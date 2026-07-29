@@ -9,7 +9,10 @@
     "cancel": "Cancel",
     "continue": "Continue",
     "back": "Back",
-    "remove": "Remove"
+    "remove": "Remove",
+    "subtotal": "Subtotal",
+    "tipAmount": "Tip",
+    "total": "Total"
   },
   "Diners": {
     "title": "Who's paying?",
@@ -41,9 +44,16 @@
     "needAtLeastOneItem": "Add at least one item to continue",
     "cannotDeselectLastDiner": "At least one diner must share this item"
   },
+  "Tip": {
+    "title": "Tip",
+    "noTip": "No tip",
+    "percentOnly": "{percent}%",
+    "custom": "Custom",
+    "customPercentageLabel": "Custom percentage",
+    "apply": "Apply"
+  },
   "StepPlaceholder": {
     "comingSoon": "This step is coming next.",
-    "tipTitle": "Tip",
     "summaryTitle": "Summary"
   }
 }

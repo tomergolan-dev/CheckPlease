@@ -9,7 +9,10 @@
     "cancel": "ביטול",
     "continue": "המשך",
     "back": "חזרה",
-    "remove": "הסר"
+    "remove": "הסר",
+    "subtotal": "סכום ביניים",
+    "tipAmount": "טיפ",
+    "total": "סה\"כ"
   },
   "Diners": {
     "title": "מי משלם?",
@@ -41,9 +44,16 @@
     "needAtLeastOneItem": "הוסיפו לפחות פריט אחד כדי להמשיך",
     "cannotDeselectLastDiner": "לפחות סועד אחד חייב להיות משויך לפריט"
   },
+  "Tip": {
+    "title": "טיפ",
+    "noTip": "בלי טיפ",
+    "percentOnly": "{percent}%",
+    "custom": "מותאם אישית",
+    "customPercentageLabel": "אחוז מותאם אישית",
+    "apply": "החל"
+  },
   "StepPlaceholder": {
     "comingSoon": "השלב הזה בדרך.",
-    "tipTitle": "טיפ",
     "summaryTitle": "סיכום"
   }
 }

@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useBillStore } from '@/lib/store/bill-store'
 import { DinersStep } from './diners-step'
 import { ItemsStep } from './items-step'
+import { TipStep } from './tip-step'
 import { StepPlaceholder } from './step-placeholder'
 import type { Bill } from '@/lib/store/types'
 
@@ -18,7 +19,7 @@ function StepContent({ bill }: { bill: Bill }) {
     case 'items':
       return <ItemsStep bill={bill} />
     case 'tip':
-      return <StepPlaceholder title={t('tipTitle')} step="tip" />
+      return <TipStep bill={bill} />
     case 'summary':
       return <StepPlaceholder title={t('summaryTitle')} step="summary" />
   }

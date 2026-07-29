@@ -2,6 +2,18 @@ import { allocateProportionally } from './allocate'
 import type { MinorUnits, TipConfig } from './types'
 
 const BASIS_POINTS_DENOMINATOR = 10_000
+const BASIS_POINTS_PER_PERCENT = 100
+
+/** Converts a human percentage (12.5) to integer basis points (1250). Negative/invalid input clamps to 0. */
+export function percentageToBasisPoints(percentage: number): number {
+  if (!Number.isFinite(percentage) || percentage < 0) return 0
+  return Math.round(percentage * BASIS_POINTS_PER_PERCENT)
+}
+
+/** Converts integer basis points (1250) back to a human percentage (12.5). */
+export function basisPointsToPercentage(basisPoints: number): number {
+  return basisPoints / BASIS_POINTS_PER_PERCENT
+}
 
 /** Rounds to the nearest minor unit, half up. */
 export function computeTipTotal(subtotalMinorUnits: MinorUnits, tip: TipConfig): MinorUnits {

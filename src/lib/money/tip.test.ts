@@ -1,5 +1,27 @@
 import { describe, expect, it } from 'vitest'
-import { computeDinerTipShares, computeTipTotal } from './tip'
+import { basisPointsToPercentage, computeDinerTipShares, computeTipTotal, percentageToBasisPoints } from './tip'
+
+describe('percentageToBasisPoints', () => {
+  it('matches the basis-point examples from the spec', () => {
+    expect(percentageToBasisPoints(0)).toBe(0)
+    expect(percentageToBasisPoints(10)).toBe(1000)
+    expect(percentageToBasisPoints(12)).toBe(1200)
+    expect(percentageToBasisPoints(12.5)).toBe(1250)
+    expect(percentageToBasisPoints(15)).toBe(1500)
+  })
+
+  it('clamps negative or invalid input to zero', () => {
+    expect(percentageToBasisPoints(-5)).toBe(0)
+    expect(percentageToBasisPoints(NaN)).toBe(0)
+  })
+})
+
+describe('basisPointsToPercentage', () => {
+  it('round-trips with percentageToBasisPoints', () => {
+    expect(basisPointsToPercentage(percentageToBasisPoints(12.5))).toBe(12.5)
+    expect(basisPointsToPercentage(0)).toBe(0)
+  })
+})
 
 describe('computeTipTotal', () => {
   it('matches the basis-point examples from the spec', () => {

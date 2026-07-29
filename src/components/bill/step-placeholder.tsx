@@ -6,8 +6,6 @@ import { useBillStore } from '@/lib/store/bill-store'
 import type { BillStep } from '@/lib/store/types'
 
 const PREVIOUS_STEP: Partial<Record<BillStep, BillStep>> = {
-  items: 'diners',
-  tip: 'items',
   summary: 'tip',
 }
 
