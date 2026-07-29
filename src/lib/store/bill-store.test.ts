@@ -159,6 +159,22 @@ describe('setItemDiners', () => {
 })
 
 describe('removeDiner', () => {
+  it('throws when removing the only diner on the bill, even with no items', () => {
+    start()
+    const store = useBillStore.getState()
+    const onlyDiner = store.addDiner()
+    expect(() => store.removeDiner(onlyDiner)).toThrow()
+    expect(useBillStore.getState().bill!.diners).toHaveLength(1)
+  })
+
+  it('throws when removing the only diner even if reassignments are (uselessly) provided', () => {
+    start()
+    const store = useBillStore.getState()
+    const onlyDiner = store.addDiner()
+    const itemId = store.addItem({ name: 'Espresso', unitPriceMinorUnits: 1000 })
+    expect(() => store.removeDiner(onlyDiner, { [itemId]: [onlyDiner] })).toThrow()
+  })
+
   it('throws if an orphaned item has no reassignment', () => {
     start()
     const store = useBillStore.getState()

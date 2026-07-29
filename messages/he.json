@@ -21,7 +21,8 @@
     "includeExistingItemsQuestion": "לשייך את הסועד הזה גם לפריטים הקיימים?",
     "includeYes": "כן, לשייך לכל הפריטים הקיימים",
     "includeNo": "לא, אני אשייך ידנית",
-    "confirmAdd": "הוסף סועד"
+    "confirmAdd": "הוסף סועד",
+    "lastDinerRequired": "נדרש לפחות סועד אחד בחשבון"
   },
   "Items": {
     "title": "מנות",

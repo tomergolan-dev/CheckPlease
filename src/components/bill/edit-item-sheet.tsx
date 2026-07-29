@@ -81,34 +81,36 @@ export function EditItemSheet({ bill, itemId, onOpenChange }: EditItemSheetProps
           <DrawerTitle>{item.name}</DrawerTitle>
         </DrawerHeader>
 
-        <ItemFormFields
-          name={item.name}
-          onNameChange={(name) => updateItem(item.id, { name })}
-          priceValue={priceValue}
-          onPriceChange={setPriceValue}
-          onPriceBlur={commitPrice}
-          quantity={item.quantity}
-          onQuantityChange={(quantity) => updateItem(item.id, { quantity })}
-        />
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pb-2">
+          <ItemFormFields
+            name={item.name}
+            onNameChange={(name) => updateItem(item.id, { name })}
+            priceValue={priceValue}
+            onPriceChange={setPriceValue}
+            onPriceBlur={commitPrice}
+            quantity={item.quantity}
+            onQuantityChange={(quantity) => updateItem(item.id, { quantity })}
+          />
 
-        <div className="flex flex-col gap-2 px-4 pt-2">
-          <span className="text-sm font-medium text-muted-foreground">{t('sharedByLabel')}</span>
-          <div className="flex flex-wrap gap-2">
-            {bill.diners.map((diner) => (
-              <DinerToggleChip
-                key={diner.id}
-                diner={diner}
-                label={dinerLabel(diner, positions[diner.id])}
-                defaultPosition={positions[diner.id]}
-                selected={item.sharedBy.includes(diner.id)}
-                disabled={item.sharedBy.length === 1 && item.sharedBy.includes(diner.id)}
-                onToggle={() => toggleDiner(diner.id)}
-              />
-            ))}
+          <div className="flex flex-col gap-2 px-4">
+            <span className="text-sm font-medium text-muted-foreground">{t('sharedByLabel')}</span>
+            <div className="flex flex-wrap gap-2">
+              {bill.diners.map((diner) => (
+                <DinerToggleChip
+                  key={diner.id}
+                  diner={diner}
+                  label={dinerLabel(diner, positions[diner.id])}
+                  defaultPosition={positions[diner.id]}
+                  selected={item.sharedBy.includes(diner.id)}
+                  disabled={item.sharedBy.length === 1 && item.sharedBy.includes(diner.id)}
+                  onToggle={() => toggleDiner(diner.id)}
+                />
+              ))}
+            </div>
+            {item.sharedBy.length === 1 && (
+              <p className="text-xs text-muted-foreground">{t('cannotDeselectLastDiner')}</p>
+            )}
           </div>
-          {item.sharedBy.length === 1 && (
-            <p className="text-xs text-muted-foreground">{t('cannotDeselectLastDiner')}</p>
-          )}
         </div>
 
         <DrawerFooter>

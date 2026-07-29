@@ -147,6 +147,10 @@ export const useBillStore = create<BillStore>()(
         const bill = get().bill
         if (!bill) return
 
+        if (bill.diners.length <= 1) {
+          throw new Error('Cannot remove the only diner on a bill — at least one is required')
+        }
+
         const impact = getDinerRemovalImpact(bill, dinerId)
         for (const itemId of impact.orphanedItemIds) {
           if (!reassignments[itemId]?.length) {

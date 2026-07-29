@@ -21,7 +21,8 @@
     "includeExistingItemsQuestion": "Should this diner be included in the existing items?",
     "includeYes": "Yes, include in all existing items",
     "includeNo": "No, I'll assign items manually",
-    "confirmAdd": "Add diner"
+    "confirmAdd": "Add diner",
+    "lastDinerRequired": "At least one paying party is required"
   },
   "Items": {
     "title": "Dishes",

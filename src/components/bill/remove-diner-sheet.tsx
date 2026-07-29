@@ -77,7 +77,7 @@ export function RemoveDinerSheet({ bill, dinerId, onOpenChange }: RemoveDinerShe
         </DrawerHeader>
 
         {impact.orphanedItemIds.length > 0 && (
-          <div className="flex flex-col gap-3 px-4">
+          <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 pb-2">
             {impact.orphanedItemIds.map((itemId) => {
               const item = bill.items.find((i) => i.id === itemId)
               if (!item) return null

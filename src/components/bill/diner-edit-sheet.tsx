@@ -20,6 +20,7 @@ import { useDinerLabel } from './use-diner-label'
 interface DinerEditSheetProps {
   diner: Diner | null
   defaultPosition?: number
+  canRemove: boolean
   onOpenChange: (open: boolean) => void
   onRequestRemove: (dinerId: string) => void
 }
@@ -27,6 +28,7 @@ interface DinerEditSheetProps {
 export function DinerEditSheet({
   diner,
   defaultPosition,
+  canRemove,
   onOpenChange,
   onRequestRemove,
 }: DinerEditSheetProps) {
@@ -90,16 +92,20 @@ export function DinerEditSheet({
           <DrawerClose asChild>
             <Button variant="outline">{tCommon('cancel')}</Button>
           </DrawerClose>
-          <button
-            type="button"
-            onClick={() => {
-              onOpenChange(false)
-              onRequestRemove(active!.id)
-            }}
-            className="rounded-md py-1 text-center text-sm text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-          >
-            {t('confirmRemove')}
-          </button>
+          {canRemove ? (
+            <button
+              type="button"
+              onClick={() => {
+                onOpenChange(false)
+                onRequestRemove(active!.id)
+              }}
+              className="rounded-md py-1 text-center text-sm text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+            >
+              {t('confirmRemove')}
+            </button>
+          ) : (
+            <p className="py-1 text-center text-xs text-muted-foreground">{t('lastDinerRequired')}</p>
+          )}
         </DrawerFooter>
       </DrawerContent>
     </Drawer>

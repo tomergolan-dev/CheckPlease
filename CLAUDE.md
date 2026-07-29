@@ -91,6 +91,8 @@ Diners can be added, renamed, resized, or removed **at any point** in the flow, 
 4. Before the removal is confirmed, show a clear summary of the consequences (which shared items will now be split among the remaining diners).
 5. Item costs are never redistributed silently — the confirmation summary is what makes the change visible before it happens.
 
+**A bill must always have at least one diner.** Removing the only remaining diner is never allowed — this is checked before the impact-aware flow even runs (not merely a side effect of every item becoming unresolvably orphaned). The UI must prevent this without a dead end: either the removal action is disabled with a clear inline reason ("At least one paying party is required" / "נדרש לפחות סועד אחד בחשבון"), never a confirmation sheet that opens with no valid way to complete it. The store enforces the same invariant defensively (`removeDiner` throws if called on a bill's only diner), independent of the UI.
+
 **Default label renumbering:** default "Diner N" labels are derived from a diner's current position among all diners, not a stored value — so removing a diner closes the gap for everyone after it (Diner 1/2/3 minus Diner 2 becomes Diner 1/2, not Diner 1/3). Renaming a diner never renumbers anyone else, since the diners array itself doesn't change on a rename. Internal `id`s and colors are never affected by any of this — only the displayed default label shifts.
 
 ## Item-Assignment Invariants
@@ -165,6 +167,7 @@ Concrete conventions that keep the "premium consumer app" bar consistent as more
 - **Diner color as identity:** a diner's assigned color shows up everywhere they appear — avatar, chips, per-diner summary rows — via the shared soft-tint token map, never a one-off color. A `ring-2 ring-card` (or `border-2 border-card`) around avatars keeps overlapping/adjacent avatars visually separated against the card background.
 - **Numbers:** every displayed currency amount uses tabular figures (`tabular-nums`) so amounts align vertically in lists and don't jitter as animated totals change.
 - **Bottom sheets are mobile-proportioned everywhere**, including on desktop viewports — constrained width, centered, never edge-to-edge (see Responsive width above).
+- **Bottom sheets whose content scales with data (per-diner assignment chips, per-item reassignment pickers) must scroll their own body**, not the whole sheet — wrap that middle content in `min-h-0 flex-1 overflow-y-auto` between the header and footer, so the header stays visible, the footer's action stays reachable, and a bill with a large number of diners (~10–20+) never pushes content off-sheet or overlaps the footer.
 
 ## Money Storage and Rounding Rules
 

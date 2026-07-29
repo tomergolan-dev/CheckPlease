@@ -64,6 +64,7 @@ export function PayingPartiesSection({ bill }: { bill: Bill }) {
       <DinerEditSheet
         diner={editingDiner}
         defaultPosition={editDinerId ? positions[editDinerId] : undefined}
+        canRemove={bill.diners.length > 1}
         onOpenChange={(open) => !open && setEditDinerId(null)}
         onRequestRemove={setRemoveDinerId}
       />
