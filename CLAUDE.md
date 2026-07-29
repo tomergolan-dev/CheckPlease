@@ -21,7 +21,7 @@ Check Please is a real, startup-quality product — not a demo, portfolio piece,
 - Every new item defaults to being shared by all current diners; user opens an item to adjust who's actually sharing it
 - Tip is optional, selected via a dedicated action, calculated proportionally per diner's subtotal
 - A summary showing each diner's subtotal, tip, and final total, always reconciling exactly to the bill grand total
-- Hebrew (RTL) and English (LTR) interface support, with a language switcher, from day one
+- Hebrew (RTL) and English (LTR) interface support from day one, with initial language auto-detected from the browser/device locale (no manual switcher yet — see Hebrew and English Support)
 - ILS (₪) as the first supported currency, he-IL locale
 - Active bill auto-persisted locally so progress survives refreshes, app switches, and mobile browser reloads
 - PWA-first mobile web app, installable, safe-area aware, Capacitor-wrappable later
@@ -42,7 +42,7 @@ These are real future-vision features. The architecture must stay clean enough t
 
 A single fluid, client-rendered bill flow with step-based internal state and animated transitions — **not** a separate Next.js route per step. Navigating back and forth must never lose data; it's all one persisted state object, not independent pages.
 
-1. **Start** — "New Bill," or a resume banner if an in-progress draft already exists in local storage. An optional restaurant/bill-name field is available here (see Data Model) but is never required and never blocks progress.
+1. **Start** — a polished onboarding/intro screen, not a marketing landing page: subtle motion, restaurant/bill/payment-themed illustration, very little text, one clear primary action (e.g. "Start Splitting"). Inspiration is Apple Wallet / Airbnb's first-open moment, not a website hero section. Pressing the primary action transitions smoothly into bill setup — it must never feel like navigating to a different page. The current foundation-stage screen (brand name, tagline, placeholder card) is temporary scaffolding, not this intended experience; it gets replaced by this onboarding screen when that work is scheduled. An optional restaurant/bill-name field is available once bill setup begins (see Data Model) but is never required and never blocks progress.
 2. **Diners** — add paying parties (see Paying-Party Model below). Diner management (add/rename/resize/remove) remains available from this point through the rest of the flow, not just at setup.
 3. **Items** — add items (name, unit price, quantity). Every new item is instantly assigned to all current diners. Tapping an item opens a bottom sheet to edit name/price/quantity, toggle which diners share it, or delete it.
 4. **Tip** — an optional, dedicated Tip action/card on the main bill interface, showing current state ("No tip" / "10% tip" / etc.). Tapping it opens a bottom sheet (see Tip Behavior below).
@@ -94,7 +94,9 @@ Diners can be added, renamed, resized, or removed **at any point** in the flow, 
 ## Hebrew and English Support
 
 - Hebrew and English are both first-class languages from the beginning — Hebrew is not a translation layer bolted on later.
-- Full RTL interface for Hebrew, full LTR interface for English, with a language switcher, localized labels/messages, and locale-correct currency/number formatting.
+- Full RTL interface for Hebrew, full LTR interface for English, localized labels/messages, and locale-correct currency/number formatting.
+- Initial interface language is determined automatically from the browser/device locale (via `Accept-Language` detection) — there is no visible manual language switcher for now. A manual switcher will return once there's a proper Settings screen with real user settings beyond language (candidates: language, theme, currency, about, privacy); it isn't worth a standalone UI just for this one toggle. Do not spend time designing that Settings screen until it's actually scheduled.
+- URL-based locale routing (`/en`, `/he` via `next-intl`) is a **development-time convenience, not a permanent product decision.** The final product should not expose `/en`/`/he` as part of the user-facing experience. As the app matures, evaluate cleaner approaches (locale resolved from device/browser preference or managed internally via app settings, with no visible locale segment in the URL) so the architecture isn't permanently locked into URL-based localization. No need to change this now — just don't build anything new that assumes the URL segment is a permanent, user-facing concept.
 - The **interface language** and any future **receipt-scan language** are independent — a user may use the app in English while (in a future version) scanning a Hebrew receipt, or vice versa. Interface localization must not assume receipt content language.
 - Typeface: **Heebo** is the primary typeface for both Hebrew and English, chosen specifically to give a unified visual identity across RTL and LTR layouts rather than pairing two different typefaces per language.
 
@@ -163,3 +165,18 @@ Both manual entry and (future) AI receipt scanning must produce the exact same `
 - Do not implement screens or business logic until the relevant product decisions have been explicitly confirmed in conversation and reflected in this document first.
 - When a new feature or edge case comes up, check whether it belongs in the confirmed MVP scope above or is a future-vision item — if future, design the extension point, don't build the feature.
 - Prefer the simpler solution by default; push back (in conversation, before building) on anything that adds complexity without a clear UX or reliability payoff, rather than silently implementing it.
+- Move quickly through the confirmed MVP scope rather than expanding it — only raise a concern when there's a genuine architectural issue, not routine polish.
+
+## MVP Build Order
+
+Build incrementally in this sequence; each stage should be working and reviewed before the next begins:
+
+1. **Calculation engine** — pure, framework-free money/split/tip math (see Money Storage and Rounding Rules), fully unit-tested in isolation before any UI depends on it.
+2. **Bill state** — the Zustand store and persisted data model (Bill/Diner/Item/Tip) that the UI will read and mutate.
+3. **Paying-party flow** — add/rename/resize/remove diners, including the impact-aware removal flow.
+4. **Item flow** — add/edit/delete items, default-all-diners assignment, the assignment bottom sheet.
+5. **Tip flow** — the Tip action/card and bottom sheet.
+6. **Summary** — per-diner and grand-total display.
+7. **Polish** — the premium onboarding/intro screen (replacing the temporary foundation placeholder), transitions, animation detail.
+
+The onboarding/intro screen described under Complete User Flow is intentionally sequenced late (Polish), not first — the core bill-splitting mechanics need to exist and work before the first-impression experience is worth investing in.

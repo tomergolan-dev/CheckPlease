@@ -12,4 +12,6 @@ export const localeDirections: Record<AppLocale, 'ltr' | 'rtl'> = {
 export const routing = defineRouting({
   locales,
   defaultLocale: 'en',
+  // No manual language switcher yet, so browser/device locale detection is the only way users land in the right language.
+  localeDetection: true,
 })

@@ -4,11 +4,5 @@
   },
   "Home": {
     "comingSoon": "The bill-splitting flow is coming next."
-  },
-  "Settings": {
-    "label": "Settings",
-    "language": "Language",
-    "en": "English",
-    "he": "עברית"
   }
 }
