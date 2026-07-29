@@ -1,0 +1,165 @@
+# Check Please
+
+## Product Vision
+
+Check Please is a real, startup-quality product — not a demo, portfolio piece, or coding exercise. It is being built with the intent to launch on the App Store and Google Play, and every decision (product and technical) should be made with that bar in mind.
+
+**Mission:** make splitting a restaurant bill effortless, fair, and actually enjoyable.
+
+**The problem:** groups finishing a meal default to someone opening a calculator, trying to remember who ordered what, manually figuring out shared items, and calculating tip by hand. It's slow, confusing, and awkward. Check Please eliminates that entire ritual.
+
+**Design philosophy:** premium, minimal, elegant, modern, friendly, fast, delightful. Inspiration: Apple Wallet, Linear, Stripe, Airbnb, Notion. Avoid: generic dashboards, Material Design appearance, busy layouts, outdated UI, excessive color, heavy gradients. The interface should feel calm and effortless — every interaction should have a purpose.
+
+**Mobile-first:** every UX decision prioritizes one-handed mobile usage. Desktop is secondary. Large touch targets, minimal typing, fast interactions, few screens, no unnecessary complexity. The target feel is a modern iOS app, not a responsive website.
+
+**Core UX principle:** the user should never have to think. Reduce taps whenever possible. Default choices match the most common real-life restaurant scenario. Never force unnecessary input.
+
+## Confirmed MVP Scope
+
+- Create a bill and manage diners (paying parties) dynamically throughout the flow
+- Add items manually: name, unit price, quantity
+- Every new item defaults to being shared by all current diners; user opens an item to adjust who's actually sharing it
+- Tip is optional, selected via a dedicated action, calculated proportionally per diner's subtotal
+- A summary showing each diner's subtotal, tip, and final total, always reconciling exactly to the bill grand total
+- Hebrew (RTL) and English (LTR) interface support, with a language switcher, from day one
+- ILS (₪) as the first supported currency, he-IL locale
+- Active bill auto-persisted locally so progress survives refreshes, app switches, and mobile browser reloads
+- PWA-first mobile web app, installable, safe-area aware, Capacitor-wrappable later
+
+## Explicitly Excluded From MVP
+
+These are real future-vision features. The architecture must stay clean enough to add them later without rewrites, but none of them are built now:
+
+- AI receipt scanning / OCR / smart receipt parsing
+- Tax/VAT calculation (target market is Israel; menu and receipt prices are already VAT-inclusive, so the app works directly with final item prices)
+- User accounts, saved history, shareable bill links
+- Payment integrations
+- Multi-language receipt parsing (Hebrew/English/mixed receipts)
+- Per-person average display derived from party size
+- Native app / React Native implementation
+
+## Complete User Flow
+
+A single fluid, client-rendered bill flow with step-based internal state and animated transitions — **not** a separate Next.js route per step. Navigating back and forth must never lose data; it's all one persisted state object, not independent pages.
+
+1. **Start** — "New Bill," or a resume banner if an in-progress draft already exists in local storage. An optional restaurant/bill-name field is available here (see Data Model) but is never required and never blocks progress.
+2. **Diners** — add paying parties (see Paying-Party Model below). Diner management (add/rename/resize/remove) remains available from this point through the rest of the flow, not just at setup.
+3. **Items** — add items (name, unit price, quantity). Every new item is instantly assigned to all current diners. Tapping an item opens a bottom sheet to edit name/price/quantity, toggle which diners share it, or delete it.
+4. **Tip** — an optional, dedicated Tip action/card on the main bill interface, showing current state ("No tip" / "10% tip" / etc.). Tapping it opens a bottom sheet (see Tip Behavior below).
+5. **Summary** — per-diner cards (subtotal → tip → total) plus a grand total.
+
+All interactive editing (diner management, item editing, tip selection, removal confirmation) uses a **consistent mobile bottom-sheet pattern** — this is the primary interaction primitive of the app, not an exception.
+
+## Paying-Party Model
+
+A "diner" represents a **paying party**, not necessarily one individual — e.g. "Diner 1" (party size 1), "Daniel & Dana" (party size 2), "Cohen Family" (party size 4).
+
+- Every diner has: internal `id` (used for all assignment/calculation), `index` (drives the default label "Diner {index}"), editable `name`, required `partySize` (default `1`), `color`, and a derived avatar/initial.
+- `partySize` is **required in the data model and UI**, but is strictly informational/display. It must **never** affect item splitting, never multiply or divide the party's total, and never otherwise enter any calculation.
+- Each paying party receives exactly one combined subtotal, one tip amount, and one final total — regardless of party size.
+- A future version may show an optional per-person average derived from party size. Not implemented in MVP; the field must already exist so this can be added without a data model change.
+
+## Dynamic Diner-Management Behavior
+
+Diners can be added, renamed, resized, or removed **at any point** in the flow, not only during initial setup.
+
+**Adding a diner after items already exist:** the add-diner bottom sheet must ask the user explicitly how the new diner relates to existing items — never decide silently.
+
+- Prompt (shown only if at least one item already exists): "Should this diner be included in the existing items?"
+- Options: **"Yes, include in all existing items"** (default, selected) / **"No, I'll assign items manually"**
+- If there are no existing items yet, this question is not shown at all.
+
+**Removing a diner** — impact-aware, never silent:
+
+1. Identify all items assigned to the diner being removed.
+2. Identify, among those, any items where this diner is the *sole* assignee.
+3. An item may never end up with zero assigned diners. If removal would orphan one or more items, the removal is **blocked** until the user reassigns each affected item (inline, as part of the same flow).
+4. Before the removal is confirmed, show a clear summary of the consequences (which shared items will now be split among the remaining diners).
+5. Item costs are never redistributed silently — the confirmation summary is what makes the change visible before it happens.
+
+## Item-Assignment Invariants
+
+- An item must always have at least one assigned diner. The UI must prevent deselecting the last remaining diner on an item and must clearly communicate why (disabled control + explanation), never allow it to silently fail or succeed.
+- New items default to being assigned to **all** current diners. This is the confirmed MVP default; a "sticky last selection" default was considered and explicitly deferred pending real usage testing.
+
+## Tip Behavior
+
+- Tip is **optional**, defaulting to "No Tip." It is never a mandatory step blocking progress to the summary.
+- No slider. A dedicated Tip action/card on the main bill interface shows the current state: No tip / 10% / 12% / 15% / Custom.
+- Tapping it opens a bottom sheet with fixed choices: **No Tip (0%) · 10% · 12% · 15% · Custom** (custom opens a numeric input inline within the same sheet).
+- Tip is calculated **proportionally to each diner's item subtotal** — never split equally across diners regardless of what they ordered.
+- On confirmation, every diner's subtotal, tip amount, and final total update immediately, with a subtle animation — not an abrupt jump.
+- Tip percentage is stored internally as **integer basis points**, never a decimal float, so that custom values (including fractional percentages like 12.5%) stay exact: 0% = `0`, 10% = `1000`, 12% = `1200`, 12.5% = `1250`, 15% = `1500`. Basis points are only ever used to derive an integer minor-unit tip amount (see Money Storage and Rounding Rules) — the final tip and totals are still calculated and rounded strictly in integer minor currency units.
+
+## Hebrew and English Support
+
+- Hebrew and English are both first-class languages from the beginning — Hebrew is not a translation layer bolted on later.
+- Full RTL interface for Hebrew, full LTR interface for English, with a language switcher, localized labels/messages, and locale-correct currency/number formatting.
+- The **interface language** and any future **receipt-scan language** are independent — a user may use the app in English while (in a future version) scanning a Hebrew receipt, or vice versa. Interface localization must not assume receipt content language.
+- Typeface: **Heebo** is the primary typeface for both Hebrew and English, chosen specifically to give a unified visual identity across RTL and LTR layouts rather than pairing two different typefaces per language.
+
+## RTL and LTR Implementation Rules
+
+- Use CSS/Tailwind **logical properties** everywhere (`ms-`/`me-`/`ps-`/`pe-`, `start`/`end`) — never physical `ml-`/`mr-`/`pl-`/`pr-` or `left`/`right` positioning for anything that should mirror between RTL and LTR.
+- Set `dir` on `<html>` based on the active interface locale.
+- This is treated as a hard rule from the first component built, not a cleanup pass — retrofitting RTL later is expensive; building it in from line one is not.
+
+## Money Storage and Rounding Rules
+
+- All monetary values are stored and calculated as **integer minor units** internally (agorot for ILS) — **never floating-point arithmetic** for anything financial.
+- A single formatting utility (parametrized by currency + locale) is the only place a minor-unit integer is ever turned into a display string. No ad hoc string formatting elsewhere.
+- Every item has `unitPriceMinorUnits` and `quantity` (default `1`, minimum `1`, compact increment/decrement control in the UI). The line total is **derived** as `unitPriceMinorUnits × quantity` and is not persisted unless a strong technical reason emerges later.
+- Splitting uses a single reusable **largest-remainder allocation** primitive — `allocateProportionally(totalMinorUnits, weights[])` — applied at two levels:
+  1. **Item → diners**: each item's line total is split across its assigned diners (equal weights), summing exactly back to the line total.
+  2. **Tip → diners**: the total tip (rounded to the nearest minor unit) is allocated across diners weighted by each diner's subtotal, summing exactly back to the total tip.
+- Invariant that must always hold and must be tested: the sum of all diners' final totals equals the bill's grand total exactly. No money is ever created or lost to rounding.
+- Architecture must not hardcode single-currency assumptions, even though ILS is the only currency shipped in MVP.
+
+## Core Data Model (conceptual)
+
+- **Bill**: `id`, `createdAt`/`updatedAt`, `currency`, `locale`, `restaurantName?` (optional, never required, never blocks progress — labeled "Restaurant name — optional" / "שם המסעדה — לא חובה"), `diners[]`, `items[]`, `tip`
+- **Diner**: `id`, `index`, `name?`, `partySize` (required, default `1`, display-only), `color`, derived avatar/initial
+- **Item**: `id`, `name`, `unitPriceMinorUnits`, `quantity` (default `1`, min `1`), `sharedBy: dinerId[]` (min length 1, always), `source: 'manual' | 'scanned'` (only `'manual'` used in MVP; field exists now so future AI-scanned items require no model change), ordering field
+- **Tip**: `{ mode: 'percentage', valueBasisPoints: number }` — percentage-only, stored as integer basis points (e.g. `1200` = 12%); no flat-amount tip mode in MVP
+
+Both manual entry and (future) AI receipt scanning must produce the exact same `Item[]` shape. After scanning, in a future version, users must always be able to edit an item's name/price, delete an incorrectly detected item, add a missing item manually, and correct any AI mistake — AI enhances the workflow, it never replaces or restricts manual control.
+
+## Architecture Decisions
+
+- **Framework:** Next.js (App Router), TypeScript, Tailwind CSS, shadcn/ui, Lucide icons.
+- **Routing:** an `[locale]` segment (`en` / `he`) via `next-intl` for routing, message catalogs, and `Intl`-based number/currency formatting. Locale is a top-level routing concern, separate from and not in conflict with the single-route, step-based bill flow.
+- **State:** a Zustand store holding the active bill (diners, items, tip, current step), persisted to `localStorage` via Zustand's `persist` middleware — this satisfies the auto-save requirement without bespoke persistence code.
+- **Calculation engine:** pure, framework-free functions with zero UI coupling, fully unit-tested in isolation. This is the one part of the codebase that must be bulletproof, since it's the trust-critical core of the whole product.
+- **Component styling:** shadcn primitives are a starting point, not the finished look — they need a real custom theme (color tokens, radius, shadow) to reach the Apple Wallet / Linear / Stripe aesthetic. Default shadcn theming does not meet the bar.
+- **Interaction primitive:** bottom sheets (shadcn's `Drawer`, Vaul-based) are the core, reused pattern for item editing, diner management, tip selection, and removal confirmation. Prefer mobile-native patterns generally — bottom sheets, contextual/inline editing, tap-first interactions — over traditional web forms. Floating action buttons are **not** a mandatory pattern; use one only where it genuinely improves discoverability and doesn't compete with a screen's primary action — a sticky bottom action button or an inline action may be the better fit elsewhere. Choose per screen based on clarity and usability, not visual novelty.
+- **Animation:** step transitions and animated total updates use a lightweight animation layer (Framer Motion). Animated number/currency updates are a small custom hook on top of it, not a separate dependency.
+- **PWA:** the MVP foundation is manifest, icons, safe-area (`env()`) insets, standalone display mode, theme color, and correct mobile viewport behavior — enough to be installable. A service worker and offline/asset caching are **explicitly deferred** until the primary bill flow is stable and tested, to avoid stale-asset and dev-caching issues while the app is still changing quickly. Native wrapping (Capacitor) is a later, separate step that should require no application code changes if the PWA layer is done correctly. No native or React Native implementation at this stage.
+
+## Folder and Component Conventions
+
+- Domain logic (calculation engine, allocation primitive, data model types) is isolated from UI and framework code, so it can be reused unchanged by any future input method (manual entry today, AI receipt scanning later).
+- Domain/UI separation should read as: pure calculation and types in one layer, state/store in another, presentational and interaction components in another — favor this separation over convenience, since it is what keeps the future receipt-scanning integration a pure addition rather than a rewrite.
+- Reusable primitives (bottom sheet, avatar/color chip, animated amount) are built once and shared across every feature that needs them, not re-implemented per screen.
+
+## Dependency Guidelines
+
+- Avoid unnecessary dependencies. Prefer reusable, strongly-typed, component-driven code over pulling in a library for something a small utility can do.
+- Every dependency beyond the confirmed stack (Next.js, TypeScript, Tailwind, shadcn/ui, Lucide, next-intl, Zustand, Framer Motion) should be justified against a real, specific need in this document — not added speculatively for a future feature.
+
+## Testing Requirements
+
+- The calculation engine (allocation primitive, item split, tip split, diner totals) must be unit-tested in isolation from the UI, with explicit tests for the invariant that diner totals always sum exactly to the bill grand total (including tip), across edge cases like uneven splits and multiple simultaneous remainders.
+- Item-assignment invariants (never zero diners on an item, diner-removal reassignment blocking) should have test coverage at the logic level, not only be relied upon via UI behavior.
+
+## PWA-First Requirements
+
+- Build as a high-quality, installable, mobile-first web application first. Native app store distribution is intended to come later via Capacitor wrapping — do not build native or React Native code now.
+- The application shell must account for mobile safe areas, touch-friendly targets, standalone PWA usage, native-feeling transitions, and structure that will support a future native share sheet, even though sharing itself is not implemented in MVP.
+- **Initial PWA foundation (MVP):** web app manifest, application icons, standalone display mode, theme color, correct mobile viewport behavior, safe-area support, and an installable-app-compatible structure.
+- **Explicitly deferred:** a service worker and any offline/asset caching. Add these only once the primary bill flow is stable and tested — introducing caching too early risks stale-asset and development-caching problems while the app is still under active change.
+
+## Incremental Development Rules
+
+- Do not implement screens or business logic until the relevant product decisions have been explicitly confirmed in conversation and reflected in this document first.
+- When a new feature or edge case comes up, check whether it belongs in the confirmed MVP scope above or is a future-vision item — if future, design the extension point, don't build the feature.
+- Prefer the simpler solution by default; push back (in conversation, before building) on anything that adds complexity without a clear UX or reliability payoff, rather than silently implementing it.
