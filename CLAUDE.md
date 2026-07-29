@@ -54,7 +54,7 @@ All interactive editing (diner management, item editing, tip selection, removal 
 
 A "diner" represents a **paying party**, not necessarily one individual — e.g. "Diner 1" (party size 1), "Daniel & Dana" (party size 2), "Cohen Family" (party size 4).
 
-- Every diner has: internal `id` (used for all assignment/calculation), `index` (drives the default label "Diner {index}"), editable `name`, required `partySize` (default `1`), `color`, and a derived avatar/initial.
+- Every diner has: a stable internal `id` (used for all assignment/calculation, never changes), editable `name`, required `partySize` (default `1`), `color`, and a derived avatar/initial. There is no stored numeric index — when `name` is absent, the default label ("Diner N") is derived from the diner's current position among all diners, recomputed on every read (see Dynamic Diner-Management Behavior). Colors are assigned once at creation from a stable cursor and never change, so a diner's visual identity stays constant even as default labels shift.
 - `partySize` is **required in the data model and UI**, but is strictly informational/display. It must **never** affect item splitting, never multiply or divide the party's total, and never otherwise enter any calculation.
 - Each paying party receives exactly one combined subtotal, one tip amount, and one final total — regardless of party size.
 - A future version may show an optional per-person average derived from party size. Not implemented in MVP; the field must already exist so this can be added without a data model change.
@@ -76,6 +76,8 @@ Diners can be added, renamed, resized, or removed **at any point** in the flow, 
 3. An item may never end up with zero assigned diners. If removal would orphan one or more items, the removal is **blocked** until the user reassigns each affected item (inline, as part of the same flow).
 4. Before the removal is confirmed, show a clear summary of the consequences (which shared items will now be split among the remaining diners).
 5. Item costs are never redistributed silently — the confirmation summary is what makes the change visible before it happens.
+
+**Default label renumbering:** default "Diner N" labels are derived from a diner's current position among all diners, not a stored value — so removing a diner closes the gap for everyone after it (Diner 1/2/3 minus Diner 2 becomes Diner 1/2, not Diner 1/3). Renaming a diner never renumbers anyone else, since the diners array itself doesn't change on a rename. Internal `id`s and colors are never affected by any of this — only the displayed default label shifts.
 
 ## Item-Assignment Invariants
 
@@ -133,7 +135,7 @@ A **presentation/payment layer only** — it never touches the exact calculation
 ## Core Data Model (conceptual)
 
 - **Bill**: `id`, `createdAt`/`updatedAt`, `currency`, `locale`, `restaurantName?` (optional, never required, never blocks progress — labeled "Restaurant name — optional" / "שם המסעדה — לא חובה"), `diners[]`, `items[]`, `tip`, `roundUpPayments` (boolean, default `false` — the Optional Payment Rounding toggle)
-- **Diner**: `id`, `index`, `name?`, `partySize` (required, default `1`, display-only), `color`, derived avatar/initial
+- **Diner**: `id` (stable UUID), `name?`, `partySize` (required, default `1`, display-only), `color` (assigned once at creation, stable) — no stored index; the default "Diner N" label is derived from position, not stored (see Dynamic Diner-Management Behavior)
 - **Item**: `id`, `name`, `unitPriceMinorUnits`, `quantity` (default `1`, min `1`), `sharedBy: dinerId[]` (min length 1, always), `source: 'manual' | 'scanned'` (only `'manual'` used in MVP; field exists now so future AI-scanned items require no model change), ordering field
 - **Tip**: `{ mode: 'percentage', valueBasisPoints: number }` — percentage-only, stored as integer basis points (e.g. `1200` = 12%); no flat-amount tip mode in MVP
 
@@ -143,7 +145,7 @@ Both manual entry and (future) AI receipt scanning must produce the exact same `
 
 - **Framework:** Next.js (App Router), TypeScript, Tailwind CSS, shadcn/ui, Lucide icons.
 - **Routing:** an `[locale]` segment (`en` / `he`) via `next-intl` for routing, message catalogs, and `Intl`-based number/currency formatting. Locale is a top-level routing concern, separate from and not in conflict with the single-route, step-based bill flow.
-- **State:** a Zustand store holding the active bill (diners, items, tip, current step), persisted to `localStorage` via Zustand's `persist` middleware — this satisfies the auto-save requirement without bespoke persistence code.
+- **State:** a Zustand store (`src/lib/store/bill-store.ts`) holding the active bill (diners, items, tip, current step), persisted to `localStorage` via Zustand's `persist` middleware — this satisfies the auto-save requirement without bespoke persistence code. Persistence is skipped on initial hydration (`skipHydration`) and rehydrated explicitly from a client-only effect (`HydrateBillStore`) so the first server-rendered pass and the first client pass always match; the storage factory falls back to a no-op outside the browser so the module is safe to import from anywhere. Derived totals are never stored — they're computed on demand from `src/lib/store/selectors.ts`, which calls straight into the calculation engine.
 - **Calculation engine:** pure, framework-free functions with zero UI coupling, fully unit-tested in isolation. This is the one part of the codebase that must be bulletproof, since it's the trust-critical core of the whole product.
 - **Component styling:** shadcn primitives are a starting point, not the finished look — they need a real custom theme (color tokens, radius, shadow) to reach the Apple Wallet / Linear / Stripe aesthetic. Default shadcn theming does not meet the bar.
 - **Interaction primitive:** bottom sheets (shadcn's `Drawer`, Vaul-based) are the core, reused pattern for item editing, diner management, tip selection, and removal confirmation. Prefer mobile-native patterns generally — bottom sheets, contextual/inline editing, tap-first interactions — over traditional web forms. Floating action buttons are **not** a mandatory pattern; use one only where it genuinely improves discoverability and doesn't compete with a screen's primary action — a sticky bottom action button or an inline action may be the better fit elsewhere. Choose per screen based on clarity and usability, not visual novelty.
