@@ -1,34 +1,34 @@
 'use client'
 
-import { useTranslations } from 'next-intl'
-import { Button } from '@/components/ui/button'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { useBillStore } from '@/lib/store/bill-store'
-import { BRAND_NAME } from '@/lib/brand'
 import { BillCanvas } from './bill-canvas'
+import { OnboardingScreen } from './onboarding-screen'
 
 export function BillEntry() {
   const bill = useBillStore((s) => s.bill)
   const startNewBill = useBillStore((s) => s.startNewBill)
-  const t = useTranslations('App')
-  const tHome = useTranslations('Home')
+  const shouldReduceMotion = useReducedMotion()
+  const transition = shouldReduceMotion ? { duration: 0 } : { duration: 0.3, ease: 'easeOut' as const }
 
   return (
     <div className="flex min-h-dvh justify-center bg-muted/40">
       <div className="w-full max-w-md bg-background">
-        {bill ? (
-          <BillCanvas />
-        ) : (
-          <div className="safe-top safe-bottom safe-x flex min-h-dvh flex-col items-center justify-center gap-4 px-6 text-center">
-            <div className="flex flex-col items-center gap-2">
-              <h1 className="text-3xl font-semibold tracking-tight">{BRAND_NAME}</h1>
-              <p className="text-muted-foreground text-base">{t('tagline')}</p>
-            </div>
-
-            <Button size="lg" className="mt-8" onClick={startNewBill}>
-              {tHome('startBillCta')}
-            </Button>
-          </div>
-        )}
+        <AnimatePresence mode="wait" initial={false}>
+          {bill ? (
+            <motion.div key="canvas" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={transition}>
+              <BillCanvas />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="onboarding"
+              exit={shouldReduceMotion ? undefined : { opacity: 0, scale: 0.98 }}
+              transition={transition}
+            >
+              <OnboardingScreen onStart={startNewBill} />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   )

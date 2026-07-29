@@ -1,9 +1,9 @@
 {
   "App": {
-    "tagline": "Split the bill. Skip the math."
+    "tagline": "Split the bill.\nNot the friendship."
   },
   "Home": {
-    "startBillCta": "Start a new bill"
+    "startBillCta": "Start Splitting"
   },
   "Common": {
     "cancel": "Cancel",
