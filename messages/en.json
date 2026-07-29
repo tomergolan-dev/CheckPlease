@@ -3,6 +3,34 @@
     "tagline": "Split the bill. Skip the math."
   },
   "Home": {
-    "comingSoon": "The bill-splitting flow is coming next."
+    "startBillCta": "Start a new bill"
+  },
+  "Common": {
+    "cancel": "Cancel",
+    "continue": "Continue",
+    "back": "Back",
+    "remove": "Remove"
+  },
+  "Diners": {
+    "title": "Who's paying?",
+    "defaultLabel": "Diner {number}",
+    "partySizeLabel": "Party size",
+    "addDiner": "Add diner",
+    "removeDinerTitle": "Remove {name}?",
+    "removeDinerSafeDescription": "No items will be left without a diner.",
+    "removeDinerImpactDescription": "These items are only assigned to {name}. Choose who takes them over before removing.",
+    "reassignPlaceholder": "Choose a diner",
+    "confirmRemove": "Remove diner",
+    "includeExistingItemsQuestion": "Should this diner be included in the existing items?",
+    "includeYes": "Yes, include in all existing items",
+    "includeNo": "No, I'll assign items manually",
+    "confirmAdd": "Add diner",
+    "needAtLeastOneDiner": "Add at least one diner to continue"
+  },
+  "StepPlaceholder": {
+    "comingSoon": "This step is coming next.",
+    "itemsTitle": "Items",
+    "tipTitle": "Tip",
+    "summaryTitle": "Summary"
   }
 }

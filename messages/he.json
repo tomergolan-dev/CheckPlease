@@ -3,6 +3,34 @@
     "tagline": "מפצלים את החשבון. בלי חשבונות."
   },
   "Home": {
-    "comingSoon": "תהליך פיצול החשבון בדרך."
+    "startBillCta": "התחל חשבון חדש"
+  },
+  "Common": {
+    "cancel": "ביטול",
+    "continue": "המשך",
+    "back": "חזרה",
+    "remove": "הסר"
+  },
+  "Diners": {
+    "title": "מי משלם?",
+    "defaultLabel": "סועד {number}",
+    "partySizeLabel": "גודל הקבוצה",
+    "addDiner": "הוסף סועד",
+    "removeDinerTitle": "להסיר את {name}?",
+    "removeDinerSafeDescription": "לא יישארו פריטים ללא סועד.",
+    "removeDinerImpactDescription": "הפריטים הבאים משויכים רק ל-{name}. בחרו מי יקבל אותם לפני ההסרה.",
+    "reassignPlaceholder": "בחר סועד",
+    "confirmRemove": "הסר סועד",
+    "includeExistingItemsQuestion": "לשייך את הסועד הזה גם לפריטים הקיימים?",
+    "includeYes": "כן, לשייך לכל הפריטים הקיימים",
+    "includeNo": "לא, אני אשייך ידנית",
+    "confirmAdd": "הוסף סועד",
+    "needAtLeastOneDiner": "הוסיפו לפחות סועד אחד כדי להמשיך"
+  },
+  "StepPlaceholder": {
+    "comingSoon": "השלב הזה בדרך.",
+    "itemsTitle": "פריטים",
+    "tipTitle": "טיפ",
+    "summaryTitle": "סיכום"
   }
 }
