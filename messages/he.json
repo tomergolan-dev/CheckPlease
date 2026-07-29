@@ -6,15 +6,12 @@
     "startBillCta": "בואו נתחיל לפצל"
   },
   "Common": {
-    "cancel": "ביטול",
-    "subtotal": "סכום ביניים",
-    "tipAmount": "טיפ",
-    "total": "סה\"כ"
+    "cancel": "ביטול"
   },
   "Diners": {
     "title": "מי משלם?",
     "defaultLabel": "סועד {number}",
-    "partySizeLabel": "גודל הקבוצה",
+    "partySizeLabel": "כמות הסועדים",
     "addDiner": "הוסף מישהו",
     "removeDinerTitle": "להסיר את {name}?",
     "removeDinerSafeDescription": "לא יישארו פריטים ללא סועד.",
@@ -34,7 +31,7 @@
     "priceLabel": "מחיר",
     "quantityLabel": "כמות",
     "confirmAdd": "הוסף מנה",
-    "sharedByLabel": "מי אכל מזה?",
+    "sharedByLabel": "מי הזמין את זה?",
     "deleteItem": "הסר מנה",
     "cannotDeselectLastDiner": "לפחות סועד אחד חייב להיות משויך לפריט"
   },
@@ -48,8 +45,12 @@
     "apply": "החל"
   },
   "Summary": {
-    "roundUpToggleLabel": "לעגל סכומים כלפי מעלה",
+    "title": "החלוקה",
+    "originalAmount": "סכום מקורי",
+    "tip": "טיפ",
+    "subtotal": "סכום ביניים",
     "rounding": "עיגול סכומים",
-    "totalPaid": "סה\"כ שולם"
+    "totalToPay": "סה\"כ לתשלום",
+    "roundUpToggleLabel": "לעגל סכומים כלפי מעלה"
   }
 }

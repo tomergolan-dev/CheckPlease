@@ -28,14 +28,14 @@ export function DinerToggleChip({
       disabled={disabled}
       onClick={onToggle}
       className={cn(
-        'flex items-center gap-2 rounded-full border py-1 ps-1 pe-3 text-sm font-medium transition-colors',
+        'flex items-center gap-2 rounded-full border py-1 ps-1 pe-3 text-sm font-medium transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
         selected
-          ? 'border-primary bg-accent text-accent-foreground'
-          : 'border-border bg-background text-muted-foreground',
+          ? 'border-primary bg-accent text-accent-foreground shadow-soft'
+          : 'border-border/60 bg-background text-muted-foreground hover:border-border hover:text-foreground',
         disabled && 'opacity-50'
       )}
     >
-      <DinerAvatar diner={diner} defaultPosition={defaultPosition} className="size-6 text-xs" />
+      <DinerAvatar diner={diner} defaultPosition={defaultPosition} className="size-6 text-xs ring-2 ring-card" />
       {label}
     </button>
   )

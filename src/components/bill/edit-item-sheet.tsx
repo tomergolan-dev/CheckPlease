@@ -118,7 +118,7 @@ export function EditItemSheet({ bill, itemId, onOpenChange }: EditItemSheetProps
           <button
             type="button"
             onClick={handleDelete}
-            className="py-1 text-center text-sm text-muted-foreground underline-offset-4 hover:underline"
+            className="rounded-md py-1 text-center text-sm text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
           >
             {t('deleteItem')}
           </button>

@@ -23,10 +23,11 @@ This is a standing rule, not a one-time redesign — every future screen must be
 - **One continuous, scrollable bill canvas — not a step wizard.** Paying parties, dishes, and the tip/live summary all live on the same growing screen, not separate full pages or routes. The user scrolls back to edit an earlier section directly; there is no "back" navigation through a sequence of steps.
 - **No forced "Continue" between routine sections.** A primary full-width call-to-action is reserved for a genuinely meaningful completion (e.g. "Start Splitting" on the intro screen) — never required just to move from paying parties to dishes to tip.
 - **All temporary editing happens in bottom sheets, compact chips, or inline expansion** — adding/editing a diner, adding/editing a dish, choosing a tip, confirming a removal. Never a dedicated full page just to edit one thing; the user should always feel like they're still inside the same bill.
-- **Warm, product-oriented copy over CRUD/admin language.** Prefer "Add a dish," "Add someone," "Who had this?" over "Add item," "Add record," "Edit entry," "Continue to next step." Icons and motion can communicate an action without a label at all when that's clearer than text. All copy must be localized naturally in Hebrew and English, not translated mechanically.
+- **Warm, product-oriented copy over CRUD/admin language.** Prefer "Add a dish," "Add someone," "Who ordered this?" over "Add item," "Add record," "Edit entry," "Continue to next step." Copy must also stay general enough to cover the real range of bill entries — drinks, bottles, desserts, service charges — not just literal food ("Who ordered this?", not a food-specific phrasing that reads oddly for a bottle of wine). Icons and motion can communicate an action without a label at all when that's clearer than text. All copy must be localized naturally in Hebrew and English, not translated mechanically — the Hebrew is canonical natural phrasing in its own right, not a rendering of the English string.
 - **Destructive controls stay secondary.** Removing a diner or dish lives inside its edit sheet as a secondary action, never a prominent icon sitting in the default row/card view.
 - **Motion supports comprehension, not decoration.** Newly added diners/dishes animate in (and out on removal); totals animate on change rather than snapping; bottom sheets feel connected to the bill beneath them. Respect `prefers-reduced-motion` everywhere motion is used. Polished, not gimmicky or childish — the bar is Apple Wallet / Airbnb, adapted to a friendly restaurant-sharing context.
-- **Responsive width:** mobile-first and thumb-friendly on phones. On larger viewports, constrain the experience to a centered, mobile-app-width canvas (not full-bleed) — the desktop view should read as a polished preview of the mobile product, never a stretched enterprise dashboard.
+- **Responsive width:** mobile-first and thumb-friendly on phones. On larger viewports, constrain the experience to a centered, mobile-app-width canvas (not full-bleed) — the desktop view should read as a polished preview of the mobile product, never a stretched enterprise dashboard. This applies to bottom sheets too: they must stay a constrained, mobile-proportioned width and stay centered even when the browser viewport is wide, never stretching edge-to-edge on desktop.
+- **Premium, comparable to leading consumer products — not a utility form.** The visual bar is a modern financial/payments app people enjoy using, not a spreadsheet with rounded corners. Subtle motifs from restaurants, receipts, menus, payment cards, and contactless payment may inform the visual language (color, iconography, card treatment) — but never literally (no rendering the app as a paper receipt, no thematic gimmicks). Fresh, native, delightful; never childish or over-decorated.
 
 ## Confirmed MVP Scope
 
@@ -68,7 +69,7 @@ All interactive editing (diner management, item editing, tip selection, removal 
 A "diner" represents a **paying party**, not necessarily one individual — e.g. "Diner 1" (party size 1), "Daniel & Dana" (party size 2), "Cohen Family" (party size 4).
 
 - Every diner has: a stable internal `id` (used for all assignment/calculation, never changes), editable `name`, required `partySize` (default `1`), `color`, and a derived avatar/initial. There is no stored numeric index — when `name` is absent, the default label ("Diner N") is derived from the diner's current position among all diners, recomputed on every read (see Dynamic Diner-Management Behavior). Colors are assigned once at creation from a stable cursor and never change, so a diner's visual identity stays constant even as default labels shift.
-- `partySize` is **required in the data model and UI**, but is strictly informational/display. It must **never** affect item splitting, never multiply or divide the party's total, and never otherwise enter any calculation.
+- `partySize` is **required in the data model and UI**, but is strictly informational/display. It must **never** affect item splitting, never multiply or divide the party's total, and never otherwise enter any calculation. UI label is "Number of diners" / "כמות הסועדים" (not "Party size" / "גודל הקבוצה") — natural product copy, same non-calculating meaning.
 - Each paying party receives exactly one combined subtotal, one tip amount, and one final total — regardless of party size.
 - A future version may show an optional per-person average derived from party size. Not implemented in MVP; the field must already exist so this can be added without a data model change.
 
@@ -114,10 +115,29 @@ A **presentation/payment layer only** — it never touches the exact calculation
 - A toggle on the Summary screen — Hebrew label "לעגל סכומים כלפי מעלה" ("round amounts up") — **default OFF**.
 - When enabled, each diner's already-computed final total (subtotal + tip, exactly as the engine calculated it) is rounded **up** to the next whole shekel. Never rounds individual items, never rounds any intermediate calculation — only the one final per-diner number, and only after it's already exact.
 - If a diner's exact total is already a whole shekel amount, it's left unchanged.
-- Per-diner display: exact amount → payable amount, e.g. `₪33.33 → ₪34`. If already whole, just show the amount (no arrow) — no additional explanatory text.
-- Bill-level summary when enabled shows three lines: the exact bill total ("סה"כ חשבון"), the rounding surplus as a small `+` amount ("עיגול סכומים"), and the payable total actually collected ("סה"כ שולם") — e.g. `₪100` / `+₪2` / `₪102`. This makes where the extra money came from immediately obvious without any explanatory copy in the main UI (a small info icon with a short explanation may be added later if needed, but the primary experience stays minimal).
+- Per-diner display: exact amount → payable (rounded) amount, e.g. `₪33.33 → ₪34`. The **rounded amount is visually dominant** (larger/bolder); the exact amount stays visible but secondary (smaller, muted). If already whole, just show the one amount (no arrow) — no additional explanatory text. The arrow must visually point in the reading direction in both RTL and LTR (mirror it, don't leave it pointing the wrong way in Hebrew).
+- Bill-level display follows the Bill Summary Terminology and Display Order below — the rounding surplus is one row in that fixed order, not a standalone three-line block.
 - Toggling the option only changes what's *displayed* as payable — it never mutates the exact totals, and the exact grand total is always available regardless of the toggle state.
-- The Bill data model will need a persisted boolean for this toggle (see Core Data Model) when the Bill Store is built.
+- Persisted as `roundUpPayments` (boolean, default `false`) on the Bill (see Core Data Model).
+
+## Bill Summary Terminology and Display Order
+
+The live summary (and its richer final form) uses a fixed conceptual order and fixed product-oriented labels — never ad hoc synonyms for the same number in different places.
+
+1. **Original amount** — "Original amount" / "סכום מקורי" — the bill subtotal before tip (sum of every item's line total).
+2. **Tip** — "Tip" / "טיפ" — the calculated tip amount.
+3. **Subtotal** — "Subtotal" / "סכום ביניים" — original amount + tip. Shown **only when tip > 0**; when tip is zero, original amount + 0 = subtotal, so repeating it adds no information and the row is hidden.
+4. **Payment rounding** — "Payment rounding" / "עיגול סכומים" — the surplus created by Optional Payment Rounding. Shown **only when rounding is enabled and actually changes the total** (surplus > 0) — hidden rather than displaying a redundant `+₪0`.
+5. **Total to pay** — "Total to pay" / "סה"כ לתשלום" — always shown, always last: the payable grand total when rounding is active, otherwise the exact total (original amount + tip).
+
+The summary must never show two rows that are numerically identical purely for "completeness" — every visible row has to add information the reader doesn't already have. Concrete cases:
+
+- Tip > 0, rounding active: Original amount → Tip → Subtotal → Payment rounding (+X) → Total to pay.
+- Tip = 0, rounding inactive: Original amount → Tip (₪0.00) → Total to pay (equals original amount). No Subtotal row.
+- Tip = 0, rounding active: Original amount → Tip (₪0.00) → Payment rounding (+X) → Total to pay. Subtotal is still hidden — it would equal the original amount.
+- Tip > 0, rounding inactive: Original amount → Tip → Subtotal → Total to pay (equals subtotal). No Payment rounding row.
+
+These English labels are **product copy**, not mechanical translations of the Hebrew (or vice versa) — each language's phrasing is chosen to sound natural on its own.
 
 ## Hebrew and English Support
 
@@ -133,6 +153,18 @@ A **presentation/payment layer only** — it never touches the exact calculation
 - Use CSS/Tailwind **logical properties** everywhere (`ms-`/`me-`/`ps-`/`pe-`, `start`/`end`) — never physical `ml-`/`mr-`/`pl-`/`pr-` or `left`/`right` positioning for anything that should mirror between RTL and LTR.
 - Set `dir` on `<html>` based on the active interface locale.
 - This is treated as a hard rule from the first component built, not a cleanup pass — retrofitting RTL later is expensive; building it in from line one is not.
+
+## Visual System
+
+Concrete conventions that keep the "premium consumer app" bar consistent as more screens get built — apply these rather than inventing new patterns per screen:
+
+- **Card surfaces:** `rounded-2xl` (or `-3xl` for larger hero surfaces), `bg-card`, a soft border at reduced opacity (`border-border/60`) rather than a full-strength border, and a shadow for depth instead of relying on the border alone.
+- **Two-tier shadow hierarchy:** `shadow-soft` for secondary/list rows, `shadow-elevated` for the single most important surface on a screen (e.g. the bill total card) and for hover-lift states — depth communicates importance, not decoration.
+- **Interactive states, applied consistently to every custom tappable element** (chips, cards, add actions): a hover lift (`hover:-translate-y-0.5 hover:shadow-elevated`) for pointer devices, a press-down (`active:scale-95` / `active:scale-[0.98]`), and a visible `focus-visible:ring-2 focus-visible:ring-ring/50` for keyboard navigation. Never ship a custom interactive element without all three.
+- **Section identity:** each canvas section (paying parties, dishes, summary) has a small uppercase label paired with a themed icon (`SectionHeading` — people/utensils/receipt) rather than a plain heading, reinforcing the restaurant/payment identity at a glance without literal illustration.
+- **Diner color as identity:** a diner's assigned color shows up everywhere they appear — avatar, chips, per-diner summary rows — via the shared soft-tint token map, never a one-off color. A `ring-2 ring-card` (or `border-2 border-card`) around avatars keeps overlapping/adjacent avatars visually separated against the card background.
+- **Numbers:** every displayed currency amount uses tabular figures (`tabular-nums`) so amounts align vertically in lists and don't jitter as animated totals change.
+- **Bottom sheets are mobile-proportioned everywhere**, including on desktop viewports — constrained width, centered, never edge-to-edge (see Responsive width above).
 
 ## Money Storage and Rounding Rules
 

@@ -6,15 +6,12 @@
     "startBillCta": "Start Splitting"
   },
   "Common": {
-    "cancel": "Cancel",
-    "subtotal": "Subtotal",
-    "tipAmount": "Tip",
-    "total": "Total"
+    "cancel": "Cancel"
   },
   "Diners": {
     "title": "Who's paying?",
     "defaultLabel": "Diner {number}",
-    "partySizeLabel": "Party size",
+    "partySizeLabel": "Number of diners",
     "addDiner": "Add someone",
     "removeDinerTitle": "Remove {name}?",
     "removeDinerSafeDescription": "No items will be left without a diner.",
@@ -34,7 +31,7 @@
     "priceLabel": "Price",
     "quantityLabel": "Quantity",
     "confirmAdd": "Add a dish",
-    "sharedByLabel": "Who had this?",
+    "sharedByLabel": "Who ordered this?",
     "deleteItem": "Remove this dish",
     "cannotDeselectLastDiner": "At least one diner must share this item"
   },
@@ -48,8 +45,12 @@
     "apply": "Apply"
   },
   "Summary": {
-    "roundUpToggleLabel": "Round up payments",
-    "rounding": "Rounding",
-    "totalPaid": "Total paid"
+    "title": "The Split",
+    "originalAmount": "Original amount",
+    "tip": "Tip",
+    "subtotal": "Subtotal",
+    "rounding": "Payment rounding",
+    "totalToPay": "Total to pay",
+    "roundUpToggleLabel": "Round up payments"
   }
 }

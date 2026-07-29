@@ -1,8 +1,10 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { Users } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { SectionHeading } from '@/components/shared/section-heading'
 import { useBillStore } from '@/lib/store/bill-store'
 import { getDinerDefaultPositions } from '@/lib/store/selectors'
 import type { Bill } from '@/lib/store/types'
@@ -33,7 +35,7 @@ export function PayingPartiesSection({ bill }: { bill: Bill }) {
 
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="px-1 text-sm font-medium text-muted-foreground">{t('title')}</h2>
+      <SectionHeading icon={Users} title={t('title')} />
 
       <div className="flex flex-wrap items-center gap-2">
         <AnimatePresence initial={false}>

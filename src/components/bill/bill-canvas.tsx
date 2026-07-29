@@ -11,7 +11,7 @@ export function BillCanvas() {
   if (!bill) return null
 
   return (
-    <div className="safe-top safe-bottom safe-x flex min-h-dvh flex-col gap-6 px-4 py-6">
+    <div className="safe-top safe-bottom safe-x flex min-h-dvh flex-col gap-8 px-4 py-8">
       <PayingPartiesSection bill={bill} />
       <ItemsSection bill={bill} />
       <LiveSummarySection bill={bill} />
