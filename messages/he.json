@@ -1,13 +1,13 @@
 {
   "App": {
-    "name": "צ'ק פליז",
     "tagline": "מפצלים את החשבון. בלי חשבונות."
   },
   "Home": {
     "comingSoon": "תהליך פיצול החשבון בדרך."
   },
-  "LanguageSwitcher": {
-    "label": "שפה",
+  "Settings": {
+    "label": "הגדרות",
+    "language": "שפה",
     "en": "English",
     "he": "עברית"
   }

@@ -4,6 +4,7 @@ import { NextIntlClientProvider, hasLocale } from 'next-intl'
 import { getMessages, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import { routing, localeDirections, type AppLocale } from '@/i18n/routing'
+import { BRAND_NAME } from '@/lib/brand'
 import '../globals.css'
 
 const heebo = Heebo({
@@ -17,13 +18,13 @@ export function generateStaticParams() {
 }
 
 export const metadata: Metadata = {
-  title: "Check Please",
+  title: BRAND_NAME,
   description: 'Split the bill. Skip the math.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Check Please',
+    title: BRAND_NAME,
   },
   icons: {
     icon: '/icons/icon.svg',

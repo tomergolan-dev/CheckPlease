@@ -1,13 +1,13 @@
 {
   "App": {
-    "name": "Check Please",
     "tagline": "Split the bill. Skip the math."
   },
   "Home": {
     "comingSoon": "The bill-splitting flow is coming next."
   },
-  "LanguageSwitcher": {
-    "label": "Language",
+  "Settings": {
+    "label": "Settings",
+    "language": "Language",
     "en": "English",
     "he": "עברית"
   }
