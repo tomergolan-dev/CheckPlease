@@ -7,9 +7,6 @@
   },
   "Common": {
     "cancel": "ביטול",
-    "continue": "המשך",
-    "back": "חזרה",
-    "remove": "הסר",
     "subtotal": "סכום ביניים",
     "tipAmount": "טיפ",
     "total": "סה\"כ"
@@ -18,7 +15,7 @@
     "title": "מי משלם?",
     "defaultLabel": "סועד {number}",
     "partySizeLabel": "גודל הקבוצה",
-    "addDiner": "הוסף סועד",
+    "addDiner": "הוסף מישהו",
     "removeDinerTitle": "להסיר את {name}?",
     "removeDinerSafeDescription": "לא יישארו פריטים ללא סועד.",
     "removeDinerImpactDescription": "הפריטים הבאים משויכים רק ל-{name}. בחרו מי יקבל אותם לפני ההסרה.",
@@ -27,33 +24,27 @@
     "includeExistingItemsQuestion": "לשייך את הסועד הזה גם לפריטים הקיימים?",
     "includeYes": "כן, לשייך לכל הפריטים הקיימים",
     "includeNo": "לא, אני אשייך ידנית",
-    "confirmAdd": "הוסף סועד",
-    "needAtLeastOneDiner": "הוסיפו לפחות סועד אחד כדי להמשיך"
+    "confirmAdd": "הוסף סועד"
   },
   "Items": {
-    "title": "פריטים",
-    "addItem": "הוסף פריט",
-    "nameLabel": "שם הפריט",
+    "title": "מנות",
+    "addItem": "הוסף מנה",
+    "nameLabel": "שם המנה",
     "namePlaceholder": "לדוגמה: פיצה",
     "priceLabel": "מחיר",
     "quantityLabel": "כמות",
-    "confirmAdd": "הוסף פריט",
-    "editTitle": "עריכת פריט",
-    "sharedByLabel": "משותף עם",
-    "deleteItem": "מחק פריט",
-    "needAtLeastOneItem": "הוסיפו לפחות פריט אחד כדי להמשיך",
+    "confirmAdd": "הוסף מנה",
+    "sharedByLabel": "מי אכל מזה?",
+    "deleteItem": "הסר מנה",
     "cannotDeselectLastDiner": "לפחות סועד אחד חייב להיות משויך לפריט"
   },
   "Tip": {
     "title": "טיפ",
+    "addTip": "הוסף טיפ",
     "noTip": "בלי טיפ",
     "percentOnly": "{percent}%",
     "custom": "מותאם אישית",
     "customPercentageLabel": "אחוז מותאם אישית",
     "apply": "החל"
-  },
-  "StepPlaceholder": {
-    "comingSoon": "השלב הזה בדרך.",
-    "summaryTitle": "סיכום"
   }
 }

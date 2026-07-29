@@ -14,6 +14,20 @@ Check Please is a real, startup-quality product — not a demo, portfolio piece,
 
 **Core UX principle:** the user should never have to think. Reduce taps whenever possible. Default choices match the most common real-life restaurant scenario. Never force unnecessary input.
 
+**Consumer app, not admin tool (permanent rule):** Check Please must feel like a delightful, casual consumer app used at a restaurant table — never like an admin CRUD system or a government form. This governs every screen built from here forward; see Consumer-App Interaction Model below for the concrete rules this implies.
+
+## Consumer-App Interaction Model
+
+This is a standing rule, not a one-time redesign — every future screen must be evaluated against it.
+
+- **One continuous, scrollable bill canvas — not a step wizard.** Paying parties, dishes, and the tip/live summary all live on the same growing screen, not separate full pages or routes. The user scrolls back to edit an earlier section directly; there is no "back" navigation through a sequence of steps.
+- **No forced "Continue" between routine sections.** A primary full-width call-to-action is reserved for a genuinely meaningful completion (e.g. "Start Splitting" on the intro screen) — never required just to move from paying parties to dishes to tip.
+- **All temporary editing happens in bottom sheets, compact chips, or inline expansion** — adding/editing a diner, adding/editing a dish, choosing a tip, confirming a removal. Never a dedicated full page just to edit one thing; the user should always feel like they're still inside the same bill.
+- **Warm, product-oriented copy over CRUD/admin language.** Prefer "Add a dish," "Add someone," "Who had this?" over "Add item," "Add record," "Edit entry," "Continue to next step." Icons and motion can communicate an action without a label at all when that's clearer than text. All copy must be localized naturally in Hebrew and English, not translated mechanically.
+- **Destructive controls stay secondary.** Removing a diner or dish lives inside its edit sheet as a secondary action, never a prominent icon sitting in the default row/card view.
+- **Motion supports comprehension, not decoration.** Newly added diners/dishes animate in (and out on removal); totals animate on change rather than snapping; bottom sheets feel connected to the bill beneath them. Respect `prefers-reduced-motion` everywhere motion is used. Polished, not gimmicky or childish — the bar is Apple Wallet / Airbnb, adapted to a friendly restaurant-sharing context.
+- **Responsive width:** mobile-first and thumb-friendly on phones. On larger viewports, constrain the experience to a centered, mobile-app-width canvas (not full-bleed) — the desktop view should read as a polished preview of the mobile product, never a stretched enterprise dashboard.
+
 ## Confirmed MVP Scope
 
 - Create a bill and manage diners (paying parties) dynamically throughout the flow
@@ -40,15 +54,14 @@ These are real future-vision features. The architecture must stay clean enough t
 
 ## Complete User Flow
 
-A single fluid, client-rendered bill flow with step-based internal state and animated transitions — **not** a separate Next.js route per step. Navigating back and forth must never lose data; it's all one persisted state object, not independent pages.
+One continuous, scrollable bill canvas — **not** a step wizard, not a separate Next.js route per section (see Consumer-App Interaction Model above). Everything lives in one persisted state object; scrolling back to an earlier section and editing it directly is the normal way to make changes, not a special case.
 
-1. **Start** — a polished onboarding/intro screen, not a marketing landing page: subtle motion, restaurant/bill/payment-themed illustration, very little text, one clear primary action (e.g. "Start Splitting"). Inspiration is Apple Wallet / Airbnb's first-open moment, not a website hero section. Pressing the primary action transitions smoothly into bill setup — it must never feel like navigating to a different page. The current foundation-stage screen (brand name, tagline, placeholder card) is temporary scaffolding, not this intended experience; it gets replaced by this onboarding screen when that work is scheduled. An optional restaurant/bill-name field is available once bill setup begins (see Data Model) but is never required and never blocks progress.
-2. **Diners** — add paying parties (see Paying-Party Model below). Diner management (add/rename/resize/remove) remains available from this point through the rest of the flow, not just at setup.
-3. **Items** — add items (name, unit price, quantity). Every new item is instantly assigned to all current diners. Tapping an item opens a bottom sheet to edit name/price/quantity, toggle which diners share it, or delete it.
-4. **Tip** — an optional, dedicated Tip action/card on the main bill interface, showing current state ("No tip" / "10% tip" / etc.). Tapping it opens a bottom sheet (see Tip Behavior below).
-5. **Summary** — per-diner cards (subtotal → tip → total) plus a grand total.
+1. **Start** — a polished onboarding/intro screen, not a marketing landing page: subtle motion, restaurant/bill/payment-themed illustration, very little text, one clear primary action (e.g. "Start Splitting"). Inspiration is Apple Wallet / Airbnb's first-open moment, not a website hero section. Pressing the primary action transitions smoothly into the bill canvas — it must never feel like navigating to a different page. The current foundation-stage screen (brand name, tagline, "Start a new bill" button) is temporary scaffolding, not this intended experience; it gets replaced by this onboarding screen when that work is scheduled. An optional restaurant/bill-name field is available once bill setup begins (see Data Model) but is never required and never blocks progress.
+2. **Paying parties** — a row of tappable diner chips (colored avatar, name, a party-size badge only when greater than one) plus a round "+" action to add someone (see Paying-Party Model below). Tapping a chip opens a compact edit sheet (rename, party size, "remove" tucked in as a secondary action). Diner management is available here at any time, by scrolling back to this section — not through backward navigation.
+3. **Dishes** — item cards (name, line total, ×qty when greater than one, avatars of who's sharing it) grow the list as they're added. A round "+" action opens an add sheet; tapping an existing card opens its edit sheet to change name/price/quantity, toggle which diners share it, or remove it.
+4. **Tip + live summary** — appears once at least one dish exists, so the user can see the subtotal before deciding on a tip (mirroring how people actually tip at a table). A compact tip chip ("Add tip" / "12%") opens the same bottom sheet described in Tip Behavior. Beneath it, a continuously updating summary — subtotal, tip, total, and each diner's current total — that never waits for an isolated "final" page to appear or update.
 
-All interactive editing (diner management, item editing, tip selection, removal confirmation) uses a **consistent mobile bottom-sheet pattern** — this is the primary interaction primitive of the app, not an exception.
+All interactive editing (diner management, item editing, tip selection, removal confirmation) uses **bottom sheets, compact chips, or inline expansion** — this is the primary interaction primitive of the app, not an exception. See Consumer-App Interaction Model for the full standing rule this follows from.
 
 ## Paying-Party Model
 
@@ -86,9 +99,10 @@ Diners can be added, renamed, resized, or removed **at any point** in the flow, 
 
 ## Tip Behavior
 
-- Tip is **optional**, defaulting to "No Tip." It is never a mandatory step blocking progress to the summary.
-- No slider. A dedicated Tip action/card on the main bill interface shows the current state: No tip / 10% / 12% / 15% / Custom.
-- Tapping it opens a bottom sheet with fixed choices: **No Tip (0%) · 10% · 12% · 15% · Custom** (custom opens a numeric input inline within the same sheet).
+- Tip is **optional**, defaulting to "No Tip." It is never a mandatory step and never a dedicated page — it's a compact chip inside the live summary area (see Complete User Flow), appearing only once there's at least one dish, so the user sees the subtotal before deciding on a tip (mirroring real restaurant behavior).
+- No slider. The chip shows the current state ("Add tip" when unset, or the active percentage).
+- Tapping it opens a bottom sheet with fixed choices: **No Tip (0%) · 10% · 12% · 15% · Custom** (custom opens a numeric input inline within the same sheet). Selecting a preset applies immediately and closes the sheet in one tap; Custom requires an explicit Apply since it needs typed input.
+- The user can reopen this control and change the tip at any time, with no need to re-enter or reconfirm anything else.
 - Tip is calculated **proportionally to each diner's item subtotal** — never split equally across diners regardless of what they ordered.
 - On confirmation, every diner's subtotal, tip amount, and final total update immediately, with a subtle animation — not an abrupt jump.
 - Tip percentage is stored internally as **integer basis points**, never a decimal float, so that custom values (including fractional percentages like 12.5%) stay exact: 0% = `0`, 10% = `1000`, 12% = `1200`, 12.5% = `1250`, 15% = `1500`. Basis points are only ever used to derive an integer minor-unit tip amount (see Money Storage and Rounding Rules) — the final tip and totals are still calculated and rounded strictly in integer minor currency units.
@@ -145,11 +159,12 @@ Both manual entry and (future) AI receipt scanning must produce the exact same `
 
 - **Framework:** Next.js (App Router), TypeScript, Tailwind CSS, shadcn/ui, Lucide icons.
 - **Routing:** an `[locale]` segment (`en` / `he`) via `next-intl` for routing, message catalogs, and `Intl`-based number/currency formatting. Locale is a top-level routing concern, separate from and not in conflict with the single-route, step-based bill flow.
-- **State:** a Zustand store (`src/lib/store/bill-store.ts`) holding the active bill (diners, items, tip, current step), persisted to `localStorage` via Zustand's `persist` middleware — this satisfies the auto-save requirement without bespoke persistence code. Persistence is skipped on initial hydration (`skipHydration`) and rehydrated explicitly from a client-only effect (`HydrateBillStore`) so the first server-rendered pass and the first client pass always match; the storage factory falls back to a no-op outside the browser so the module is safe to import from anywhere. Derived totals are never stored — they're computed on demand from `src/lib/store/selectors.ts`, which calls straight into the calculation engine.
+- **State:** a Zustand store (`src/lib/store/bill-store.ts`) holding the active bill (diners, items, tip), persisted to `localStorage` via Zustand's `persist` middleware — this satisfies the auto-save requirement without bespoke persistence code. There is no "current step" in the store — the UI is one continuous canvas, not a wizard (see Consumer-App Interaction Model). Persistence is skipped on initial hydration (`skipHydration`) and rehydrated explicitly from a client-only effect (`HydrateBillStore`) so the first server-rendered pass and the first client pass always match; the storage factory falls back to a no-op outside the browser so the module is safe to import from anywhere. Derived totals are never stored — they're computed on demand from `src/lib/store/selectors.ts`, which calls straight into the calculation engine.
 - **Calculation engine:** pure, framework-free functions with zero UI coupling, fully unit-tested in isolation. This is the one part of the codebase that must be bulletproof, since it's the trust-critical core of the whole product.
 - **Component styling:** shadcn primitives are a starting point, not the finished look — they need a real custom theme (color tokens, radius, shadow) to reach the Apple Wallet / Linear / Stripe aesthetic. Default shadcn theming does not meet the bar.
-- **Interaction primitive:** bottom sheets (shadcn's `Drawer`, Vaul-based) are the core, reused pattern for item editing, diner management, tip selection, and removal confirmation. Prefer mobile-native patterns generally — bottom sheets, contextual/inline editing, tap-first interactions — over traditional web forms. Floating action buttons are **not** a mandatory pattern; use one only where it genuinely improves discoverability and doesn't compete with a screen's primary action — a sticky bottom action button or an inline action may be the better fit elsewhere. Choose per screen based on clarity and usability, not visual novelty.
-- **Animation:** step transitions and animated total updates use a lightweight animation layer (Framer Motion). Animated number/currency updates are a small custom hook on top of it, not a separate dependency.
+- **Interaction primitive:** bottom sheets (shadcn's `Drawer`, Vaul-based) are the core, reused pattern for item editing, diner management, tip selection, and removal confirmation — never a dedicated full page for a routine edit. Prefer mobile-native patterns generally — bottom sheets, chips, contextual/inline editing, tap-first interactions — over traditional web forms. Floating action buttons are **not** a mandatory pattern; use one only where it genuinely improves discoverability and doesn't compete with a screen's primary action — a sticky bottom action button or an inline action may be the better fit elsewhere. Choose per screen based on clarity and usability, not visual novelty.
+- **Animation:** list insertion/removal (diners, dishes) and animated total updates use a lightweight animation layer (Framer Motion), respecting `prefers-reduced-motion`. Animated number/currency updates are a small custom hook (`useAnimatedNumber`) on top of it, not a separate dependency.
+- **Responsive layout:** the bill canvas is constrained to a centered, mobile-app-width column (not full-bleed) at all viewport sizes — desktop is a polished preview of the mobile product, not a stretched dashboard.
 - **PWA:** the MVP foundation is manifest, icons, safe-area (`env()`) insets, standalone display mode, theme color, and correct mobile viewport behavior — enough to be installable. A service worker and offline/asset caching are **explicitly deferred** until the primary bill flow is stable and tested, to avoid stale-asset and dev-caching issues while the app is still changing quickly. Native wrapping (Capacitor) is a later, separate step that should require no application code changes if the PWA layer is done correctly. No native or React Native implementation at this stage.
 
 ## Folder and Component Conventions
@@ -188,10 +203,10 @@ Build incrementally in this sequence; each stage should be working and reviewed 
 
 1. **Calculation engine** — pure, framework-free money/split/tip math (see Money Storage and Rounding Rules), fully unit-tested in isolation before any UI depends on it.
 2. **Bill state** — the Zustand store and persisted data model (Bill/Diner/Item/Tip) that the UI will read and mutate.
-3. **Paying-party flow** — add/rename/resize/remove diners, including the impact-aware removal flow.
-4. **Item flow** — add/edit/delete items, default-all-diners assignment, the assignment bottom sheet.
-5. **Tip flow** — the Tip action/card and bottom sheet.
-6. **Summary** — per-diner and grand-total display.
-7. **Polish** — the premium onboarding/intro screen (replacing the temporary foundation placeholder), transitions, animation detail.
+3. **Paying parties** — add/rename/resize/remove diners as a section of the continuous bill canvas, including the impact-aware removal flow.
+4. **Dishes** — add/edit/remove items as a section of the same canvas, default-all-diners assignment, the assignment bottom sheet.
+5. **Tip + live summary** — the tip chip and bottom sheet, plus a continuously updating subtotal/tip/total and per-diner summary (see Complete User Flow) — not a separate step or page.
+6. **Complete final summary** — enriching the already-live summary with the Optional Payment Rounding toggle and any remaining final-reveal polish, not building a summary page from scratch.
+7. **Polish** — the premium onboarding/intro screen (replacing the temporary foundation placeholder), deeper transition/animation detail.
 
-The onboarding/intro screen described under Complete User Flow is intentionally sequenced late (Polish), not first — the core bill-splitting mechanics need to exist and work before the first-impression experience is worth investing in.
+Steps 3–5 are not separate pages — they're sections of one continuous canvas (see Consumer-App Interaction Model), built and reviewed in this order but always presented together. The onboarding/intro screen described under Complete User Flow is intentionally sequenced last (Polish), not first — the core bill-splitting mechanics need to exist and work before the first-impression experience is worth investing in.

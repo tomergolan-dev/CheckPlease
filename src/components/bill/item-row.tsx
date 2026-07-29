@@ -20,7 +20,7 @@ export function ItemRow({
     <button
       type="button"
       onClick={() => onOpen(item.id)}
-      className="flex items-center gap-3 rounded-2xl border border-border bg-card px-3 py-2.5 text-start shadow-soft"
+      className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card px-3 py-2.5 text-start shadow-soft transition-transform active:scale-[0.98]"
     >
       <div className="flex flex-1 flex-col gap-0.5">
         <span className="truncate text-sm font-medium">

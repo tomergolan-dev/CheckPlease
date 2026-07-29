@@ -57,9 +57,11 @@ export function AddItemSheet() {
       <DrawerTrigger asChild>
         <button
           type="button"
-          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-border py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="flex items-center gap-2 self-start rounded-full border border-dashed border-border py-1 ps-1 pe-3 text-sm font-medium text-muted-foreground transition-all hover:border-primary hover:text-foreground active:scale-95"
         >
-          <Plus className="size-4" />
+          <span className="flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground">
+            <Plus className="size-4" />
+          </span>
           {t('addItem')}
         </button>
       </DrawerTrigger>

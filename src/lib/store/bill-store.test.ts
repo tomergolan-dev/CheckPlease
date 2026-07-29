@@ -3,7 +3,7 @@ import { useBillStore } from './bill-store'
 import { getDinerDefaultPositions } from './selectors'
 
 beforeEach(() => {
-  useBillStore.setState({ bill: null, currentStep: 'diners' })
+  useBillStore.setState({ bill: null })
 })
 
 function start() {
@@ -13,7 +13,7 @@ function start() {
 describe('startNewBill', () => {
   it('creates an empty bill with the expected defaults', () => {
     start()
-    const { bill, currentStep } = useBillStore.getState()
+    const { bill } = useBillStore.getState()
     expect(bill).toMatchObject({
       currency: 'ILS',
       roundUpPayments: false,
@@ -21,7 +21,6 @@ describe('startNewBill', () => {
       items: [],
       tip: { mode: 'percentage', valueBasisPoints: 0 },
     })
-    expect(currentStep).toBe('diners')
   })
 })
 
@@ -246,16 +245,10 @@ describe('setTip / setRoundUpPayments / setRestaurantName', () => {
   })
 })
 
-describe('discardBill / goToStep', () => {
+describe('discardBill', () => {
   it('discards the active bill', () => {
     start()
     useBillStore.getState().discardBill()
     expect(useBillStore.getState().bill).toBeNull()
-  })
-
-  it('changes the current step', () => {
-    start()
-    useBillStore.getState().goToStep('tip')
-    expect(useBillStore.getState().currentStep).toBe('tip')
   })
 })

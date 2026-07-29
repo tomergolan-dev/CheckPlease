@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { colorTokenForIndex } from './palette'
 import { getDinerRemovalImpact } from './selectors'
-import type { Bill, BillStep, Diner, Item } from './types'
+import type { Bill, Diner, Item } from './types'
 import type { TipConfig } from '@/lib/money'
 
 function nextSortIndex(items: Item[]): number {
@@ -26,11 +26,9 @@ function touch(): Pick<Bill, 'updatedAt'> {
 
 export interface BillStore {
   bill: Bill | null
-  currentStep: BillStep
 
   startNewBill: () => void
   discardBill: () => void
-  goToStep: (step: BillStep) => void
 
   setRestaurantName: (name: string) => void
   setRoundUpPayments: (enabled: boolean) => void
@@ -55,7 +53,6 @@ export const useBillStore = create<BillStore>()(
   persist(
     (set, get) => ({
       bill: null,
-      currentStep: 'diners',
 
       startNewBill: () => {
         const now = Date.now()
@@ -71,13 +68,10 @@ export const useBillStore = create<BillStore>()(
             items: [],
             tip: { mode: 'percentage', valueBasisPoints: 0 },
           },
-          currentStep: 'diners',
         })
       },
 
-      discardBill: () => set({ bill: null, currentStep: 'diners' }),
-
-      goToStep: (step) => set({ currentStep: step }),
+      discardBill: () => set({ bill: null }),
 
       setRestaurantName: (name) => {
         const bill = get().bill

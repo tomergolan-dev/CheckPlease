@@ -7,9 +7,6 @@
   },
   "Common": {
     "cancel": "Cancel",
-    "continue": "Continue",
-    "back": "Back",
-    "remove": "Remove",
     "subtotal": "Subtotal",
     "tipAmount": "Tip",
     "total": "Total"
@@ -18,7 +15,7 @@
     "title": "Who's paying?",
     "defaultLabel": "Diner {number}",
     "partySizeLabel": "Party size",
-    "addDiner": "Add diner",
+    "addDiner": "Add someone",
     "removeDinerTitle": "Remove {name}?",
     "removeDinerSafeDescription": "No items will be left without a diner.",
     "removeDinerImpactDescription": "These items are only assigned to {name}. Choose who takes them over before removing.",
@@ -27,33 +24,27 @@
     "includeExistingItemsQuestion": "Should this diner be included in the existing items?",
     "includeYes": "Yes, include in all existing items",
     "includeNo": "No, I'll assign items manually",
-    "confirmAdd": "Add diner",
-    "needAtLeastOneDiner": "Add at least one diner to continue"
+    "confirmAdd": "Add diner"
   },
   "Items": {
-    "title": "Items",
-    "addItem": "Add item",
-    "nameLabel": "Item name",
+    "title": "Dishes",
+    "addItem": "Add a dish",
+    "nameLabel": "Dish name",
     "namePlaceholder": "e.g. Pizza",
     "priceLabel": "Price",
     "quantityLabel": "Quantity",
-    "confirmAdd": "Add item",
-    "editTitle": "Edit item",
-    "sharedByLabel": "Shared by",
-    "deleteItem": "Delete item",
-    "needAtLeastOneItem": "Add at least one item to continue",
+    "confirmAdd": "Add a dish",
+    "sharedByLabel": "Who had this?",
+    "deleteItem": "Remove this dish",
     "cannotDeselectLastDiner": "At least one diner must share this item"
   },
   "Tip": {
     "title": "Tip",
+    "addTip": "Add tip",
     "noTip": "No tip",
     "percentOnly": "{percent}%",
     "custom": "Custom",
     "customPercentageLabel": "Custom percentage",
     "apply": "Apply"
-  },
-  "StepPlaceholder": {
-    "comingSoon": "This step is coming next.",
-    "summaryTitle": "Summary"
   }
 }

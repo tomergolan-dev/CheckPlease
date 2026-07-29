@@ -38,8 +38,6 @@ export interface Bill {
   tip: TipConfig
 }
 
-export type BillStep = 'diners' | 'items' | 'tip' | 'summary'
-
 export interface DinerRemovalImpact {
   /** Items that keep at least one other diner after removal — no action needed. */
   sharedItemIds: string[]

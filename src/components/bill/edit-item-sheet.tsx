@@ -1,7 +1,6 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Trash2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import {
@@ -79,7 +78,7 @@ export function EditItemSheet({ bill, itemId, onOpenChange }: EditItemSheetProps
     <Drawer open={Boolean(itemId)} onOpenChange={onOpenChange}>
       <DrawerContent>
         <DrawerHeader>
-          <DrawerTitle>{t('editTitle')}</DrawerTitle>
+          <DrawerTitle>{item.name}</DrawerTitle>
         </DrawerHeader>
 
         <ItemFormFields
@@ -113,13 +112,16 @@ export function EditItemSheet({ bill, itemId, onOpenChange }: EditItemSheetProps
         </div>
 
         <DrawerFooter>
-          <Button variant="destructive" onClick={handleDelete}>
-            <Trash2 />
-            {t('deleteItem')}
-          </Button>
           <DrawerClose asChild>
             <Button variant="outline">{tCommon('cancel')}</Button>
           </DrawerClose>
+          <button
+            type="button"
+            onClick={handleDelete}
+            className="py-1 text-center text-sm text-muted-foreground underline-offset-4 hover:underline"
+          >
+            {t('deleteItem')}
+          </button>
         </DrawerFooter>
       </DrawerContent>
     </Drawer>

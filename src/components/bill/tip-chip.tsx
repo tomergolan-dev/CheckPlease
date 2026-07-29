@@ -1,0 +1,29 @@
+'use client'
+
+import { useState } from 'react'
+import { HandCoins } from 'lucide-react'
+import { useTranslations } from 'next-intl'
+import { basisPointsToPercentage } from '@/lib/money'
+import type { Bill } from '@/lib/store/types'
+import { TipSheet } from './tip-sheet'
+
+export function TipChip({ bill }: { bill: Bill }) {
+  const t = useTranslations('Tip')
+  const [open, setOpen] = useState(false)
+  const bps = bill.tip.valueBasisPoints
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="flex items-center gap-2 self-start rounded-full border border-border bg-card py-1.5 ps-2 pe-3 text-sm font-medium shadow-soft transition-transform active:scale-95"
+      >
+        <HandCoins className="size-4 text-primary" />
+        {bps === 0 ? t('addTip') : t('percentOnly', { percent: basisPointsToPercentage(bps) })}
+      </button>
+
+      <TipSheet bill={bill} open={open} onOpenChange={setOpen} />
+    </>
+  )
+}
