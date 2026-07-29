@@ -46,5 +46,10 @@
     "custom": "מותאם אישית",
     "customPercentageLabel": "אחוז מותאם אישית",
     "apply": "החל"
+  },
+  "Summary": {
+    "roundUpToggleLabel": "לעגל סכומים כלפי מעלה",
+    "rounding": "עיגול סכומים",
+    "totalPaid": "סה\"כ שולם"
   }
 }

@@ -46,5 +46,10 @@
     "custom": "Custom",
     "customPercentageLabel": "Custom percentage",
     "apply": "Apply"
+  },
+  "Summary": {
+    "roundUpToggleLabel": "Round up payments",
+    "rounding": "Rounding",
+    "totalPaid": "Total paid"
   }
 }
