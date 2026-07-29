@@ -91,6 +91,18 @@ Diners can be added, renamed, resized, or removed **at any point** in the flow, 
 - On confirmation, every diner's subtotal, tip amount, and final total update immediately, with a subtle animation — not an abrupt jump.
 - Tip percentage is stored internally as **integer basis points**, never a decimal float, so that custom values (including fractional percentages like 12.5%) stay exact: 0% = `0`, 10% = `1000`, 12% = `1200`, 12.5% = `1250`, 15% = `1500`. Basis points are only ever used to derive an integer minor-unit tip amount (see Money Storage and Rounding Rules) — the final tip and totals are still calculated and rounded strictly in integer minor currency units.
 
+## Optional Payment Rounding
+
+A **presentation/payment layer only** — it never touches the exact calculation engine, which remains the single source of truth for every amount. Implemented as a separate layer on top of the engine's `DinerTotal[]` output (`src/lib/money/payable.ts`), not as a change to `allocate.ts`/`items.ts`/`tip.ts`/`totals.ts`.
+
+- A toggle on the Summary screen — Hebrew label "לעגל סכומים כלפי מעלה" ("round amounts up") — **default OFF**.
+- When enabled, each diner's already-computed final total (subtotal + tip, exactly as the engine calculated it) is rounded **up** to the next whole shekel. Never rounds individual items, never rounds any intermediate calculation — only the one final per-diner number, and only after it's already exact.
+- If a diner's exact total is already a whole shekel amount, it's left unchanged.
+- Per-diner display: exact amount → payable amount, e.g. `₪33.33 → ₪34`. If already whole, just show the amount (no arrow) — no additional explanatory text.
+- Bill-level summary when enabled shows three lines: the exact bill total ("סה"כ חשבון"), the rounding surplus as a small `+` amount ("עיגול סכומים"), and the payable total actually collected ("סה"כ שולם") — e.g. `₪100` / `+₪2` / `₪102`. This makes where the extra money came from immediately obvious without any explanatory copy in the main UI (a small info icon with a short explanation may be added later if needed, but the primary experience stays minimal).
+- Toggling the option only changes what's *displayed* as payable — it never mutates the exact totals, and the exact grand total is always available regardless of the toggle state.
+- The Bill data model will need a persisted boolean for this toggle (see Core Data Model) when the Bill Store is built.
+
 ## Hebrew and English Support
 
 - Hebrew and English are both first-class languages from the beginning — Hebrew is not a translation layer bolted on later.
@@ -116,10 +128,11 @@ Diners can be added, renamed, resized, or removed **at any point** in the flow, 
   2. **Tip → diners**: the total tip (rounded to the nearest minor unit) is allocated across diners weighted by each diner's subtotal, summing exactly back to the total tip.
 - Invariant that must always hold and must be tested: the sum of all diners' final totals equals the bill's grand total exactly. No money is ever created or lost to rounding.
 - Architecture must not hardcode single-currency assumptions, even though ILS is the only currency shipped in MVP.
+- The optional payment-rounding feature (see Optional Payment Rounding) is layered strictly on top of these exact totals for display/payment purposes — it is not an exception to any of the rules above, and the engine itself never rounds up.
 
 ## Core Data Model (conceptual)
 
-- **Bill**: `id`, `createdAt`/`updatedAt`, `currency`, `locale`, `restaurantName?` (optional, never required, never blocks progress — labeled "Restaurant name — optional" / "שם המסעדה — לא חובה"), `diners[]`, `items[]`, `tip`
+- **Bill**: `id`, `createdAt`/`updatedAt`, `currency`, `locale`, `restaurantName?` (optional, never required, never blocks progress — labeled "Restaurant name — optional" / "שם המסעדה — לא חובה"), `diners[]`, `items[]`, `tip`, `roundUpPayments` (boolean, default `false` — the Optional Payment Rounding toggle)
 - **Diner**: `id`, `index`, `name?`, `partySize` (required, default `1`, display-only), `color`, derived avatar/initial
 - **Item**: `id`, `name`, `unitPriceMinorUnits`, `quantity` (default `1`, min `1`), `sharedBy: dinerId[]` (min length 1, always), `source: 'manual' | 'scanned'` (only `'manual'` used in MVP; field exists now so future AI-scanned items require no model change), ordering field
 - **Tip**: `{ mode: 'percentage', valueBasisPoints: number }` — percentage-only, stored as integer basis points (e.g. `1200` = 12%); no flat-amount tip mode in MVP

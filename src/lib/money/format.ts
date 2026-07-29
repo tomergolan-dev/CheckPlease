@@ -5,9 +5,12 @@ const CURRENCY_MINOR_UNIT_EXPONENT: Record<string, number> = {
   ILS: 2,
 }
 
+export function getCurrencyMinorUnitExponent(currency: string): number {
+  return CURRENCY_MINOR_UNIT_EXPONENT[currency] ?? 2
+}
+
 function minorUnitsToMajor(amount: MinorUnits, currency: string): number {
-  const exponent = CURRENCY_MINOR_UNIT_EXPONENT[currency] ?? 2
-  return amount / 10 ** exponent
+  return amount / 10 ** getCurrencyMinorUnitExponent(currency)
 }
 
 export function formatCurrency(amount: MinorUnits, currency: string, locale: string): string {
