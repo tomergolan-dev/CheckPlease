@@ -9,6 +9,7 @@ import { Stepper } from '@/components/shared/stepper'
 import { useBillStore } from '@/lib/store/bill-store'
 import type { Diner } from '@/lib/store/types'
 import { DinerAvatar } from './diner-avatar'
+import { useDinerLabel } from './use-diner-label'
 
 interface DinerRowProps {
   diner: Diner
@@ -21,8 +22,9 @@ export function DinerRow({ diner, defaultPosition, onRequestRemove }: DinerRowPr
   const tCommon = useTranslations('Common')
   const renameDiner = useBillStore((s) => s.renameDiner)
   const setDinerPartySize = useBillStore((s) => s.setDinerPartySize)
+  const dinerLabel = useDinerLabel()
 
-  const displayName = diner.name ?? t('defaultLabel', { number: defaultPosition ?? 0 })
+  const displayName = dinerLabel(diner, defaultPosition)
   const [isEditing, setIsEditing] = useState(false)
   const [draftName, setDraftName] = useState(displayName)
 

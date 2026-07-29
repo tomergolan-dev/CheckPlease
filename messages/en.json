@@ -27,9 +27,22 @@
     "confirmAdd": "Add diner",
     "needAtLeastOneDiner": "Add at least one diner to continue"
   },
+  "Items": {
+    "title": "Items",
+    "addItem": "Add item",
+    "nameLabel": "Item name",
+    "namePlaceholder": "e.g. Pizza",
+    "priceLabel": "Price",
+    "quantityLabel": "Quantity",
+    "confirmAdd": "Add item",
+    "editTitle": "Edit item",
+    "sharedByLabel": "Shared by",
+    "deleteItem": "Delete item",
+    "needAtLeastOneItem": "Add at least one item to continue",
+    "cannotDeselectLastDiner": "At least one diner must share this item"
+  },
   "StepPlaceholder": {
     "comingSoon": "This step is coming next.",
-    "itemsTitle": "Items",
     "tipTitle": "Tip",
     "summaryTitle": "Summary"
   }

@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useTranslations } from 'next-intl'
 import { useBillStore } from '@/lib/store/bill-store'
 import { DinersStep } from './diners-step'
+import { ItemsStep } from './items-step'
 import { StepPlaceholder } from './step-placeholder'
 import type { Bill } from '@/lib/store/types'
 
@@ -15,7 +16,7 @@ function StepContent({ bill }: { bill: Bill }) {
     case 'diners':
       return <DinersStep bill={bill} />
     case 'items':
-      return <StepPlaceholder title={t('itemsTitle')} step="items" />
+      return <ItemsStep bill={bill} />
     case 'tip':
       return <StepPlaceholder title={t('tipTitle')} step="tip" />
     case 'summary':

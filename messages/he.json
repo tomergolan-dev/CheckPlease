@@ -27,9 +27,22 @@
     "confirmAdd": "הוסף סועד",
     "needAtLeastOneDiner": "הוסיפו לפחות סועד אחד כדי להמשיך"
   },
+  "Items": {
+    "title": "פריטים",
+    "addItem": "הוסף פריט",
+    "nameLabel": "שם הפריט",
+    "namePlaceholder": "לדוגמה: פיצה",
+    "priceLabel": "מחיר",
+    "quantityLabel": "כמות",
+    "confirmAdd": "הוסף פריט",
+    "editTitle": "עריכת פריט",
+    "sharedByLabel": "משותף עם",
+    "deleteItem": "מחק פריט",
+    "needAtLeastOneItem": "הוסיפו לפחות פריט אחד כדי להמשיך",
+    "cannotDeselectLastDiner": "לפחות סועד אחד חייב להיות משויך לפריט"
+  },
   "StepPlaceholder": {
     "comingSoon": "השלב הזה בדרך.",
-    "itemsTitle": "פריטים",
     "tipTitle": "טיפ",
     "summaryTitle": "סיכום"
   }

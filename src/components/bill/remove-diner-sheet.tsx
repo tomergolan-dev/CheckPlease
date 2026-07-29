@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button'
 import { useBillStore } from '@/lib/store/bill-store'
 import { getDinerDefaultPositions, getDinerRemovalImpact } from '@/lib/store/selectors'
 import type { Bill } from '@/lib/store/types'
+import { useDinerLabel } from './use-diner-label'
 
 interface RemoveDinerSheetProps {
   bill: Bill
@@ -26,6 +27,7 @@ export function RemoveDinerSheet({ bill, dinerId, onOpenChange }: RemoveDinerShe
   const t = useTranslations('Diners')
   const tCommon = useTranslations('Common')
   const removeDiner = useBillStore((s) => s.removeDiner)
+  const dinerLabel = useDinerLabel()
   const [reassignments, setReassignments] = useState<Record<string, string>>({})
 
   // Keep showing the last-selected diner while the sheet animates closed, instead of
@@ -47,7 +49,7 @@ export function RemoveDinerSheet({ bill, dinerId, onOpenChange }: RemoveDinerShe
     return <Drawer open={false} onOpenChange={onOpenChange} />
   }
 
-  const dinerName = diner.name ?? t('defaultLabel', { number: positions[diner.id] ?? 0 })
+  const dinerName = dinerLabel(diner, positions[diner.id])
   const isResolved = impact.orphanedItemIds.every((itemId) => reassignments[itemId])
 
   function handleRemove() {
@@ -94,7 +96,7 @@ export function RemoveDinerSheet({ bill, dinerId, onOpenChange }: RemoveDinerShe
                     </option>
                     {remainingDiners.map((candidate) => (
                       <option key={candidate.id} value={candidate.id}>
-                        {candidate.name ?? t('defaultLabel', { number: positions[candidate.id] ?? 0 })}
+                        {dinerLabel(candidate, positions[candidate.id])}
                       </option>
                     ))}
                   </select>
