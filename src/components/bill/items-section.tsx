@@ -27,22 +27,30 @@ export function ItemsSection({ bill }: { bill: Bill }) {
       <SectionHeading icon={UtensilsCrossed} title={t('title')} />
 
       <div className="flex flex-col gap-2">
-        <AnimatePresence initial={false}>
-          {sortedItems.map((item) => (
-            <motion.div
-              key={item.id}
-              layout
-              initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={shouldReduceMotion ? undefined : { opacity: 0, y: -8 }}
-              transition={{ duration: 0.18 }}
-            >
-              <ItemRow item={item} bill={bill} positions={positions} onOpen={setEditItemId} />
-            </motion.div>
-          ))}
-        </AnimatePresence>
-
+        {/* Kept first, not last — stays one tap away regardless of how long the list grows. */}
         <AddItemSheet />
+
+        {sortedItems.length === 0 ? (
+          <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-border/60 px-6 py-8 text-center">
+            <UtensilsCrossed className="size-6 text-muted-foreground/50" />
+            <p className="text-sm text-muted-foreground">{t('emptyState')}</p>
+          </div>
+        ) : (
+          <AnimatePresence initial={false}>
+            {sortedItems.map((item) => (
+              <motion.div
+                key={item.id}
+                layout
+                initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={shouldReduceMotion ? undefined : { opacity: 0, y: -8 }}
+                transition={{ duration: 0.18 }}
+              >
+                <ItemRow item={item} bill={bill} positions={positions} onOpen={setEditItemId} />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        )}
       </div>
 
       <EditItemSheet bill={bill} itemId={editItemId} onOpenChange={(open) => !open && setEditItemId(null)} />

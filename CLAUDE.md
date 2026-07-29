@@ -100,6 +100,11 @@ Diners can be added, renamed, resized, or removed **at any point** in the flow, 
 - An item must always have at least one assigned diner. The UI must prevent deselecting the last remaining diner on an item and must clearly communicate why (disabled control + explanation), never allow it to silently fail or succeed.
 - New items default to being assigned to **all** current diners. This is the confirmed MVP default; a "sticky last selection" default was considered and explicitly deferred pending real usage testing.
 
+**Item-count edge cases:** unlike diners, a bill has no minimum item count — zero dishes is a normal, valid state (before the first one is added, or after deleting all of them), not an error to guard against.
+
+- **Empty state:** when there are no dishes yet, the Dishes section shows a small dashed-border placeholder (muted icon + one short line, "No dishes yet" / "עדיין אין מנות") in place of the list — not a bare section with nothing but the add action.
+- **Add action stays reachable regardless of list length:** the "Add a dish" action is positioned **before** the dish list, not after it — so it never requires scrolling past a long list (tens of dishes) to reach it. This is a plain reordering, not a sticky/floating element — no new interaction pattern introduced for what's explicitly not an extreme case to optimize for.
+
 ## Tip Behavior
 
 - Tip is **optional**, defaulting to "No Tip." It is never a mandatory step and never a dedicated page — it's a compact chip inside the live summary area (see Complete User Flow), appearing only once there's at least one dish, so the user sees the subtotal before deciding on a tip (mirroring real restaurant behavior).

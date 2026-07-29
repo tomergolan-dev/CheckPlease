@@ -34,7 +34,8 @@
     "confirmAdd": "הוסף מנה",
     "sharedByLabel": "מי הזמין את זה?",
     "deleteItem": "הסר מנה",
-    "cannotDeselectLastDiner": "לפחות סועד אחד חייב להיות משויך לפריט"
+    "cannotDeselectLastDiner": "לפחות סועד אחד חייב להיות משויך לפריט",
+    "emptyState": "עדיין אין מנות"
   },
   "Tip": {
     "title": "טיפ",

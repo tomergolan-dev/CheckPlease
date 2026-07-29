@@ -34,7 +34,8 @@
     "confirmAdd": "Add a dish",
     "sharedByLabel": "Who ordered this?",
     "deleteItem": "Remove this dish",
-    "cannotDeselectLastDiner": "At least one diner must share this item"
+    "cannotDeselectLastDiner": "At least one diner must share this item",
+    "emptyState": "No dishes yet"
   },
   "Tip": {
     "title": "Tip",
