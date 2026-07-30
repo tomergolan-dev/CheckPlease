@@ -10,6 +10,14 @@ type SupportedMediaType = (typeof SUPPORTED_MEDIA_TYPES)[number]
 /** Generous ceiling on the base64 payload — client-side compression keeps real uploads far below this. */
 const MAX_BASE64_LENGTH = 12_000_000
 
+/**
+ * Haiku 4.5 (the cheapest tier) proved too unreliable on real receipt photos in testing — too many
+ * misread names/prices. Sonnet 5 is the accuracy/cost middle ground: much stronger OCR-style vision
+ * than Haiku, still a fraction of Opus 5's price (and has introductory pricing through 2026-08-31).
+ * 'claude-opus-5' remains a one-line upgrade if Sonnet 5 still isn't accurate enough in practice.
+ */
+const MODEL = 'claude-sonnet-5'
+
 const RECEIPT_SCHEMA = {
   type: 'object',
   properties: {
@@ -33,6 +41,7 @@ const RECEIPT_SCHEMA = {
 const EXTRACTION_PROMPT = `This image is a photo of a restaurant receipt or bill. Extract every distinct food or drink line item together with its price, in the language it's printed in (do not translate names).
 
 Rules:
+- Read every digit carefully — double-check that each price you output matches exactly what's printed, including the decimal point. Misreading a digit is worse than leaving an item out.
 - Use each line's total price as printed (if a unit price and an extended/line total are both shown, use the line total, not the unit price).
 - If the same dish name appears on more than one line, keep each occurrence as a separate entry — do not merge them.
 - Exclude subtotal, tax/VAT, service charge, tip, discount, payment method, and grand-total lines.
@@ -78,7 +87,7 @@ export async function POST(request: Request) {
   let response: Anthropic.Message
   try {
     response = await client.messages.create({
-      model: 'claude-opus-5',
+      model: MODEL,
       max_tokens: 4096,
       output_config: {
         effort: 'medium',

@@ -137,6 +137,29 @@ describe('addItem / updateItem / removeItem', () => {
     store.removeItem(itemId)
     expect(useBillStore.getState().bill!.items).toEqual([])
   })
+
+  it('tags scanned items with source: scanned', () => {
+    start()
+    const store = useBillStore.getState()
+    store.addItem({ name: 'Pizza', unitPriceMinorUnits: 5000, source: 'scanned' })
+    expect(useBillStore.getState().bill!.items[0]!.source).toBe('scanned')
+  })
+})
+
+describe('clearItems', () => {
+  it('removes every item, leaving diners untouched', () => {
+    start()
+    const store = useBillStore.getState()
+    const d1 = store.addDiner()
+    store.addItem({ name: 'Pizza', unitPriceMinorUnits: 5000 })
+    store.addItem({ name: 'Salad', unitPriceMinorUnits: 3000 })
+
+    store.clearItems()
+
+    const { bill } = useBillStore.getState()
+    expect(bill!.items).toEqual([])
+    expect(bill!.diners.map((d) => d.id)).toEqual([d1])
+  })
 })
 
 describe('setItemDiners', () => {

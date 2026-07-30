@@ -29,12 +29,15 @@ interface DraftRow {
 
 type Step = 'picker' | 'processing' | 'review' | 'error'
 type ErrorCode = ScanReceiptErrorCode | 'no_items'
+type AddMode = 'append' | 'replace'
 
 export function ScanReceiptSheet() {
   const t = useTranslations('Items')
   const tCommon = useTranslations('Common')
   const addItem = useBillStore((s) => s.addItem)
+  const clearItems = useBillStore((s) => s.clearItems)
   const currency = useBillStore((s) => s.bill?.currency ?? 'ILS')
+  const existingItemsCount = useBillStore((s) => s.bill?.items.length ?? 0)
   const shouldReduceMotion = useReducedMotion()
 
   const [open, setOpen] = useState(false)
@@ -42,6 +45,7 @@ export function ScanReceiptSheet() {
   const [rows, setRows] = useState<DraftRow[]>([])
   const [errorCode, setErrorCode] = useState<ErrorCode | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [addMode, setAddMode] = useState<AddMode>('append')
 
   const cameraInputRef = useRef<HTMLInputElement>(null)
   const libraryInputRef = useRef<HTMLInputElement>(null)
@@ -50,6 +54,7 @@ export function ScanReceiptSheet() {
     setStep('picker')
     setRows([])
     setErrorCode(null)
+    setAddMode('append')
     setPreviewUrl((prev) => {
       if (prev) URL.revokeObjectURL(prev)
       return null
@@ -97,6 +102,9 @@ export function ScanReceiptSheet() {
   )
 
   function confirmReview() {
+    if (addMode === 'replace') {
+      clearItems()
+    }
     for (const row of rows) {
       if (!row.included) continue
       const name = row.name.trim()
@@ -166,7 +174,7 @@ export function ScanReceiptSheet() {
             {step === 'picker' && (
               <motion.div
                 key="picker"
-                className="flex flex-1 flex-col"
+                className="flex min-h-0 flex-1 flex-col"
                 initial={stepInitial}
                 animate={{ opacity: 1, y: 0 }}
                 exit={stepExit}
@@ -205,7 +213,7 @@ export function ScanReceiptSheet() {
             {step === 'processing' && (
               <motion.div
                 key="processing"
-                className="flex flex-1 flex-col"
+                className="flex min-h-0 flex-1 flex-col"
                 initial={stepInitial}
                 animate={{ opacity: 1, y: 0 }}
                 exit={stepExit}
@@ -232,7 +240,7 @@ export function ScanReceiptSheet() {
             {step === 'error' && (
               <motion.div
                 key="error"
-                className="flex flex-1 flex-col"
+                className="flex min-h-0 flex-1 flex-col"
                 initial={stepInitial}
                 animate={{ opacity: 1, y: 0 }}
                 exit={stepExit}
@@ -261,7 +269,7 @@ export function ScanReceiptSheet() {
             {step === 'review' && (
               <motion.div
                 key="review"
-                className="flex flex-1 flex-col"
+                className="flex min-h-0 flex-1 flex-col"
                 initial={stepInitial}
                 animate={{ opacity: 1, y: 0 }}
                 exit={stepExit}
@@ -314,6 +322,41 @@ export function ScanReceiptSheet() {
                   ))}
                 </div>
 
+                {existingItemsCount > 0 && (
+                  <div className="flex flex-col gap-2 border-t border-border/60 px-4 pt-3">
+                    <span className="text-sm font-medium text-muted-foreground">
+                      {t('scanExistingItemsQuestion')}
+                    </span>
+                    <div className="flex flex-col gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={addMode === 'append' ? 'default' : 'outline'}
+                        aria-pressed={addMode === 'append'}
+                        onClick={() => setAddMode('append')}
+                        className="justify-start"
+                      >
+                        {t('scanKeepExisting')}
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={addMode === 'replace' ? 'default' : 'outline'}
+                        aria-pressed={addMode === 'replace'}
+                        onClick={() => setAddMode('replace')}
+                        className="justify-start"
+                      >
+                        {t('scanReplaceExisting')}
+                      </Button>
+                    </div>
+                    {addMode === 'replace' && (
+                      <p className="text-xs text-muted-foreground">
+                        {t('scanReplaceWarning', { count: existingItemsCount })}
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between border-t border-border/60 px-4 py-2.5">
                   <span className="text-sm text-muted-foreground">{t('scanReviewTotal')}</span>
                   <span className="text-base font-semibold tabular-nums">
@@ -323,7 +366,9 @@ export function ScanReceiptSheet() {
 
                 <DrawerFooter>
                   <Button disabled={includedCount === 0} onClick={confirmReview}>
-                    {t('scanAddCount', { count: includedCount })}
+                    {addMode === 'replace'
+                      ? t('scanAddCountReplace', { count: includedCount })
+                      : t('scanAddCount', { count: includedCount })}
                   </Button>
                   <DrawerClose asChild>
                     <Button variant="outline">{tCommon('cancel')}</Button>

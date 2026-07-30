@@ -21,8 +21,9 @@ export class ScanReceiptError extends Error {
   }
 }
 
-const MAX_DIMENSION = 1600
-const JPEG_QUALITY = 0.85
+/** Sonnet 5's high-resolution vision tier caps at 2576px on the long edge — stay comfortably under that. */
+const MAX_DIMENSION = 2200
+const JPEG_QUALITY = 0.9
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer)

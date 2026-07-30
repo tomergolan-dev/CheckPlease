@@ -49,6 +49,7 @@ export interface BillStore {
     patch: Partial<Pick<Item, 'name' | 'unitPriceMinorUnits' | 'quantity'>>
   ) => void
   removeItem: (itemId: string) => void
+  clearItems: () => void
   setItemDiners: (itemId: string, dinerIds: string[]) => void
 
   setTip: (tip: TipConfig) => void
@@ -224,6 +225,12 @@ export const useBillStore = create<BillStore>()(
         const bill = get().bill
         if (!bill) return
         set({ bill: { ...bill, items: bill.items.filter((item) => item.id !== itemId), ...touch() } })
+      },
+
+      clearItems: () => {
+        const bill = get().bill
+        if (!bill) return
+        set({ bill: { ...bill, items: [], ...touch() } })
       },
 
       setItemDiners: (itemId, dinerIds) => {
