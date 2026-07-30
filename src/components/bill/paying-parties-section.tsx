@@ -35,7 +35,7 @@ export function PayingPartiesSection({ bill }: { bill: Bill }) {
 
   return (
     <section className="flex flex-col gap-3">
-      <SectionHeading icon={Users} title={t('title')} />
+      <SectionHeading icon={Users} title={t('title')} tone="blue" />
 
       <div className="flex flex-wrap items-center gap-2">
         <AnimatePresence initial={false}>
@@ -43,10 +43,12 @@ export function PayingPartiesSection({ bill }: { bill: Bill }) {
             <motion.div
               key={diner.id}
               layout
-              initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.85 }}
+              initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={shouldReduceMotion ? undefined : { opacity: 0, scale: 0.85 }}
-              transition={{ duration: 0.18 }}
+              transition={
+                shouldReduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 420, damping: 22 }
+              }
             >
               <DinerChip
                 diner={diner}

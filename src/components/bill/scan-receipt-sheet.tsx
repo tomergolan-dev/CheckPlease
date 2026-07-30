@@ -6,6 +6,7 @@ import { Camera, CircleX, Images, Loader2, Plus, ScanLine, X } from 'lucide-reac
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { IconBadge } from '@/components/shared/icon-badge'
 import { Stepper } from '@/components/shared/stepper'
 import {
   Drawer,
@@ -166,9 +167,7 @@ export function ScanReceiptSheet() {
             type="button"
             className="flex items-center gap-2 self-start rounded-full border border-dashed border-border py-1 ps-1 pe-3.5 text-sm font-medium text-muted-foreground transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:text-foreground hover:shadow-soft active:translate-y-0 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
           >
-            <span className="flex size-9 items-center justify-center rounded-full bg-accent text-accent-foreground">
-              <ScanLine className="size-4" />
-            </span>
+            <IconBadge icon={ScanLine} tone="violet" />
             {t('scanReceipt')}
           </button>
         </DrawerTrigger>
@@ -229,9 +228,7 @@ export function ScanReceiptSheet() {
                     <img src={previewUrl} alt="" className="h-48 w-full object-cover" />
                   )}
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background/75 text-center backdrop-blur-sm">
-                    <span className="flex size-12 items-center justify-center rounded-full bg-accent text-accent-foreground">
-                      <Loader2 className="size-5 animate-spin" />
-                    </span>
+                    <IconBadge icon={Loader2} tone="violet" size="lg" iconClassName="animate-spin" />
                     <div className="flex flex-col gap-0.5 px-6">
                       <p className="text-sm font-medium">{t('scanProcessingTitle')}</p>
                       <p className="text-xs text-muted-foreground">{t('scanProcessingHint')}</p>
@@ -291,7 +288,7 @@ export function ScanReceiptSheet() {
                       initial={shouldReduceMotion ? false : { opacity: 0, y: 6 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.16, delay: shouldReduceMotion ? 0 : index * 0.03 }}
-                      className={`flex items-center gap-2 rounded-xl border border-border/60 bg-card px-3 py-2 transition-opacity ${
+                      className={`flex items-center gap-2 rounded-xl border border-border/40 bg-card px-3 py-2 transition-opacity ${
                         row.included ? '' : 'opacity-40'
                       }`}
                     >
@@ -336,7 +333,7 @@ export function ScanReceiptSheet() {
                 </div>
 
                 {existingItemsCount > 0 && (
-                  <div className="flex flex-col gap-2 border-t border-border/60 px-4 pt-3">
+                  <div className="flex flex-col gap-2 border-t border-border/40 px-4 pt-3">
                     <span className="text-sm font-medium text-muted-foreground">
                       {t('scanExistingItemsQuestion')}
                     </span>
@@ -370,7 +367,7 @@ export function ScanReceiptSheet() {
                   </div>
                 )}
 
-                <div className="flex items-center justify-between border-t border-border/60 px-4 py-2.5">
+                <div className="flex items-center justify-between border-t border-border/40 px-4 py-2.5">
                   <span className="text-sm text-muted-foreground">{t('scanReviewTotal')}</span>
                   <span className="text-base font-semibold tabular-nums">
                     {formatCurrency(includedTotalMinorUnits, currency)}

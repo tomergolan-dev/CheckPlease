@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { UtensilsCrossed } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { IconBadge } from '@/components/shared/icon-badge'
 import { SectionHeading } from '@/components/shared/section-heading'
 import { getDinerDefaultPositions } from '@/lib/store/selectors'
 import type { Bill } from '@/lib/store/types'
@@ -25,7 +26,7 @@ export function ItemsSection({ bill }: { bill: Bill }) {
 
   return (
     <section className="flex flex-col gap-3">
-      <SectionHeading icon={UtensilsCrossed} title={t('title')} />
+      <SectionHeading icon={UtensilsCrossed} title={t('title')} tone="amber" />
 
       <div className="flex flex-col gap-2">
         {/* Kept first, not last — stays one tap away regardless of how long the list grows. */}
@@ -35,10 +36,8 @@ export function ItemsSection({ bill }: { bill: Bill }) {
         </div>
 
         {sortedItems.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border/60 px-6 py-8 text-center">
-            <span className="flex size-11 items-center justify-center rounded-full bg-accent text-accent-foreground">
-              <UtensilsCrossed className="size-5" />
-            </span>
+          <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border/40 px-6 py-8 text-center">
+            <IconBadge icon={UtensilsCrossed} tone="amber" size="lg" />
             <p className="text-sm text-muted-foreground">{t('emptyState')}</p>
           </div>
         ) : (
@@ -47,10 +46,12 @@ export function ItemsSection({ bill }: { bill: Bill }) {
               <motion.div
                 key={item.id}
                 layout
-                initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={shouldReduceMotion ? undefined : { opacity: 0, y: -8 }}
-                transition={{ duration: 0.18 }}
+                initial={shouldReduceMotion ? false : { opacity: 0, y: 8, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={shouldReduceMotion ? undefined : { opacity: 0, y: -8, scale: 0.97 }}
+                transition={
+                  shouldReduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 380, damping: 26 }
+                }
               >
                 <ItemRow item={item} bill={bill} positions={positions} onOpen={setEditItemId} />
               </motion.div>

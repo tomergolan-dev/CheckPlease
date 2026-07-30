@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
+import { IconBadge } from '@/components/shared/icon-badge'
 import {
   Drawer,
   DrawerClose,
@@ -42,9 +43,7 @@ export function AddDinerControl({ hasExistingItems }: { hasExistingItems: boolea
         onClick={handleAdd}
         className="flex items-center gap-2 rounded-full border border-dashed border-border py-1 ps-1 pe-3.5 text-sm font-medium text-muted-foreground transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:text-foreground hover:shadow-soft active:translate-y-0 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
       >
-        <span className="flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground">
-          <Plus className="size-4" />
-        </span>
+        <IconBadge icon={Plus} tone="blue" />
         {t('addDiner')}
       </button>
 
