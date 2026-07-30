@@ -114,6 +114,7 @@ Diners can be added, renamed, resized, or removed **at any point** in the flow, 
 - Tip is calculated **proportionally to each diner's item subtotal** — never split equally across diners regardless of what they ordered.
 - On confirmation, every diner's subtotal, tip amount, and final total update immediately, with a subtle animation — not an abrupt jump.
 - Tip percentage is stored internally as **integer basis points**, never a decimal float, so that custom values (including fractional percentages like 12.5%) stay exact: 0% = `0`, 10% = `1000`, 12% = `1200`, 12.5% = `1250`, 15% = `1500`. Basis points are only ever used to derive an integer minor-unit tip amount (see Money Storage and Rounding Rules) — the final tip and totals are still calculated and rounded strictly in integer minor currency units.
+- **Custom tip input is validated, never silently coerced.** Non-numeric or malformed input (e.g. "abc", "12abc") must never silently fall back to a plausible-looking 0% — Apply stays disabled and a clear inline error shows once the field is non-empty and invalid. A comma decimal separator ("12,5") is accepted identically to a period ("12.5") and normalized automatically — no error shown for that, since it's valid input in a different, expected notation, not a mistake. No upper bound on the custom percentage in MVP; revisit only if product requirements change.
 
 ## Optional Payment Rounding
 

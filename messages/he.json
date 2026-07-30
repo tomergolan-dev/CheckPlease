@@ -44,7 +44,8 @@
     "percentOnly": "{percent}%",
     "custom": "מותאם אישית",
     "customPercentageLabel": "אחוז מותאם אישית",
-    "apply": "החל"
+    "apply": "החל",
+    "invalidPercentage": "יש להזין אחוז תקין"
   },
   "Summary": {
     "title": "החלוקה",

@@ -44,7 +44,8 @@
     "percentOnly": "{percent}%",
     "custom": "Custom",
     "customPercentageLabel": "Custom percentage",
-    "apply": "Apply"
+    "apply": "Apply",
+    "invalidPercentage": "Enter a valid percentage"
   },
   "Summary": {
     "title": "The Split",

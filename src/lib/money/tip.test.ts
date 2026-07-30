@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { basisPointsToPercentage, computeDinerTipShares, computeTipTotal, percentageToBasisPoints } from './tip'
+import {
+  basisPointsToPercentage,
+  computeDinerTipShares,
+  computeTipTotal,
+  normalizePercentageInput,
+  parsePercentageInput,
+  percentageToBasisPoints,
+} from './tip'
 
 describe('percentageToBasisPoints', () => {
   it('matches the basis-point examples from the spec', () => {
@@ -20,6 +27,57 @@ describe('basisPointsToPercentage', () => {
   it('round-trips with percentageToBasisPoints', () => {
     expect(basisPointsToPercentage(percentageToBasisPoints(12.5))).toBe(12.5)
     expect(basisPointsToPercentage(0)).toBe(0)
+  })
+})
+
+describe('normalizePercentageInput', () => {
+  it('converts a comma decimal separator to a period', () => {
+    expect(normalizePercentageInput('12,5')).toBe('12.5')
+  })
+
+  it('leaves a period separator unchanged', () => {
+    expect(normalizePercentageInput('12.5')).toBe('12.5')
+  })
+
+  it('trims surrounding whitespace', () => {
+    expect(normalizePercentageInput('  12  ')).toBe('12')
+  })
+})
+
+describe('parsePercentageInput', () => {
+  it('parses plain integers and decimals', () => {
+    expect(parsePercentageInput('12')).toBe(12)
+    expect(parsePercentageInput('12.5')).toBe(12.5)
+    expect(parsePercentageInput('.5')).toBe(0.5)
+  })
+
+  it('accepts a comma decimal separator identically to a period', () => {
+    expect(parsePercentageInput('12,5')).toBe(12.5)
+  })
+
+  it('returns null for non-numeric input instead of silently falling back', () => {
+    expect(parsePercentageInput('abc')).toBeNull()
+    expect(parsePercentageInput('12abc')).toBeNull()
+    expect(parsePercentageInput('abc12')).toBeNull()
+  })
+
+  it('returns null for empty or whitespace-only input', () => {
+    expect(parsePercentageInput('')).toBeNull()
+    expect(parsePercentageInput('   ')).toBeNull()
+  })
+
+  it('returns null for a negative value rather than silently clamping to zero', () => {
+    expect(parsePercentageInput('-5')).toBeNull()
+  })
+
+  it('returns null for malformed decimals', () => {
+    expect(parsePercentageInput('12.5.6')).toBeNull()
+    expect(parsePercentageInput('.')).toBeNull()
+    expect(parsePercentageInput(',')).toBeNull()
+  })
+
+  it('accepts a trailing decimal point with no digits after it', () => {
+    expect(parsePercentageInput('12.')).toBe(12)
   })
 })
 

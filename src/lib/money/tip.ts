@@ -10,6 +10,28 @@ export function percentageToBasisPoints(percentage: number): number {
   return Math.round(percentage * BASIS_POINTS_PER_PERCENT)
 }
 
+/** A non-negative decimal number, optionally with a fractional part — "12", "12.5", ".5" all match. */
+const VALID_PERCENTAGE_PATTERN = /^(\d+(\.\d*)?|\.\d+)$/
+
+/**
+ * Accepts a comma as a decimal separator (common on Hebrew/mobile keyboards) and normalizes
+ * it to a period, so "12,5" and "12.5" are equivalent without the user having to think about it.
+ */
+export function normalizePercentageInput(value: string): string {
+  return value.trim().replace(',', '.')
+}
+
+/**
+ * Parses a user-typed percentage string for the custom tip input. Returns `null` for anything
+ * that isn't a clean non-negative number — including trailing garbage like "12abc" — so invalid
+ * input is a distinguishable failure, never silently coerced into a plausible-looking 0.
+ */
+export function parsePercentageInput(value: string): number | null {
+  const normalized = normalizePercentageInput(value)
+  if (!VALID_PERCENTAGE_PATTERN.test(normalized)) return null
+  return Number.parseFloat(normalized)
+}
+
 /** Converts integer basis points (1250) back to a human percentage (12.5). */
 export function basisPointsToPercentage(basisPoints: number): number {
   return basisPoints / BASIS_POINTS_PER_PERCENT

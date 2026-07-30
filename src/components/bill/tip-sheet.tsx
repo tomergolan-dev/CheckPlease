@@ -20,6 +20,7 @@ import {
   computeBillSubtotal,
   computeTipTotal,
   formatCurrency,
+  parsePercentageInput,
   percentageToBasisPoints,
 } from '@/lib/money'
 import type { Bill } from '@/lib/store/types'
@@ -48,6 +49,8 @@ export function TipSheet({
   )
 
   const subtotal = computeBillSubtotal(bill.items)
+  const parsedCustomPercentage = parsePercentageInput(customValue)
+  const isCustomValueInvalid = customValue.trim().length > 0 && parsedCustomPercentage === null
 
   function applyPreset(bps: number) {
     setTip({ mode: 'percentage', valueBasisPoints: bps })
@@ -55,8 +58,8 @@ export function TipSheet({
   }
 
   function applyCustom() {
-    const bps = percentageToBasisPoints(Number.parseFloat(customValue))
-    setTip({ mode: 'percentage', valueBasisPoints: bps })
+    if (parsedCustomPercentage === null) return
+    setTip({ mode: 'percentage', valueBasisPoints: percentageToBasisPoints(parsedCustomPercentage) })
     onOpenChange(false)
   }
 
@@ -111,23 +114,27 @@ export function TipSheet({
           </button>
 
           {customMode && (
-            <div className="flex items-center gap-2 pt-1">
-              <div className="relative flex-1">
-                <Input
-                  autoFocus
-                  inputMode="decimal"
-                  aria-label={t('customPercentageLabel')}
-                  value={customValue}
-                  onChange={(e) => setCustomValue(e.target.value)}
-                  className="pe-7"
-                />
-                <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-sm text-muted-foreground">
-                  %
-                </span>
+            <div className="flex flex-col gap-1.5 pt-1">
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Input
+                    autoFocus
+                    inputMode="decimal"
+                    aria-label={t('customPercentageLabel')}
+                    aria-invalid={isCustomValueInvalid}
+                    value={customValue}
+                    onChange={(e) => setCustomValue(e.target.value)}
+                    className="pe-7"
+                  />
+                  <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-sm text-muted-foreground">
+                    %
+                  </span>
+                </div>
+                <Button onClick={applyCustom} disabled={parsedCustomPercentage === null}>
+                  {t('apply')}
+                </Button>
               </div>
-              <Button onClick={applyCustom} disabled={customValue.trim().length === 0}>
-                {t('apply')}
-              </Button>
+              {isCustomValueInvalid && <p className="text-xs text-destructive">{t('invalidPercentage')}</p>}
             </div>
           )}
         </div>
