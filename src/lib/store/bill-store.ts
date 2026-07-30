@@ -38,7 +38,12 @@ export interface BillStore {
   setDinerPartySize: (dinerId: string, partySize: number) => void
   removeDiner: (dinerId: string, reassignments?: Record<string, string[]>) => void
 
-  addItem: (input: { name: string; unitPriceMinorUnits: number; quantity?: number }) => string
+  addItem: (input: {
+    name: string
+    unitPriceMinorUnits: number
+    quantity?: number
+    source?: Item['source']
+  }) => string
   updateItem: (
     itemId: string,
     patch: Partial<Pick<Item, 'name' | 'unitPriceMinorUnits' | 'quantity'>>
@@ -179,7 +184,7 @@ export const useBillStore = create<BillStore>()(
         })
       },
 
-      addItem: ({ name, unitPriceMinorUnits, quantity = 1 }) => {
+      addItem: ({ name, unitPriceMinorUnits, quantity = 1, source = 'manual' }) => {
         const bill = get().bill
         if (!bill) throw new Error('Cannot add an item: no active bill')
 
@@ -190,7 +195,7 @@ export const useBillStore = create<BillStore>()(
           unitPriceMinorUnits,
           quantity: Math.max(1, Math.round(quantity)),
           sharedBy: bill.diners.map((diner) => diner.id),
-          source: 'manual',
+          source,
           sortIndex: nextSortIndex(bill.items),
         }
 

@@ -35,7 +35,22 @@
     "sharedByLabel": "מי הזמין את זה?",
     "deleteItem": "הסר מנה",
     "cannotDeselectLastDiner": "לפחות סועד אחד חייב להיות משויך לפריט",
-    "emptyState": "עדיין אין מנות"
+    "emptyState": "עדיין אין מנות",
+    "scanReceipt": "סריקת קבלה",
+    "scanTakePhoto": "צלמו תמונה",
+    "scanChooseFromLibrary": "בחרו מהגלריה",
+    "scanProcessingTitle": "קוראים את הקבלה…",
+    "scanProcessingHint": "זה בדרך כלל לוקח כמה שניות",
+    "scanReviewTitle": "אשרו את המנות",
+    "scanReviewHint": "בדקו את הפרטים לפני ההוספה — אפשר לערוך הכל.",
+    "scanAddCount": "{count, plural, one {הוספת מנה} other {הוספת # מנות}}",
+    "scanNoItemsFound": "לא הצלחנו למצוא מנות בתמונה הזו",
+    "scanErrorGeneric": "משהו השתבש בקריאת הקבלה",
+    "scanErrorHint": "נסו תמונה ברורה יותר, או הוסיפו את המנות ידנית.",
+    "scanTryAgain": "נסו שוב",
+    "scanAddManually": "הוספה ידנית",
+    "scanExcludeItem": "הסר מהרשימה",
+    "scanIncludeItem": "כלול ברשימה"
   },
   "Tip": {
     "title": "טיפ",

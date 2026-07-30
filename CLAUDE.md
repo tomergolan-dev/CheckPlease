@@ -40,16 +40,15 @@ This is a standing rule, not a one-time redesign — every future screen must be
 - ILS (₪) as the first supported currency, he-IL locale
 - Active bill auto-persisted locally so progress survives refreshes, app switches, and mobile browser reloads
 - PWA-first mobile web app, installable, safe-area aware, Capacitor-wrappable later
+- Receipt scanning as a second, co-equal way to create dishes alongside manual entry (see Receipt Scanning below)
 
 ## Explicitly Excluded From MVP
 
 These are real future-vision features. The architecture must stay clean enough to add them later without rewrites, but none of them are built now:
 
-- AI receipt scanning / OCR / smart receipt parsing
 - Tax/VAT calculation (target market is Israel; menu and receipt prices are already VAT-inclusive, so the app works directly with final item prices)
 - User accounts, saved history, shareable bill links
 - Payment integrations
-- Multi-language receipt parsing (Hebrew/English/mixed receipts)
 - Per-person average display derived from party size
 - Native app / React Native implementation
 
@@ -103,7 +102,18 @@ Diners can be added, renamed, resized, or removed **at any point** in the flow, 
 **Item-count edge cases:** unlike diners, a bill has no minimum item count — zero dishes is a normal, valid state (before the first one is added, or after deleting all of them), not an error to guard against.
 
 - **Empty state:** when there are no dishes yet, the Dishes section shows a small dashed-border placeholder (muted icon + one short line, "No dishes yet" / "עדיין אין מנות") in place of the list — not a bare section with nothing but the add action.
-- **Add action stays reachable regardless of list length:** the "Add a dish" action is positioned **before** the dish list, not after it — so it never requires scrolling past a long list (tens of dishes) to reach it. This is a plain reordering, not a sticky/floating element — no new interaction pattern introduced for what's explicitly not an extreme case to optimize for.
+- **Add action stays reachable regardless of list length:** the "Add a dish" action (and, alongside it, "Scan receipt" — see Receipt Scanning) is positioned **before** the dish list, not after it — so it never requires scrolling past a long list (tens of dishes) to reach it. This is a plain reordering, not a sticky/floating element — no new interaction pattern introduced for what's explicitly not an extreme case to optimize for.
+
+## Receipt Scanning
+
+A second, fully co-equal way to create dishes — manual entry and receipt scanning both produce the exact same editable `Item[]` shape (see Core Data Model), and neither ever replaces or restricts the other. Scanning is a convenience, not a different data path.
+
+- **Entry point:** a "Scan receipt" chip sits next to "Add a dish," always in the same position, before the dish list, in every state (empty and non-empty) — there's no separate "scan vs. manual" fork in the UI, just two chips that open two sheets.
+- **Flow:** tapping "Scan receipt" opens a bottom sheet with two choices — "Take a photo" (native camera, `capture="environment"`) or "Choose from library" (native gallery) — via a plain file input, not a custom camera UI. After a photo is picked, the same sheet transitions through a processing state ("Reading your receipt…") to a review step: an editable checklist of every detected dish (name and price both editable inline, each row individually excludable via a toggle), then a single confirm action that commits only the included rows. A failure (nothing detected, network/API error) shows a friendly retry prompt with "Try again" and "Add manually" — never a dead end.
+- **Committing:** confirmed rows are added through the same store `addItem` action manual entry uses, tagged `source: 'scanned'`; they default to all current diners exactly like a manually-added dish and are immediately editable/removable the same way afterward via the existing item edit sheet. Scanned items carry no persistent visual marker distinguishing them from manual ones once committed — after adding, a dish is just a dish, per the "AI enhances the workflow, it never replaces or restricts manual control" principle (see Core Data Model).
+- **Technical approach:** a server-side Next.js API route (`POST /api/scan-receipt`, `src/app/api/scan-receipt/route.ts`) sends the receipt photo to Claude's vision API (`claude-opus-5`, structured JSON output via `output_config.format`) and gets back `{ name, price }` pairs directly — no separate OCR service, no custom line-grouping heuristics. This is the first backend code in the project. Chosen over cloud OCR (Google Vision/Textract) and client-side OCR (Tesseract.js) specifically because a vision-capable LLM handles mixed Hebrew/English receipts with minimal custom parsing code (see Hebrew and English Support — interface language and receipt-content language are independent).
+- **Request/response contract:** the client downscales and re-encodes the photo as JPEG (capped at 1600px on the long edge) before upload, then `POST`s `{ image: base64, mediaType, currency }` and receives `{ items: [{ name, priceMinorUnits }] }` on success or `{ error: <code> }` on failure (`invalid_image`, `server_misconfigured`, `refused`, `upstream_error`, `network_error`). Money conversion (major units → integer minor units) happens server-side using the same currency-parametrized money utilities as the rest of the app (`src/lib/money`) — never a separate parsing path.
+- **Configuration:** requires a server-side `ANTHROPIC_API_KEY` environment variable (see `.env.local.example`, gitignored via `.env*.local`) — never exposed to the client, never referenced outside the API route. If unset, the route fails clearly (`server_misconfigured`) rather than silently or with a generic 500.
 
 ## Tip Behavior
 
@@ -153,7 +163,7 @@ These English labels are **product copy**, not mechanical translations of the He
 - Full RTL interface for Hebrew, full LTR interface for English, localized labels/messages, and locale-correct currency/number formatting.
 - Initial interface language is determined automatically from the browser/device locale (via `Accept-Language` detection) — there is no visible manual language switcher for now. A manual switcher will return once there's a proper Settings screen with real user settings beyond language (candidates: language, theme, currency, about, privacy); it isn't worth a standalone UI just for this one toggle. Do not spend time designing that Settings screen until it's actually scheduled.
 - URL-based locale routing (`/en`, `/he` via `next-intl`) is a **development-time convenience, not a permanent product decision.** The final product should not expose `/en`/`/he` as part of the user-facing experience. As the app matures, evaluate cleaner approaches (locale resolved from device/browser preference or managed internally via app settings, with no visible locale segment in the URL) so the architecture isn't permanently locked into URL-based localization. No need to change this now — just don't build anything new that assumes the URL segment is a permanent, user-facing concept.
-- The **interface language** and any future **receipt-scan language** are independent — a user may use the app in English while (in a future version) scanning a Hebrew receipt, or vice versa. Interface localization must not assume receipt content language.
+- The **interface language** and the **receipt-scan language** are independent — a user may use the app in English while scanning a Hebrew receipt, or vice versa. Interface localization must not assume receipt content language, and the scan prompt extracts item names in whatever language the receipt is printed in rather than translating them.
 - Typeface: **Heebo** is the primary typeface for both Hebrew and English, chosen specifically to give a unified visual identity across RTL and LTR layouts rather than pairing two different typefaces per language.
 
 ## RTL and LTR Implementation Rules
@@ -192,10 +202,10 @@ Concrete conventions that keep the "premium consumer app" bar consistent as more
 
 - **Bill**: `id`, `createdAt`/`updatedAt`, `currency`, `locale`, `restaurantName?` (optional, never required, never blocks progress — labeled "Restaurant name — optional" / "שם המסעדה — לא חובה"), `diners[]`, `items[]`, `tip`, `roundUpPayments` (boolean, default `false` — the Optional Payment Rounding toggle)
 - **Diner**: `id` (stable UUID), `name?`, `partySize` (required, default `1`, display-only), `color` (assigned once at creation, stable) — no stored index; the default "Diner N" label is derived from position, not stored (see Dynamic Diner-Management Behavior)
-- **Item**: `id`, `name`, `unitPriceMinorUnits`, `quantity` (default `1`, min `1`), `sharedBy: dinerId[]` (min length 1, always), `source: 'manual' | 'scanned'` (only `'manual'` used in MVP; field exists now so future AI-scanned items require no model change), ordering field
+- **Item**: `id`, `name`, `unitPriceMinorUnits`, `quantity` (default `1`, min `1`), `sharedBy: dinerId[]` (min length 1, always), `source: 'manual' | 'scanned'` (records how the item was created; never affects calculation or display), ordering field
 - **Tip**: `{ mode: 'percentage', valueBasisPoints: number }` — percentage-only, stored as integer basis points (e.g. `1200` = 12%); no flat-amount tip mode in MVP
 
-Both manual entry and (future) AI receipt scanning must produce the exact same `Item[]` shape. After scanning, in a future version, users must always be able to edit an item's name/price, delete an incorrectly detected item, add a missing item manually, and correct any AI mistake — AI enhances the workflow, it never replaces or restricts manual control.
+Both manual entry and receipt scanning (see Receipt Scanning) produce the exact same `Item[]` shape. After scanning, users must always be able to edit an item's name/price, delete an incorrectly detected item, add a missing item manually, and correct any AI mistake — AI enhances the workflow, it never replaces or restricts manual control.
 
 ## Architecture Decisions
 
@@ -209,6 +219,7 @@ Both manual entry and (future) AI receipt scanning must produce the exact same `
 - **Animation:** list insertion/removal (diners, dishes) and animated total updates use a lightweight animation layer (Framer Motion), respecting `prefers-reduced-motion`. Animated number/currency updates are a small custom hook (`useAnimatedNumber`) on top of it, not a separate dependency.
 - **Responsive layout:** the bill canvas is constrained to a centered, mobile-app-width column (not full-bleed) at all viewport sizes — desktop is a polished preview of the mobile product, not a stretched dashboard.
 - **PWA:** the MVP foundation is manifest, icons, safe-area (`env()`) insets, standalone display mode, theme color, and correct mobile viewport behavior — enough to be installable. A service worker and offline/asset caching are **explicitly deferred** until the primary bill flow is stable and tested, to avoid stale-asset and dev-caching issues while the app is still changing quickly. Native wrapping (Capacitor) is a later, separate step that should require no application code changes if the PWA layer is done correctly. No native or React Native implementation at this stage.
+- **Backend:** a single Next.js API route (`src/app/api/scan-receipt/route.ts`) is the app's only server-side code, existing solely to keep the `ANTHROPIC_API_KEY` off the client (see Receipt Scanning). It has no database, no auth, and no other responsibility — the app is otherwise still a static/client-persisted PWA.
 
 ## Folder and Component Conventions
 
@@ -220,6 +231,7 @@ Both manual entry and (future) AI receipt scanning must produce the exact same `
 
 - Avoid unnecessary dependencies. Prefer reusable, strongly-typed, component-driven code over pulling in a library for something a small utility can do.
 - Every dependency beyond the confirmed stack (Next.js, TypeScript, Tailwind, shadcn/ui, Lucide, next-intl, Zustand, Framer Motion) should be justified against a real, specific need in this document — not added speculatively for a future feature.
+- `@anthropic-ai/sdk` — server-only, used exclusively by the Receipt Scanning API route (see Receipt Scanning) to call Claude's vision API. Never imported from client components; image compression on the client uses the native Canvas API instead of a library.
 
 ## Testing Requirements
 

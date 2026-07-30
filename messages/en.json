@@ -35,7 +35,22 @@
     "sharedByLabel": "Who ordered this?",
     "deleteItem": "Remove this dish",
     "cannotDeselectLastDiner": "At least one diner must share this item",
-    "emptyState": "No dishes yet"
+    "emptyState": "No dishes yet",
+    "scanReceipt": "Scan receipt",
+    "scanTakePhoto": "Take a photo",
+    "scanChooseFromLibrary": "Choose from library",
+    "scanProcessingTitle": "Reading your receipt…",
+    "scanProcessingHint": "This usually takes a few seconds",
+    "scanReviewTitle": "Confirm your dishes",
+    "scanReviewHint": "Check the details before adding — you can edit anything.",
+    "scanAddCount": "{count, plural, one {Add # dish} other {Add # dishes}}",
+    "scanNoItemsFound": "We couldn't find any dishes in that photo",
+    "scanErrorGeneric": "Something went wrong while reading the receipt",
+    "scanErrorHint": "Try a clearer photo, or add your dishes manually.",
+    "scanTryAgain": "Try again",
+    "scanAddManually": "Add manually",
+    "scanExcludeItem": "Remove from list",
+    "scanIncludeItem": "Include in list"
   },
   "Tip": {
     "title": "Tip",
