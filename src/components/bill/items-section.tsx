@@ -31,8 +31,10 @@ export function ItemsSection({ bill }: { bill: Bill }) {
         <AddItemSheet />
 
         {sortedItems.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-border/60 px-6 py-8 text-center">
-            <UtensilsCrossed className="size-6 text-muted-foreground/50" />
+          <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border/60 px-6 py-8 text-center">
+            <span className="flex size-11 items-center justify-center rounded-full bg-accent text-accent-foreground">
+              <UtensilsCrossed className="size-5" />
+            </span>
             <p className="text-sm text-muted-foreground">{t('emptyState')}</p>
           </div>
         ) : (

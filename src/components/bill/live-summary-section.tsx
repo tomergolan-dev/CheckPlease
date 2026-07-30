@@ -75,9 +75,9 @@ export function LiveSummarySection({ bill }: { bill: Bill }) {
           </div>
         )}
 
-        <div className="flex items-center justify-between border-t border-border pt-2.5 text-base font-semibold">
-          <span>{t('totalToPay')}</span>
-          <AnimatedCurrency amount={totalToPay} currency={bill.currency} />
+        <div className="flex items-end justify-between border-t border-border pt-3">
+          <span className="text-sm font-medium text-muted-foreground">{t('totalToPay')}</span>
+          <AnimatedCurrency amount={totalToPay} currency={bill.currency} className="text-2xl font-bold text-primary" />
         </div>
       </div>
 

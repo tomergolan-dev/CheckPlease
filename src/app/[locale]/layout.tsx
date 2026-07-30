@@ -5,7 +5,6 @@ import { getMessages, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import { routing, localeDirections, type AppLocale } from '@/i18n/routing'
 import { BRAND_NAME } from '@/lib/brand'
-import { HydrateBillStore } from '@/lib/store/hydrate-bill-store'
 import '../globals.css'
 
 const heebo = Heebo({
@@ -63,10 +62,7 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} dir={direction} className={heebo.variable} suppressHydrationWarning>
       <body className="min-h-dvh antialiased">
-        <NextIntlClientProvider messages={messages}>
-          <HydrateBillStore />
-          {children}
-        </NextIntlClientProvider>
+        <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
       </body>
     </html>
   )
