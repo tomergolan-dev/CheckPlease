@@ -50,7 +50,8 @@
     "scanTryAgain": "Try again",
     "scanAddManually": "Add manually",
     "scanExcludeItem": "Remove from list",
-    "scanIncludeItem": "Include in list"
+    "scanIncludeItem": "Include in list",
+    "scannedBadgeLabel": "Added by scanning a receipt"
   },
   "Tip": {
     "title": "Tip",

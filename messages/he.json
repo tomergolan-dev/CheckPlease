@@ -50,7 +50,8 @@
     "scanTryAgain": "נסו שוב",
     "scanAddManually": "הוספה ידנית",
     "scanExcludeItem": "הסר מהרשימה",
-    "scanIncludeItem": "כלול ברשימה"
+    "scanIncludeItem": "כלול ברשימה",
+    "scannedBadgeLabel": "נוסף מסריקת קבלה"
   },
   "Tip": {
     "title": "טיפ",

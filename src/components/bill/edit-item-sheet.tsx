@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { ScanLine } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import {
@@ -78,7 +79,16 @@ export function EditItemSheet({ bill, itemId, onOpenChange }: EditItemSheetProps
     <Drawer open={Boolean(itemId)} onOpenChange={onOpenChange}>
       <DrawerContent>
         <DrawerHeader>
-          <DrawerTitle>{item.name}</DrawerTitle>
+          <DrawerTitle className="flex items-center justify-center gap-1.5 md:justify-start">
+            {item.name}
+            {item.source === 'scanned' && (
+              <ScanLine
+                role="img"
+                aria-label={t('scannedBadgeLabel')}
+                className="size-3.5 shrink-0 text-muted-foreground/60"
+              />
+            )}
+          </DrawerTitle>
         </DrawerHeader>
 
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pb-2">
