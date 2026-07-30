@@ -27,9 +27,10 @@ const RECEIPT_SCHEMA = {
         type: 'object',
         properties: {
           name: { type: 'string' },
+          quantity: { type: 'integer' },
           price: { type: 'number' },
         },
-        required: ['name', 'price'],
+        required: ['name', 'quantity', 'price'],
         additionalProperties: false,
       },
     },
@@ -38,12 +39,14 @@ const RECEIPT_SCHEMA = {
   additionalProperties: false,
 } as const
 
-const EXTRACTION_PROMPT = `This image is a photo of a restaurant receipt or bill. Extract every distinct food or drink line item together with its price, in the language it's printed in (do not translate names).
+const EXTRACTION_PROMPT = `This image is a photo of a restaurant receipt or bill. Extract every distinct food or drink line item together with its quantity and price, in the language it's printed in (do not translate names).
 
 Rules:
-- Read every digit carefully — double-check that each price you output matches exactly what's printed, including the decimal point. Misreading a digit is worse than leaving an item out.
-- Use each line's total price as printed (if a unit price and an extended/line total are both shown, use the line total, not the unit price).
-- If the same dish name appears on more than one line, keep each occurrence as a separate entry — do not merge them.
+- "price" is always the line's total price as printed — if a unit price and an extended/line total are both shown, use the line total, not the unit price.
+- "quantity" is how many units that price covers. If a line shows an explicit quantity or multiplier for one dish (e.g. "2x", "×2", a quantity column) together with a single combined price, report that quantity together with the combined price — do not split it into repeated entries.
+- If the same dish appears on separate, non-multiplied lines (e.g. two distinct order lines for the same dish with no ×N shown), keep each line as its own entry with quantity 1 rather than merging them.
+- If no quantity is shown on a line, use quantity 1.
+- Read every digit carefully — double-check that each price and quantity you output matches exactly what's printed, including the decimal point. Misreading a digit is worse than leaving an item out.
 - Exclude subtotal, tax/VAT, service charge, tip, discount, payment method, and grand-total lines.
 - Exclude table numbers, dates, receipt/order numbers, and any other non-item metadata.
 - If the photo is unreadable or you cannot confidently identify any items, return an empty items array rather than guessing.`
@@ -118,7 +121,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'upstream_error' }, { status: 502 })
   }
 
-  let parsed: { items?: Array<{ name?: unknown; price?: unknown }> }
+  let parsed: { items?: Array<{ name?: unknown; quantity?: unknown; price?: unknown }> }
   try {
     parsed = JSON.parse(textBlock.text)
   } catch (error) {
@@ -128,13 +131,20 @@ export async function POST(request: Request) {
 
   const items = (parsed.items ?? [])
     .filter(
-      (item): item is { name: string; price: number } =>
+      (item): item is { name: string; quantity?: unknown; price: number } =>
         typeof item.name === 'string' && item.name.trim().length > 0 && typeof item.price === 'number'
     )
-    .map((item) => ({
-      name: item.name.trim(),
-      priceMinorUnits: parseInputValueToMinorUnits(String(item.price), currency),
-    }))
+    .map((item) => {
+      const quantity = Math.max(1, Math.round(typeof item.quantity === 'number' ? item.quantity : 1))
+      const lineTotalMinorUnits = parseInputValueToMinorUnits(String(item.price), currency)
+      return {
+        name: item.name.trim(),
+        quantity,
+        // The line total is what's printed and least ambiguous for the model to read; the app's
+        // Item model stores unit price × quantity, so divide here rather than asking the model to.
+        unitPriceMinorUnits: Math.round(lineTotalMinorUnits / quantity),
+      }
+    })
 
   return NextResponse.json({ items })
 }

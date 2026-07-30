@@ -2,7 +2,8 @@ import type { CurrencyCode } from '@/lib/store/types'
 
 export interface ScannedItem {
   name: string
-  priceMinorUnits: number
+  quantity: number
+  unitPriceMinorUnits: number
 }
 
 export type ScanReceiptErrorCode =

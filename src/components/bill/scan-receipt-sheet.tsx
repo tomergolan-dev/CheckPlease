@@ -6,6 +6,7 @@ import { Camera, CircleX, Images, Loader2, Plus, ScanLine, X } from 'lucide-reac
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Stepper } from '@/components/shared/stepper'
 import {
   Drawer,
   DrawerClose,
@@ -24,6 +25,7 @@ interface DraftRow {
   id: string
   name: string
   priceValue: string
+  quantity: number
   included: boolean
 }
 
@@ -79,7 +81,8 @@ export function ScanReceiptSheet() {
         items.map((item) => ({
           id: crypto.randomUUID(),
           name: item.name,
-          priceValue: minorUnitsToInputValue(item.priceMinorUnits, currency),
+          priceValue: minorUnitsToInputValue(item.unitPriceMinorUnits, currency),
+          quantity: item.quantity,
           included: true,
         }))
       )
@@ -97,7 +100,7 @@ export function ScanReceiptSheet() {
   const includedRows = rows.filter((row) => row.included)
   const includedCount = includedRows.length
   const includedTotalMinorUnits = includedRows.reduce(
-    (sum, row) => sum + parseInputValueToMinorUnits(row.priceValue, currency),
+    (sum, row) => sum + parseInputValueToMinorUnits(row.priceValue, currency) * row.quantity,
     0
   )
 
@@ -112,6 +115,7 @@ export function ScanReceiptSheet() {
       addItem({
         name,
         unitPriceMinorUnits: parseInputValueToMinorUnits(row.priceValue, currency),
+        quantity: row.quantity,
         source: 'scanned',
       })
     }
@@ -297,17 +301,26 @@ export function ScanReceiptSheet() {
                           onChange={(e) => updateRow(row.id, { name: e.target.value })}
                           disabled={!row.included}
                         />
-                        <div className="relative w-24">
-                          <span className="pointer-events-none absolute inset-y-0 start-2.5 flex items-center text-xs text-muted-foreground">
-                            ₪
-                          </span>
-                          <Input
-                            inputMode="decimal"
-                            value={row.priceValue}
-                            onChange={(e) => updateRow(row.id, { priceValue: e.target.value })}
-                            disabled={!row.included}
-                            className="ps-6 text-sm"
-                          />
+                        <div className="flex items-center gap-2">
+                          <div className="relative w-24">
+                            <span className="pointer-events-none absolute inset-y-0 start-2.5 flex items-center text-xs text-muted-foreground">
+                              ₪
+                            </span>
+                            <Input
+                              inputMode="decimal"
+                              value={row.priceValue}
+                              onChange={(e) => updateRow(row.id, { priceValue: e.target.value })}
+                              disabled={!row.included}
+                              className="ps-6 text-sm"
+                            />
+                          </div>
+                          <div className={row.included ? '' : 'pointer-events-none opacity-60'}>
+                            <Stepper
+                              value={row.quantity}
+                              onChange={(quantity) => updateRow(row.id, { quantity })}
+                              label={t('quantityLabel')}
+                            />
+                          </div>
                         </div>
                       </div>
                       <button
