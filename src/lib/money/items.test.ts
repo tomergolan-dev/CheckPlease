@@ -51,4 +51,18 @@ describe('computeDinerSubtotals', () => {
     const sum = dinerIds.reduce((total, id) => total + subtotals[id]!, 0)
     expect(sum).toBe(computeBillSubtotal(items))
   })
+
+  it('rotates the leftover agora fairly across repeated equally-shared items instead of always favoring one diner', () => {
+    // Same 3 diners share 3 identical ₪1.00 items — each item alone splits 34/33/33 with the
+    // extra agora going to whoever's won it least so far, so it should rotate d1 -> d2 -> d3
+    // and land on a perfectly equal 100/100/100, not the 102/99/99 a fixed lowest-index
+    // tie-break would produce across all three items.
+    const items: CalcItem[] = [
+      { id: 'i1', unitPriceMinorUnits: 100, quantity: 1, sharedBy: ['d1', 'd2', 'd3'] },
+      { id: 'i2', unitPriceMinorUnits: 100, quantity: 1, sharedBy: ['d1', 'd2', 'd3'] },
+      { id: 'i3', unitPriceMinorUnits: 100, quantity: 1, sharedBy: ['d1', 'd2', 'd3'] },
+    ]
+    const subtotals = computeDinerSubtotals(items, ['d1', 'd2', 'd3'])
+    expect(subtotals).toEqual({ d1: 100, d2: 100, d3: 100 })
+  })
 })

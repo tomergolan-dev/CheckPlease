@@ -199,9 +199,10 @@ Concrete conventions that keep the "premium consumer app" bar consistent as more
 - All monetary values are stored and calculated as **integer minor units** internally (agorot for ILS) — **never floating-point arithmetic** for anything financial.
 - A single formatting utility (parametrized by currency + locale) is the only place a minor-unit integer is ever turned into a display string. No ad hoc string formatting elsewhere.
 - Every item has `unitPriceMinorUnits` and `quantity` (default `1`, minimum `1`, compact increment/decrement control in the UI). The line total is **derived** as `unitPriceMinorUnits × quantity` and is not persisted unless a strong technical reason emerges later.
-- Splitting uses a single reusable **largest-remainder allocation** primitive — `allocateProportionally(totalMinorUnits, weights[])` — applied at two levels:
+- Splitting uses a single reusable **largest-remainder allocation** primitive — `allocateProportionally(totalMinorUnits, weights[], options?)` — applied at two levels:
   1. **Item → diners**: each item's line total is split across its assigned diners (equal weights), summing exactly back to the line total.
   2. **Tip → diners**: the total tip (rounded to the nearest minor unit) is allocated across diners weighted by each diner's subtotal, summing exactly back to the total tip.
+- **Fair remainder rotation across repeated equal-weight splits.** When every party has equal weight (the normal item-split case), their fractional remainder is identical for all of them — it's a full tie, not a near-tie — so a lone tie-break of "lowest index wins" would hand the leftover agora to the *same* diner on every item a group shares, not just once. `computeDinerSubtotals` (`src/lib/money/items.ts`) tracks how many times each diner has already won that leftover agora across the bill's items so far, and passes it as `allocateProportionally`'s `tieBreakPriority` option (lower value wins) so the extra agora rotates fairly across a bill with many shared items instead of always favoring whoever is earliest in the diner list. `allocateProportionally` still defaults to lowest-index-wins when `tieBreakPriority` is omitted, for any one-off caller (tip allocation doesn't need this — it's a single allocation event per bill, not a repeated one, so the bias can't compound there).
 - Invariant that must always hold and must be tested: the sum of all diners' final totals equals the bill's grand total exactly. No money is ever created or lost to rounding.
 - Architecture must not hardcode single-currency assumptions, even though ILS is the only currency shipped in MVP.
 - The optional payment-rounding feature (see Optional Payment Rounding) is layered strictly on top of these exact totals for display/payment purposes — it is not an exception to any of the rules above, and the engine itself never rounds up.
@@ -243,7 +244,7 @@ Both manual entry and receipt scanning (see Receipt Scanning) produce the exact 
 
 ## Testing Requirements
 
-- The calculation engine (allocation primitive, item split, tip split, diner totals) must be unit-tested in isolation from the UI, with explicit tests for the invariant that diner totals always sum exactly to the bill grand total (including tip), across edge cases like uneven splits and multiple simultaneous remainders.
+- The calculation engine (allocation primitive, item split, tip split, diner totals) must be unit-tested in isolation from the UI, with explicit tests for the invariant that diner totals always sum exactly to the bill grand total (including tip), across edge cases like uneven splits, multiple simultaneous remainders, and fair remainder rotation across repeated equal-weight splits (a group of diners sharing many items must not have the leftover agora always land on the same diner).
 - Item-assignment invariants (never zero diners on an item, diner-removal reassignment blocking) should have test coverage at the logic level, not only be relied upon via UI behavior.
 
 ## PWA-First Requirements

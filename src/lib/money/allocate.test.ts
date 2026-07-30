@@ -47,4 +47,18 @@ describe('allocateProportionally', () => {
   it('throws when there are no parties to allocate to', () => {
     expect(() => allocateProportionally(100, [])).toThrow()
   })
+
+  describe('tieBreakPriority', () => {
+    it('gives the remainder to the lowest-priority party instead of the lowest index', () => {
+      expect(allocateProportionally(100, [1, 1, 1], { tieBreakPriority: [5, 0, 2] })).toEqual([33, 34, 33])
+    })
+
+    it('still breaks ties by index when priorities are equal', () => {
+      expect(allocateProportionally(100, [1, 1, 1], { tieBreakPriority: [0, 0, 0] })).toEqual([34, 33, 33])
+    })
+
+    it('falls back to lowest-index-wins when omitted, unchanged from before', () => {
+      expect(allocateProportionally(100, [1, 1, 1])).toEqual([34, 33, 33])
+    })
+  })
 })
