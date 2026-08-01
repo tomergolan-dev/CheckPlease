@@ -40,11 +40,11 @@ export function ItemRow({
         {item.quantity > 1 && <span className="text-muted-foreground"> ×{item.quantity}</span>}
       </span>
 
+      <ItemAvatarStack diners={sharedByDiners} positions={positions} />
+
       <span className="shrink-0 text-sm tabular-nums text-muted-foreground">
         {formatCurrency(lineTotal, bill.currency)}
       </span>
-
-      <ItemAvatarStack diners={sharedByDiners} positions={positions} />
 
       <ChevronRight className="size-4 shrink-0 text-muted-foreground/60 rtl:rotate-180" aria-hidden="true" />
     </button>

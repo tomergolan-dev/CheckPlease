@@ -114,25 +114,21 @@ export function LiveSummarySection({ bill }: { bill: Bill }) {
                 <span className="truncate text-xs font-medium">{dinerLabel(diner, positions[diner.id])}</span>
               </div>
 
-              {isRounded ? (
-                <div className="flex flex-wrap items-center justify-center gap-1">
-                  <span className="text-[11px] text-muted-foreground">
+              {/* Fixed-height, non-wrapping stack so every card lines up identically regardless
+                  of whether rounding applies to this diner or how many digits their amount has. */}
+              <div className="flex min-h-11 flex-col items-center justify-center gap-0.5">
+                {isRounded && (
+                  <span className="flex items-center gap-1 text-[11px] whitespace-nowrap text-muted-foreground">
                     <AnimatedCurrency amount={dinerTotal.exactMinorUnits} currency={bill.currency} />
+                    <ChevronRight className="size-3 shrink-0 rtl:rotate-180" aria-hidden="true" />
                   </span>
-                  <ChevronRight className="size-3 shrink-0 text-muted-foreground rtl:rotate-180" />
-                  <AnimatedCurrency
-                    amount={dinerTotal.payableMinorUnits}
-                    currency={bill.currency}
-                    className={`text-lg font-extrabold ${DINER_TEXT_CLASSES[diner.color]}`}
-                  />
-                </div>
-              ) : (
+                )}
                 <AnimatedCurrency
                   amount={dinerTotal.payableMinorUnits}
                   currency={bill.currency}
-                  className={`text-lg font-extrabold ${DINER_TEXT_CLASSES[diner.color]}`}
+                  className={`text-lg leading-none font-extrabold whitespace-nowrap ${DINER_TEXT_CLASSES[diner.color]}`}
                 />
-              )}
+              </div>
             </div>
           )
         })}
