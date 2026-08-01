@@ -50,15 +50,30 @@ export const DINER_TEXT_CLASSES: Record<DinerColorToken, string> = {
   pink: 'text-[#96285e]',
 }
 
-/** A pale wash of a diner's identity color — for a card background that reads as "theirs"
- * without competing with the bold accent-colored amount sitting on top of it. */
+/** A very pale wash of a diner's identity color — for a card background that reads as
+ * "theirs" without competing with the bold accent-colored amount sitting on top of it.
+ * Lighter than it looks like it should be — the color's job here is a whisper of identity,
+ * not a block of tint. */
 export const DINER_TINT_CLASSES: Record<DinerColorToken, string> = {
-  blue: 'bg-[#b7d7e8]/25',
-  green: 'bg-[#c3d6b2]/25',
-  amber: 'bg-[#f5d685]/25',
-  rose: 'bg-[#f0bcb9]/25',
-  violet: 'bg-[#cabbe6]/25',
-  teal: 'bg-[#aed8ce]/25',
-  orange: 'bg-[#f5c093]/25',
-  pink: 'bg-[#f8c4d9]/25',
+  blue: 'bg-[#b7d7e8]/[0.14]',
+  green: 'bg-[#c3d6b2]/[0.14]',
+  amber: 'bg-[#f5d685]/[0.14]',
+  rose: 'bg-[#f0bcb9]/[0.14]',
+  violet: 'bg-[#cabbe6]/[0.14]',
+  teal: 'bg-[#aed8ce]/[0.14]',
+  orange: 'bg-[#f5c093]/[0.14]',
+  pink: 'bg-[#f8c4d9]/[0.14]',
+}
+
+/** A slightly stronger wash of the same color, for a hairline border that gives the pale
+ * tint card definition without a heavy neutral-gray outline. */
+export const DINER_BORDER_CLASSES: Record<DinerColorToken, string> = {
+  blue: 'border-[#b7d7e8]/40',
+  green: 'border-[#c3d6b2]/40',
+  amber: 'border-[#f5d685]/40',
+  rose: 'border-[#f0bcb9]/40',
+  violet: 'border-[#cabbe6]/40',
+  teal: 'border-[#aed8ce]/40',
+  orange: 'border-[#f5c093]/40',
+  pink: 'border-[#f8c4d9]/40',
 }

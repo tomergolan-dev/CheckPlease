@@ -219,7 +219,7 @@ export function ScanReceiptSheet() {
                 <DrawerHeader>
                   <DrawerTitle>{t('scanReceipt')}</DrawerTitle>
                 </DrawerHeader>
-                <div className="flex flex-col gap-2 px-7 pb-2">
+                <div className="flex flex-col gap-2 px-8 pb-2">
                   <Button
                     size="lg"
                     className="w-full justify-start gap-2.5"
@@ -262,7 +262,7 @@ export function ScanReceiptSheet() {
                   )}
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background/75 text-center backdrop-blur-sm">
                     <IconBadge icon={Loader2} tone="violet" size="lg" iconClassName="animate-spin" />
-                    <div className="flex flex-col gap-0.5 px-7">
+                    <div className="flex flex-col gap-0.5 px-8">
                       <p className="text-sm font-medium">{t('scanProcessingTitle')}</p>
                       <p className="text-xs text-muted-foreground">{t('scanProcessingHint')}</p>
                     </div>
@@ -280,7 +280,7 @@ export function ScanReceiptSheet() {
                 exit={stepExit}
                 transition={stepTransition}
               >
-                <div className="flex flex-col items-center gap-4 px-7 py-8 text-center">
+                <div className="flex flex-col items-center gap-4 px-8 py-8 text-center">
                   <span className="flex size-14 items-center justify-center rounded-full bg-destructive/10 text-destructive">
                     <CircleX className="size-6" />
                   </span>
@@ -314,7 +314,7 @@ export function ScanReceiptSheet() {
                   <DrawerDescription>{t('scanReviewHint', { count: rows.length })}</DrawerDescription>
                 </DrawerHeader>
 
-                <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-7 pt-1 pb-2">
+                <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-8 pt-1 pb-2">
                   {rows.map((row, index) => {
                     const isEditing = editingRowId === row.id
                     return (
@@ -407,7 +407,7 @@ export function ScanReceiptSheet() {
                 </div>
 
                 {existingItemsCount > 0 && (
-                  <div className="flex flex-col gap-2 border-t border-border/40 px-7 pt-3">
+                  <div className="flex flex-col gap-2 border-t border-border/40 px-8 pt-3">
                     <span className="text-sm font-medium text-muted-foreground">
                       {t('scanExistingItemsQuestion')}
                     </span>
@@ -441,7 +441,7 @@ export function ScanReceiptSheet() {
                   </div>
                 )}
 
-                <div className="flex items-center justify-between border-t border-border/40 px-7 py-2.5">
+                <div className="flex items-center justify-between border-t border-border/40 px-8 py-2.5">
                   <span className="text-sm text-muted-foreground">{t('scanReviewTotal')}</span>
                   <span className="text-base font-semibold tabular-nums">
                     {formatCurrency(includedTotalMinorUnits, currency)}

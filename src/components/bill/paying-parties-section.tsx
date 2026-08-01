@@ -34,7 +34,7 @@ export function PayingPartiesSection({ bill }: { bill: Bill }) {
   }, [])
 
   return (
-    <section className="flex flex-col gap-4 py-1">
+    <section className="flex flex-col gap-4">
       <SectionHeading icon={Users} title={t('title')} tone="blue" />
 
       <div className="flex flex-wrap items-start gap-3">

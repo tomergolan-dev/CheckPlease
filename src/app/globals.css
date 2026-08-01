@@ -45,8 +45,8 @@
   --sidebar-ring: #d9722f;
 
   /* Softer still — a surface resting gently on the table, barely lifting off the page. */
-  --shadow-soft: 0 1px 2px rgba(43, 38, 32, 0.03), 0 4px 12px -7px rgba(43, 38, 32, 0.06);
-  --shadow-elevated: 0 1px 2px rgba(43, 38, 32, 0.03), 0 10px 22px -10px rgba(43, 38, 32, 0.09);
+  --shadow-soft: 0 1px 1px rgba(43, 38, 32, 0.02), 0 3px 10px -7px rgba(43, 38, 32, 0.05);
+  --shadow-elevated: 0 1px 2px rgba(43, 38, 32, 0.025), 0 8px 20px -10px rgba(43, 38, 32, 0.08);
 }
 
 .dark {

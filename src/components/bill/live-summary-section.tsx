@@ -9,7 +9,7 @@ import type { Bill } from '@/lib/store/types'
 import { AnimatedCurrency } from '@/components/shared/animated-currency'
 import { SectionHeading } from '@/components/shared/section-heading'
 import { DinerAvatar } from './diner-avatar'
-import { DINER_TEXT_CLASSES, DINER_TINT_CLASSES } from './diner-display'
+import { DINER_BORDER_CLASSES, DINER_TEXT_CLASSES, DINER_TINT_CLASSES } from './diner-display'
 import { TipAndRoundingCard } from './tip-and-rounding-card'
 import { useDinerLabel } from './use-diner-label'
 
@@ -54,26 +54,30 @@ export function LiveSummarySection({ bill }: { bill: Bill }) {
       >
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground">{t('originalAmount')}</span>
-          <AnimatedCurrency amount={originalAmount} currency={bill.currency} />
+          <AnimatedCurrency amount={originalAmount} currency={bill.currency} className="text-foreground/85" />
         </div>
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground">
             {tipTotal > 0 ? `${t('tip')} (${tipPercent}%)` : t('tip')}
           </span>
-          <AnimatedCurrency amount={tipTotal} currency={bill.currency} />
+          <AnimatedCurrency amount={tipTotal} currency={bill.currency} className="text-foreground/85" />
         </div>
 
         {showSubtotalRow && (
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">{t('subtotal')}</span>
-            <AnimatedCurrency amount={exactTotal} currency={bill.currency} />
+            <AnimatedCurrency amount={exactTotal} currency={bill.currency} className="text-foreground/85" />
           </div>
         )}
 
         {showRoundingRow && (
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">{t('rounding')}</span>
-            <AnimatedCurrency amount={payable.roundingSurplusMinorUnits} currency={bill.currency} />
+            <AnimatedCurrency
+              amount={payable.roundingSurplusMinorUnits}
+              currency={bill.currency}
+              className="text-foreground/85"
+            />
           </div>
         )}
 
@@ -95,7 +99,7 @@ export function LiveSummarySection({ bill }: { bill: Bill }) {
           return (
             <div
               key={dinerTotal.dinerId}
-              className={`flex flex-col items-center gap-1.5 rounded-2xl px-2 py-3 ${DINER_TINT_CLASSES[diner.color]}`}
+              className={`flex flex-col items-center gap-1.5 rounded-2xl border px-2 py-3 shadow-soft ${DINER_TINT_CLASSES[diner.color]} ${DINER_BORDER_CLASSES[diner.color]}`}
             >
               <div className="flex min-w-0 items-center gap-1.5">
                 <DinerAvatar
