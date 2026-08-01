@@ -9,7 +9,7 @@ import type { Bill } from '@/lib/store/types'
 import { AnimatedCurrency } from '@/components/shared/animated-currency'
 import { SectionHeading } from '@/components/shared/section-heading'
 import { DinerAvatar } from './diner-avatar'
-import { DINER_BORDER_CLASSES, DINER_TEXT_CLASSES, DINER_TINT_CLASSES } from './diner-display'
+import { DINER_TEXT_CLASSES } from './diner-display'
 import { TipAndRoundingCard } from './tip-and-rounding-card'
 import { useDinerLabel } from './use-diner-label'
 
@@ -99,7 +99,7 @@ export function LiveSummarySection({ bill }: { bill: Bill }) {
           return (
             <div
               key={dinerTotal.dinerId}
-              className={`flex flex-col items-center gap-1.5 rounded-2xl border px-2 py-3 shadow-soft ${DINER_TINT_CLASSES[diner.color]} ${DINER_BORDER_CLASSES[diner.color]}`}
+              className="flex flex-col items-center gap-1.5 rounded-2xl border border-border/40 bg-card px-2 py-3 shadow-soft"
             >
               <div className="flex min-w-0 items-center gap-1.5">
                 <DinerAvatar
