@@ -4,7 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { useBillStore } from '@/lib/store/bill-store'
 import { useIsBillStoreHydrated } from '@/lib/store/hydrate-bill-store'
 import { BRAND_NAME } from '@/lib/brand'
-import { AmbientBackground } from '@/components/shared/ambient-background'
+import { DoodleAccents } from '@/components/shared/doodle-accents'
 import { BillCanvas } from './bill-canvas'
 import { OnboardingScreen } from './onboarding-screen'
 
@@ -26,7 +26,7 @@ export function BillEntry() {
   return (
     <div className="flex min-h-dvh justify-center bg-muted/40">
       <div className="relative w-full max-w-md overflow-hidden bg-background">
-        <AmbientBackground />
+        <DoodleAccents />
         <AnimatePresence mode="wait" initial={false}>
           {!hasHydrated ? (
             <motion.div key="boot" exit={shouldReduceMotion ? undefined : { opacity: 0 }} transition={transition}>

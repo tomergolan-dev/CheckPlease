@@ -165,9 +165,9 @@ export function ScanReceiptSheet() {
         <DrawerTrigger asChild>
           <button
             type="button"
-            className="flex items-center gap-2 self-start rounded-full border border-dashed border-border py-1 ps-1 pe-3.5 text-sm font-medium text-muted-foreground transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:text-foreground hover:shadow-soft active:translate-y-0 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+            className="flex items-center gap-1.5 self-start rounded-full border-[1.5px] border-border bg-transparent px-3.5 py-1.5 text-sm font-medium text-muted-foreground transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:text-foreground hover:shadow-soft active:translate-y-0 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
           >
-            <IconBadge icon={ScanLine} tone="violet" />
+            <ScanLine className="size-4" aria-hidden="true" />
             {t('scanReceipt')}
           </button>
         </DrawerTrigger>

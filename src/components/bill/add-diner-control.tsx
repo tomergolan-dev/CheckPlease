@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
-import { IconBadge } from '@/components/shared/icon-badge'
 import {
   Drawer,
   DrawerClose,
@@ -41,10 +40,14 @@ export function AddDinerControl({ hasExistingItems }: { hasExistingItems: boolea
       <button
         type="button"
         onClick={handleAdd}
-        className="flex items-center gap-2 rounded-full border border-dashed border-border py-1 ps-1 pe-3.5 text-sm font-medium text-muted-foreground transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:text-foreground hover:shadow-soft active:translate-y-0 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+        className="flex w-16 shrink-0 flex-col items-center gap-1 rounded-2xl py-1 transition-all hover:-translate-y-0.5 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
       >
-        <IconBadge icon={Plus} tone="blue" />
-        {t('addDiner')}
+        <span className="flex size-14 items-center justify-center rounded-full border-2 border-dashed border-border text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground">
+          <Plus className="size-5" aria-hidden="true" />
+        </span>
+        <span className="w-full text-center text-xs leading-tight font-medium text-muted-foreground">
+          {t('addDiner')}
+        </span>
       </button>
 
       <Drawer open={askOpen} onOpenChange={setAskOpen}>

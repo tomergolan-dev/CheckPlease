@@ -11,6 +11,7 @@ import { AnimatedCurrency } from '@/components/shared/animated-currency'
 import { SectionHeading } from '@/components/shared/section-heading'
 import { Switch } from '@/components/ui/switch'
 import { DinerAvatar } from './diner-avatar'
+import { DINER_DOT_CLASSES } from './diner-display'
 import { TipChip } from './tip-chip'
 import { useDinerLabel } from './use-diner-label'
 
@@ -51,67 +52,48 @@ export function LiveSummarySection({ bill }: { bill: Bill }) {
         />
       </label>
 
-      {/*
-        Signature moment (agreed exception to "never render literally as a receipt" — see Visual
-        System): a torn/perforated bottom edge on the one card that matters most, via a real CSS
-        mask cutting circular holes rather than a color-matching hack, so it stays correct against
-        the animated ambient background behind it. Not a pattern reused elsewhere.
-      */}
       <motion.div
         initial={shouldReduceMotion ? false : { opacity: 0, y: -14, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={shouldReduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 260, damping: 22 }}
+        className="flex flex-col gap-2 rounded-[22px] border border-border/40 bg-card px-4 pt-3.5 pb-4 shadow-elevated"
       >
-        <div className="flex flex-col gap-2 rounded-t-3xl border border-b-0 border-border/40 bg-card px-4 pt-3.5 pb-4 shadow-elevated">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">{t('originalAmount')}</span>
-            <AnimatedCurrency amount={originalAmount} currency={bill.currency} />
-          </div>
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">{t('tip')}</span>
-            <AnimatedCurrency amount={tipTotal} currency={bill.currency} />
-          </div>
-
-          {showSubtotalRow && (
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">{t('subtotal')}</span>
-              <AnimatedCurrency amount={exactTotal} currency={bill.currency} />
-            </div>
-          )}
-
-          {showRoundingRow && (
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">{t('rounding')}</span>
-              <span className="flex items-center gap-0.5 text-muted-foreground">
-                +<AnimatedCurrency amount={payable.roundingSurplusMinorUnits} currency={bill.currency} />
-              </span>
-            </div>
-          )}
-
-          <div className="flex items-end justify-between border-t border-border pt-3">
-            <span className="text-sm font-medium text-muted-foreground">{t('totalToPay')}</span>
-            <AnimatedCurrency
-              amount={totalToPay}
-              currency={bill.currency}
-              className="text-3xl font-bold text-primary"
-            />
-          </div>
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">{t('originalAmount')}</span>
+          <AnimatedCurrency amount={originalAmount} currency={bill.currency} />
         </div>
-        <div
-          aria-hidden="true"
-          className="h-3 w-full bg-card"
-          style={{
-            maskImage: 'radial-gradient(circle at 9px 0, transparent 8px, black 8.5px)',
-            maskSize: '18px 12px',
-            maskRepeat: 'repeat-x',
-            WebkitMaskImage: 'radial-gradient(circle at 9px 0, transparent 8px, black 8.5px)',
-            WebkitMaskSize: '18px 12px',
-            WebkitMaskRepeat: 'repeat-x',
-          }}
-        />
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">{t('tip')}</span>
+          <AnimatedCurrency amount={tipTotal} currency={bill.currency} />
+        </div>
+
+        {showSubtotalRow && (
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">{t('subtotal')}</span>
+            <AnimatedCurrency amount={exactTotal} currency={bill.currency} />
+          </div>
+        )}
+
+        {showRoundingRow && (
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">{t('rounding')}</span>
+            <span className="flex items-center gap-0.5 text-muted-foreground">
+              +<AnimatedCurrency amount={payable.roundingSurplusMinorUnits} currency={bill.currency} />
+            </span>
+          </div>
+        )}
+
+        <div className="flex items-end justify-between border-t border-dashed border-border pt-3">
+          <span className="text-sm font-semibold text-muted-foreground">{t('totalToPay')}</span>
+          <AnimatedCurrency
+            amount={totalToPay}
+            currency={bill.currency}
+            className="text-[2rem] leading-none font-bold text-primary"
+          />
+        </div>
       </motion.div>
 
-      <div className="flex flex-col gap-2">
+      <div className="grid grid-cols-3 gap-2.5">
         {payable.diners.map((dinerTotal) => {
           const diner = bill.diners.find((d) => d.id === dinerTotal.dinerId)
           if (!diner) return null
@@ -119,31 +101,38 @@ export function LiveSummarySection({ bill }: { bill: Bill }) {
           return (
             <div
               key={dinerTotal.dinerId}
-              className="flex items-center justify-between rounded-2xl border border-border/40 bg-card px-3 py-2.5 shadow-soft transition-shadow hover:shadow-elevated"
+              className="flex flex-col items-center gap-1.5 rounded-2xl border border-border/40 bg-card px-2 py-3 shadow-soft transition-shadow hover:shadow-elevated"
             >
-              <div className="flex items-center gap-2">
+              <div className="flex min-w-0 items-center gap-1.5">
                 <DinerAvatar
                   diner={diner}
                   defaultPosition={positions[diner.id]}
-                  className="size-8 text-xs ring-2 ring-card"
+                  className="size-5 shrink-0 text-[9px]"
                 />
-                <span className="text-sm font-medium">{dinerLabel(diner, positions[diner.id])}</span>
+                <span className="truncate text-xs font-medium">{dinerLabel(diner, positions[diner.id])}</span>
               </div>
-              <div className="flex items-center gap-1.5">
-                {isRounded && (
-                  <>
-                    <span className="text-xs text-muted-foreground">
-                      <AnimatedCurrency amount={dinerTotal.exactMinorUnits} currency={bill.currency} />
-                    </span>
-                    <ChevronRight className="size-3.5 text-muted-foreground rtl:rotate-180" />
-                  </>
-                )}
+
+              {isRounded ? (
+                <div className="flex flex-wrap items-center justify-center gap-1">
+                  <span className="text-[11px] text-muted-foreground">
+                    <AnimatedCurrency amount={dinerTotal.exactMinorUnits} currency={bill.currency} />
+                  </span>
+                  <ChevronRight className="size-3 shrink-0 text-muted-foreground rtl:rotate-180" />
+                  <AnimatedCurrency
+                    amount={dinerTotal.payableMinorUnits}
+                    currency={bill.currency}
+                    className="text-sm font-semibold"
+                  />
+                </div>
+              ) : (
                 <AnimatedCurrency
                   amount={dinerTotal.payableMinorUnits}
                   currency={bill.currency}
-                  className="text-lg font-semibold"
+                  className="text-sm font-semibold"
                 />
-              </div>
+              )}
+
+              <span className={`h-1 w-10 rounded-full ${DINER_DOT_CLASSES[diner.color]}`} aria-hidden="true" />
             </div>
           )
         })}

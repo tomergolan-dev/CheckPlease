@@ -7,14 +7,31 @@ export function initialsFromName(name: string): string {
   return (words[0]![0]! + words[1]![0]!).toUpperCase()
 }
 
-/** Soft, tinted backgrounds rather than solid saturated fills — calm, not busy. */
+/**
+ * Solid pastel fills, not neutral-tinted backgrounds — a diner's color is their identity
+ * everywhere they appear (avatar, chips, summary rows), so it reads the same in both themes
+ * rather than dissolving into a dark-mode neutral.
+ */
 export const DINER_COLOR_CLASSES: Record<DinerColorToken, string> = {
-  blue: 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
-  green: 'bg-green-500/15 text-green-600 dark:text-green-400',
-  amber: 'bg-amber-500/15 text-amber-700 dark:text-amber-400',
-  rose: 'bg-rose-500/15 text-rose-600 dark:text-rose-400',
-  violet: 'bg-violet-500/15 text-violet-600 dark:text-violet-400',
-  teal: 'bg-teal-500/15 text-teal-600 dark:text-teal-400',
-  orange: 'bg-orange-500/15 text-orange-600 dark:text-orange-400',
-  pink: 'bg-pink-500/15 text-pink-600 dark:text-pink-400',
+  blue: 'bg-[#9dc2d9] text-[#2f6a8c]',
+  green: 'bg-[#93af7e] text-[#3e5c2c]',
+  amber: 'bg-[#f0c25a] text-[#a6740b]',
+  rose: 'bg-[#e8a2a0] text-[#b3453f]',
+  violet: 'bg-[#b9a8d9] text-[#6a4f9e]',
+  teal: 'bg-[#8fc4bb] text-[#2f7d6e]',
+  orange: 'bg-[#f0a868] text-[#b3651a]',
+  pink: 'bg-[#f4a8c4] text-[#e0568f]',
+}
+
+/** The same identity color as a plain solid fill — used for underline bars and other accents
+ * that need just the color, not the avatar's background+text pairing. */
+export const DINER_DOT_CLASSES: Record<DinerColorToken, string> = {
+  blue: 'bg-[#9dc2d9]',
+  green: 'bg-[#93af7e]',
+  amber: 'bg-[#f0c25a]',
+  rose: 'bg-[#e8a2a0]',
+  violet: 'bg-[#b9a8d9]',
+  teal: 'bg-[#8fc4bb]',
+  orange: 'bg-[#f0a868]',
+  pink: 'bg-[#f4a8c4]',
 }

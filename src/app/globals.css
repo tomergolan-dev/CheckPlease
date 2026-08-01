@@ -5,84 +5,86 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --radius: 1rem;
+  --radius: 0.85rem;
 
-  /* Background sits a clear, deliberate step below card — cards should visibly "pop" off the
-     page via color/lightness contrast, not rely on a border to draw their edge. */
-  --background: oklch(0.955 0.006 264);
-  --foreground: oklch(0.17 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.17 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.17 0 0);
-  --border: oklch(0.9 0.006 264);
-  --input: oklch(0.9 0.006 264);
-  --ring: oklch(0.53 0.17 264);
-  --muted: oklch(0.925 0.007 264);
-  --muted-foreground: oklch(0.5 0 0);
-  --primary: oklch(0.53 0.17 264);
-  --primary-foreground: oklch(0.98 0 0);
-  --secondary: oklch(0.935 0.006 264);
-  --secondary-foreground: oklch(0.17 0 0);
-  --accent: oklch(0.95 0.03 264);
-  --accent-foreground: oklch(0.4 0.12 264);
-  --destructive: oklch(0.58 0.22 27);
+  /* Warm cream world — the restaurant/table feeling, not a cool finance-app gray.
+     Cards are pure white against the cream page, so they lift via color contrast alone. */
+  --background: #fcf4e8;
+  --foreground: #2b2620;
+  --card: #ffffff;
+  --card-foreground: #2b2620;
+  --popover: #ffffff;
+  --popover-foreground: #2b2620;
+  --border: #ece1d0;
+  --input: #ece1d0;
+  --ring: #d9722f;
+  --muted: #f4ece0;
+  --muted-foreground: #8a7f6c;
+  --primary: #d9722f;
+  --primary-foreground: #fffaf3;
+  --secondary: #f4ece0;
+  --secondary-foreground: #2b2620;
+  --accent: #f7e2d1;
+  --accent-foreground: #a6551f;
+  --destructive: #c94f3f;
 
-  --chart-1: oklch(0.53 0.17 264);
-  --chart-2: oklch(0.7 0.15 200);
-  --chart-3: oklch(0.75 0.16 90);
-  --chart-4: oklch(0.65 0.2 25);
-  --chart-5: oklch(0.6 0.14 320);
+  --chart-1: #d9722f;
+  --chart-2: #3e5c2c;
+  --chart-3: #a6740b;
+  --chart-4: #6a4f9e;
+  --chart-5: #2f6a8c;
 
-  --sidebar: oklch(0.955 0.006 264);
-  --sidebar-foreground: oklch(0.17 0 0);
-  --sidebar-primary: oklch(0.53 0.17 264);
-  --sidebar-primary-foreground: oklch(0.98 0 0);
-  --sidebar-accent: oklch(0.95 0.03 264);
-  --sidebar-accent-foreground: oklch(0.4 0.12 264);
-  --sidebar-border: oklch(0.9 0.006 264);
-  --sidebar-ring: oklch(0.53 0.17 264);
+  --sidebar: #fcf4e8;
+  --sidebar-foreground: #2b2620;
+  --sidebar-primary: #d9722f;
+  --sidebar-primary-foreground: #fffaf3;
+  --sidebar-accent: #f7e2d1;
+  --sidebar-accent-foreground: #a6551f;
+  --sidebar-border: #ece1d0;
+  --sidebar-ring: #d9722f;
 
-  /* Layered, directional (negative-spread) shadows read as a surface actually lifting off the
-     page rather than a faint diffuse haze — the more "native app" quality of depth. */
-  --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.05), 0 6px 16px -4px rgb(0 0 0 / 0.09);
-  --shadow-elevated: 0 2px 6px rgb(0 0 0 / 0.07), 0 18px 36px -10px rgb(0 0 0 / 0.16);
+  /* Soft, close shadows — a surface resting gently on the table, not casting a hard drop shadow. */
+  --shadow-soft: 0 1px 2px rgba(43, 38, 32, 0.04), 0 6px 16px -8px rgba(43, 38, 32, 0.08);
+  --shadow-elevated: 0 1px 2px rgba(43, 38, 32, 0.04), 0 14px 28px -12px rgba(43, 38, 32, 0.12);
 }
 
 .dark {
-  --background: oklch(0.15 0.004 264);
-  --foreground: oklch(0.97 0 0);
-  --card: oklch(0.205 0.007 264);
-  --card-foreground: oklch(0.97 0 0);
-  --popover: oklch(0.205 0.007 264);
-  --popover-foreground: oklch(0.97 0 0);
-  --border: oklch(0.3 0.008 264);
-  --input: oklch(0.3 0.008 264);
-  --ring: oklch(0.72 0.15 264);
-  --muted: oklch(0.25 0.008 264);
-  --muted-foreground: oklch(0.66 0 0);
-  --primary: oklch(0.72 0.15 264);
-  --primary-foreground: oklch(0.17 0 0);
-  --secondary: oklch(0.25 0.008 264);
-  --secondary-foreground: oklch(0.97 0 0);
-  --accent: oklch(0.28 0.05 264);
-  --accent-foreground: oklch(0.88 0.06 264);
-  --destructive: oklch(0.7 0.19 22);
+  --background: #1c1712;
+  --foreground: #f2e9db;
+  --card: #26201a;
+  --card-foreground: #f2e9db;
+  --popover: #26201a;
+  --popover-foreground: #f2e9db;
+  --border: #3a3226;
+  --input: #3a3226;
+  --ring: #e08a4f;
+  --muted: #322a20;
+  --muted-foreground: #b3a793;
+  --primary: #e08a4f;
+  --primary-foreground: #1c1712;
+  --secondary: #322a20;
+  --secondary-foreground: #f2e9db;
+  --accent: #3d2f22;
+  --accent-foreground: #f0b781;
+  --destructive: #d97463;
 
-  --chart-1: oklch(0.72 0.15 264);
-  --chart-2: oklch(0.75 0.13 200);
-  --chart-3: oklch(0.8 0.15 90);
-  --chart-4: oklch(0.72 0.18 25);
-  --chart-5: oklch(0.68 0.13 320);
+  --chart-1: #e08a4f;
+  --chart-2: #93af7e;
+  --chart-3: #f0c25a;
+  --chart-4: #b9a8d9;
+  --chart-5: #9dc2d9;
 
-  --sidebar: oklch(0.15 0.004 264);
-  --sidebar-foreground: oklch(0.97 0 0);
-  --sidebar-primary: oklch(0.72 0.15 264);
-  --sidebar-primary-foreground: oklch(0.17 0 0);
-  --sidebar-accent: oklch(0.28 0.05 264);
-  --sidebar-accent-foreground: oklch(0.88 0.06 264);
-  --sidebar-border: oklch(0.3 0.008 264);
-  --sidebar-ring: oklch(0.72 0.15 264);
+  --sidebar: #1c1712;
+  --sidebar-foreground: #f2e9db;
+  --sidebar-primary: #e08a4f;
+  --sidebar-primary-foreground: #1c1712;
+  --sidebar-accent: #3d2f22;
+  --sidebar-accent-foreground: #f0b781;
+  --sidebar-border: #3a3226;
+  --sidebar-ring: #e08a4f;
+
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.16), 0 6px 16px -8px rgba(0, 0, 0, 0.3);
+  --shadow-elevated: 0 1px 2px rgba(0, 0, 0, 0.18), 0 14px 28px -12px rgba(0, 0, 0, 0.4);
 }
 
 @theme inline {

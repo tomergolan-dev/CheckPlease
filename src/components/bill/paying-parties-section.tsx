@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { SectionHeading } from '@/components/shared/section-heading'
 import { useBillStore } from '@/lib/store/bill-store'
-import { getDinerDefaultPositions } from '@/lib/store/selectors'
+import { getDinerDefaultPositions, getDinerTotals } from '@/lib/store/selectors'
 import type { Bill } from '@/lib/store/types'
 import { AddDinerControl } from './add-diner-control'
 import { DinerChip } from './diner-chip'
@@ -21,6 +21,10 @@ export function PayingPartiesSection({ bill }: { bill: Bill }) {
   const shouldReduceMotion = useReducedMotion()
 
   const positions = useMemo(() => getDinerDefaultPositions(bill.diners), [bill.diners])
+  const dinerTotals = useMemo(
+    () => (bill.items.length > 0 ? getDinerTotals(bill) : null),
+    [bill]
+  )
   const [editDinerId, setEditDinerId] = useState<string | null>(null)
   const [removeDinerId, setRemoveDinerId] = useState<string | null>(null)
   const editingDiner = bill.diners.find((d) => d.id === editDinerId) ?? null
@@ -37,7 +41,7 @@ export function PayingPartiesSection({ bill }: { bill: Bill }) {
     <section className="flex flex-col gap-3">
       <SectionHeading icon={Users} title={t('title')} tone="blue" />
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-start gap-2">
         <AnimatePresence initial={false}>
           {bill.diners.map((diner) => (
             <motion.div
@@ -54,6 +58,8 @@ export function PayingPartiesSection({ bill }: { bill: Bill }) {
                 diner={diner}
                 label={dinerLabel(diner, positions[diner.id])}
                 defaultPosition={positions[diner.id]}
+                amountMinorUnits={dinerTotals?.find((d) => d.dinerId === diner.id)?.totalMinorUnits}
+                currency={dinerTotals ? bill.currency : undefined}
                 onOpen={() => setEditDinerId(diner.id)}
               />
             </motion.div>
