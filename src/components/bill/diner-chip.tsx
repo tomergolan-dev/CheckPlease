@@ -2,6 +2,7 @@
 
 import type { Diner } from '@/lib/store/types'
 import { DinerAvatar } from './diner-avatar'
+import { DINER_VIBRANT_CLASSES } from './diner-display'
 
 interface DinerChipProps {
   diner: Diner
@@ -23,7 +24,9 @@ export function DinerChip({ diner, label, defaultPosition, onOpen }: DinerChipPr
       <span className="relative inline-flex">
         <DinerAvatar diner={diner} defaultPosition={defaultPosition} className="size-14 text-base ring-2 ring-card" />
         {diner.partySize > 1 && (
-          <span className="absolute -end-1 -bottom-1 flex size-4 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground ring-2 ring-card">
+          <span
+            className={`absolute -end-1 -bottom-1 flex size-4 items-center justify-center rounded-full text-[10px] font-semibold text-white ring-2 ring-card ${DINER_VIBRANT_CLASSES[diner.color]}`}
+          >
             {diner.partySize}
           </span>
         )}

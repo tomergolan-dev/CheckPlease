@@ -57,7 +57,7 @@ export function AddItemSheet() {
       <DrawerTrigger asChild>
         <button
           type="button"
-          className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-primary/15 bg-accent/60 px-4 py-3.5 text-sm font-semibold text-primary transition-all hover:-translate-y-0.5 hover:bg-accent/80 hover:shadow-soft active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+          className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-border/60 bg-card px-4 py-3.5 text-sm font-medium text-primary transition-all hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-soft active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
         >
           <Plus className="size-4" aria-hidden="true" />
           {t('addItem')}

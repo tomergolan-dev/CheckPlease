@@ -50,18 +50,25 @@ export function ItemsSection({ bill }: { bill: Bill }) {
             <p className="text-sm text-muted-foreground">{t('emptyState')}</p>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-[22px] border border-border/40 bg-card shadow-soft">
+          // `layout` on this card (not just the rows inside it) is what makes the collapse a
+          // smooth height tween instead of an instant snap — without it, this plain div's
+          // height follows its children's current DOM state exactly, so overflow-hidden was
+          // clipping the exiting rows' fade instead of shrinking around them.
+          <motion.div
+            layout
+            className="overflow-hidden rounded-[22px] border border-border/40 bg-card shadow-soft"
+          >
             <div className="flex flex-col divide-y divide-border/40">
-              <AnimatePresence initial={false}>
+              <AnimatePresence initial={false} mode="popLayout">
                 {visibleItems.map((item) => (
                   <motion.div
                     key={item.id}
                     layout
                     initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={shouldReduceMotion ? undefined : { opacity: 0, y: -8 }}
+                    exit={shouldReduceMotion ? undefined : { opacity: 0 }}
                     transition={
-                      shouldReduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 380, damping: 26 }
+                      shouldReduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 380, damping: 32 }
                     }
                   >
                     <ItemRow item={item} bill={bill} positions={positions} onOpen={setEditItemId} />
@@ -83,7 +90,7 @@ export function ItemsSection({ bill }: { bill: Bill }) {
                 />
               </button>
             )}
-          </div>
+          </motion.div>
         )}
       </div>
 

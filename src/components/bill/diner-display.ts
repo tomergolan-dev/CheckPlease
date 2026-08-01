@@ -38,16 +38,32 @@ export const DINER_DOT_CLASSES: Record<DinerColorToken, string> = {
 
 /** Just the identity text color — for placing a diner's accent on a number/label that sits on
  * a neutral background (e.g. the per-person payment card's final amount), without the avatar's
- * gradient background coming along for the ride. */
+ * gradient background coming along for the ride. Genuinely vibrant (not the muted avatar tones)
+ * since this is the one number on the card the eye is meant to land on. */
 export const DINER_TEXT_CLASSES: Record<DinerColorToken, string> = {
-  blue: 'text-[#1f4f68]',
-  green: 'text-[#33501f]',
-  amber: 'text-[#8a5e07]',
-  rose: 'text-[#8a3128]',
-  violet: 'text-[#4c3878]',
-  teal: 'text-[#1f5c50]',
-  orange: 'text-[#8a4c10]',
-  pink: 'text-[#96285e]',
+  blue: 'text-[#2563eb]',
+  green: 'text-[#16a34a]',
+  amber: 'text-[#d97706]',
+  rose: 'text-[#e11d48]',
+  violet: 'text-[#7c3aed]',
+  teal: 'text-[#0d9488]',
+  orange: 'text-[#ea580c]',
+  pink: 'text-[#db2777]',
+}
+
+/** A solid, vibrant fill using the same hue family as DINER_TEXT_CLASSES — for small
+ * high-contrast badges (e.g. the party-size count) that need to read clearly at a glance,
+ * always paired with white text. Keeps a diner's color identical across avatar, badge, and
+ * payment card instead of the badge defaulting to a one-size-fits-all primary orange. */
+export const DINER_VIBRANT_CLASSES: Record<DinerColorToken, string> = {
+  blue: 'bg-[#2563eb]',
+  green: 'bg-[#16a34a]',
+  amber: 'bg-[#d97706]',
+  rose: 'bg-[#e11d48]',
+  violet: 'bg-[#7c3aed]',
+  teal: 'bg-[#0d9488]',
+  orange: 'bg-[#ea580c]',
+  pink: 'bg-[#db2777]',
 }
 
 /** A very pale wash of a diner's identity color — for a card background that reads as

@@ -25,7 +25,7 @@ export function BillEntry() {
   const transition = shouldReduceMotion ? { duration: 0 } : { duration: 0.3, ease: 'easeOut' as const }
 
   return (
-    <div className="flex min-h-dvh justify-center bg-muted/40">
+    <div className={cn('flex min-h-dvh justify-center bg-muted/40', bill && 'lg:bg-background')}>
       <div
         className={cn(
           // No overflow-hidden here — the sticky summary column on wide screens needs the
@@ -36,7 +36,10 @@ export function BillEntry() {
           // The onboarding hero stays a compact, centered moment at any viewport size — only
           // the active bill canvas widens to make real use of tablet/desktop space, since
           // that's where a wider layout (and the sticky summary column) actually pays off.
-          bill ? 'max-w-md md:max-w-2xl lg:max-w-4xl' : 'max-w-md'
+          // From lg up, the outer page background matches this container's own background
+          // (above), so there's no visible "card floating in a frame" edge — just generous,
+          // natural margins, not a boxed-in centered container.
+          bill ? 'max-w-md md:max-w-2xl lg:max-w-5xl xl:max-w-6xl' : 'max-w-md'
         )}
       >
         <DoodleAccents />
