@@ -44,7 +44,8 @@ export function getDinerRemovalImpact(bill: Bill, dinerId: string): DinerRemoval
 
 export function getDinerTotals(bill: Bill): DinerTotal[] {
   const dinerIds = bill.diners.map((diner) => diner.id)
-  const subtotals = computeDinerSubtotals(bill.items, dinerIds)
+  const dinerWeights = Object.fromEntries(bill.diners.map((diner) => [diner.id, diner.partySize]))
+  const subtotals = computeDinerSubtotals(bill.items, dinerIds, dinerWeights)
   const billSubtotal = computeBillSubtotal(bill.items)
   const tipTotal = computeTipTotal(billSubtotal, bill.tip)
   const tipShares = computeDinerTipShares(dinerIds, subtotals, tipTotal)

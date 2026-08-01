@@ -28,6 +28,20 @@ describe('computeItemSplit', () => {
     const item: CalcItem = { id: 'i1', unitPriceMinorUnits: 100, quantity: 1, sharedBy: [] }
     expect(() => computeItemSplit(item)).toThrow()
   })
+
+  it('weights the split by partySize instead of splitting evenly per paying party', () => {
+    // Tomer (party size 1), Sharon (party size 1), Roshatzki (party size 2) share a ₪200
+    // dish — 4 diners total, so it splits into 4 equal ₪50 portions: Roshatzki's party of 2
+    // gets ₪100, not an equal third of ₪200 like the other two paying parties.
+    const item: CalcItem = { id: 'i1', unitPriceMinorUnits: 20000, quantity: 1, sharedBy: ['tomer', 'sharon', 'roshatzki'] }
+    const dinerWeights = { tomer: 1, sharon: 1, roshatzki: 2 }
+    expect(computeItemSplit(item, dinerWeights)).toEqual({ tomer: 5000, sharon: 5000, roshatzki: 10000 })
+  })
+
+  it('falls back to weight 1 for a diner missing from the weights map', () => {
+    const item: CalcItem = { id: 'i1', unitPriceMinorUnits: 300, quantity: 1, sharedBy: ['d1', 'd2'] }
+    expect(computeItemSplit(item, { d1: 1 })).toEqual({ d1: 150, d2: 150 })
+  })
 })
 
 describe('computeDinerSubtotals', () => {
@@ -64,5 +78,18 @@ describe('computeDinerSubtotals', () => {
     ]
     const subtotals = computeDinerSubtotals(items, ['d1', 'd2', 'd3'])
     expect(subtotals).toEqual({ d1: 100, d2: 100, d3: 100 })
+  })
+
+  it('weights subtotals by partySize across the whole bill, not just one item', () => {
+    const items: CalcItem[] = [
+      { id: 'i1', unitPriceMinorUnits: 20000, quantity: 1, sharedBy: ['tomer', 'sharon', 'roshatzki'] },
+      { id: 'i2', unitPriceMinorUnits: 10000, quantity: 1, sharedBy: ['sharon', 'roshatzki'] },
+    ]
+    const dinerWeights = { tomer: 1, sharon: 1, roshatzki: 2 }
+    const subtotals = computeDinerSubtotals(items, ['tomer', 'sharon', 'roshatzki'], dinerWeights)
+    // i1: 5000/5000/10000. i2 (weights 1 and 2 over ₪100): 3333/6667.
+    expect(subtotals).toEqual({ tomer: 5000, sharon: 8333, roshatzki: 16667 })
+    const sum = Object.values(subtotals).reduce((a, b) => a + b, 0)
+    expect(sum).toBe(computeBillSubtotal(items))
   })
 })

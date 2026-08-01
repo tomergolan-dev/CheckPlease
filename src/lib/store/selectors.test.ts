@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { getBillPayableSummary, getDinerDefaultPositions, getDinerRemovalImpact, getDinerTotals } from './selectors'
 import type { Bill, Diner, Item } from './types'
 
-function diner(id: string, name?: string): Diner {
-  return { id, name, partySize: 1, color: 'blue' }
+function diner(id: string, name?: string, partySize = 1): Diner {
+  return { id, name, partySize, color: 'blue' }
 }
 
 function bill(diners: Diner[], items: Item[]): Bill {
@@ -95,5 +95,29 @@ describe('getDinerTotals / getBillPayableSummary', () => {
     const payable = getBillPayableSummary(testBill)
     expect(payable.exactGrandTotalMinorUnits).toBe(5500)
     expect(payable.payableGrandTotalMinorUnits).toBe(5500) // rounding disabled by default
+  })
+
+  it('weights a shared dish by each paying party\'s partySize, not by paying-party count', () => {
+    // Tomer (party size 1), Sharon (party size 1), Roshatzki (party size 2) — 4 diners
+    // total sharing a ₪200 dish should split into 4 equal ₪50 portions, so Roshatzki's
+    // party of 2 pays ₪100 while Tomer and Sharon each pay ₪50 — not an equal ₪66.67 each.
+    const diners = [diner('tomer'), diner('sharon'), diner('roshatzki', undefined, 2)]
+    const items: Item[] = [
+      {
+        id: 'i1',
+        name: 'Shared dish',
+        unitPriceMinorUnits: 20000,
+        quantity: 1,
+        sharedBy: ['tomer', 'sharon', 'roshatzki'],
+        source: 'manual',
+        sortIndex: 0,
+      },
+    ]
+    const testBill = bill(diners, items)
+
+    const totals = getDinerTotals(testBill)
+    expect(totals.find((d) => d.dinerId === 'tomer')?.totalMinorUnits).toBe(5000)
+    expect(totals.find((d) => d.dinerId === 'sharon')?.totalMinorUnits).toBe(5000)
+    expect(totals.find((d) => d.dinerId === 'roshatzki')?.totalMinorUnits).toBe(10000)
   })
 })

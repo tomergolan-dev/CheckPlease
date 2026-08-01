@@ -10,8 +10,13 @@ import type { CalcItem, TipConfig } from './types'
  * allocation stages (item -> diners, tip -> diners), regardless of how unevenly the
  * bill splits.
  */
-function runPipeline(dinerIds: string[], items: CalcItem[], tip: TipConfig) {
-  const subtotals = computeDinerSubtotals(items, dinerIds)
+function runPipeline(
+  dinerIds: string[],
+  items: CalcItem[],
+  tip: TipConfig,
+  dinerWeights: Record<string, number> = {}
+) {
+  const subtotals = computeDinerSubtotals(items, dinerIds, dinerWeights)
   const billSubtotal = computeBillSubtotal(items)
   const tipTotal = computeTipTotal(billSubtotal, tip)
   const tipShares = computeDinerTipShares(dinerIds, subtotals, tipTotal)
@@ -102,6 +107,49 @@ describe('bill calculation pipeline', () => {
         })
         expect(grandTotal).toBe(billSubtotal + tipTotal)
       }
+    }
+  })
+
+  it('reconciles exactly when parties have unequal partySize weights, and tip follows the weighted subtotal', () => {
+    // Tomer (1), Sharon (1), Roshatzki (2) — a party of 2 should end up paying roughly
+    // double a party of 1 for the same shared dishes, and the tip (proportional to each
+    // diner's subtotal) should follow that same weighting automatically.
+    const dinerIds = ['tomer', 'sharon', 'roshatzki']
+    const dinerWeights = { tomer: 1, sharon: 1, roshatzki: 2 }
+    const items: CalcItem[] = [{ id: 'i1', unitPriceMinorUnits: 20000, quantity: 1, sharedBy: dinerIds }]
+    const { billSubtotal, tipTotal, dinerTotals, grandTotal } = runPipeline(
+      dinerIds,
+      items,
+      { mode: 'percentage', valueBasisPoints: 1000 },
+      dinerWeights
+    )
+    const tomerTotal = dinerTotals.find((d) => d.dinerId === 'tomer')!.totalMinorUnits
+    const sharonTotal = dinerTotals.find((d) => d.dinerId === 'sharon')!.totalMinorUnits
+    const roshatzkiTotal = dinerTotals.find((d) => d.dinerId === 'roshatzki')!.totalMinorUnits
+    expect(tomerTotal).toBe(5500) // ₪50 + 10% tip
+    expect(sharonTotal).toBe(5500)
+    expect(roshatzkiTotal).toBe(11000) // ₪100 + 10% tip
+    expect(grandTotal).toBe(billSubtotal + tipTotal)
+  })
+
+  it('reconciles exactly across a sweep of odd amounts with unequal partySize weights', () => {
+    const unitPrices = [199, 1301, 4999, 7, 12345, 333, 1]
+    const dinerIds = ['d0', 'd1', 'd2', 'd3']
+    const dinerWeights = { d0: 1, d1: 2, d2: 3, d3: 1 }
+    const items: CalcItem[] = unitPrices.map((price, i) => ({
+      id: `i${i}`,
+      unitPriceMinorUnits: price,
+      quantity: (i % 3) + 1,
+      sharedBy: dinerIds.slice(0, (i % dinerIds.length) + 1),
+    }))
+    for (const bps of [0, 1000, 1200, 1250, 1500, 3333]) {
+      const { billSubtotal, tipTotal, grandTotal } = runPipeline(
+        dinerIds,
+        items,
+        { mode: 'percentage', valueBasisPoints: bps },
+        dinerWeights
+      )
+      expect(grandTotal).toBe(billSubtotal + tipTotal)
     }
   })
 })
