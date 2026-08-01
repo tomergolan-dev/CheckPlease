@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input'
 import { Stepper } from '@/components/shared/stepper'
 import {
   Drawer,
-  DrawerClose,
   DrawerContent,
   DrawerFooter,
   DrawerHeader,
@@ -58,8 +57,11 @@ export function DinerEditSheet({
     setNameDinerId(active.id)
   }
 
-  function commitName() {
-    renameDiner(active!.id, name)
+  function handleNameChange(value: string) {
+    setName(value)
+    // Committed live, same as every other editable field — closing the sheet is "Done,"
+    // never a separate save step the user has to remember to trigger.
+    renameDiner(active!.id, value)
   }
 
   return (
@@ -73,8 +75,7 @@ export function DinerEditSheet({
           <Input
             autoFocus
             value={name}
-            onChange={(e) => setName(e.target.value)}
-            onBlur={commitName}
+            onChange={(e) => handleNameChange(e.target.value)}
             placeholder={t('defaultLabel', { number: defaultPosition ?? 0 })}
           />
 
@@ -89,9 +90,7 @@ export function DinerEditSheet({
         </div>
 
         <DrawerFooter>
-          <DrawerClose asChild>
-            <Button variant="outline">{tCommon('cancel')}</Button>
-          </DrawerClose>
+          <Button onClick={() => onOpenChange(false)}>{tCommon('done')}</Button>
           {canRemove ? (
             <button
               type="button"

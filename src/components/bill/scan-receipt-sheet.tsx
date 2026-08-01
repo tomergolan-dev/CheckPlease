@@ -300,7 +300,7 @@ export function ScanReceiptSheet() {
                           disabled={!row.included}
                         />
                         <div className="flex items-center gap-2">
-                          <div className="relative w-24">
+                          <div className="relative w-28">
                             <span className="pointer-events-none absolute inset-y-0 start-2.5 flex items-center text-xs text-muted-foreground">
                               ₪
                             </span>
@@ -309,7 +309,7 @@ export function ScanReceiptSheet() {
                               value={row.priceValue}
                               onChange={(e) => updateRow(row.id, { priceValue: e.target.value })}
                               disabled={!row.included}
-                              className="ps-6 text-sm"
+                              className="ps-6"
                             />
                           </div>
                           <div className={row.included ? '' : 'pointer-events-none opacity-60'}>

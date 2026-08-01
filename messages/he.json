@@ -1,12 +1,17 @@
 {
   "App": {
-    "tagline": "לפצל את החשבון.\nלא את החברות."
+    "tagline": "לפצל את החשבון.\nלא את החברות.",
+    "newBillAction": "התחלת חשבון חדש",
+    "newBillConfirmTitle": "להתחיל חשבון חדש?",
+    "newBillConfirmDescription": "הפעולה תמחק לצמיתות את החשבון הנוכחי — כולל הסועדים, המנות והטיפ. אי אפשר לבטל אותה.",
+    "newBillConfirmAction": "התחל חשבון חדש"
   },
   "Home": {
     "startBillCta": "בואו נתחיל לפצל"
   },
   "Common": {
-    "cancel": "ביטול"
+    "cancel": "ביטול",
+    "done": "סיום"
   },
   "Diners": {
     "title": "מי משלם?",

@@ -1,6 +1,7 @@
 'use client'
 
 import { useBillStore } from '@/lib/store/bill-store'
+import { AppHeader } from './app-header'
 import { ItemsSection } from './items-section'
 import { LiveSummarySection } from './live-summary-section'
 import { PayingPartiesSection } from './paying-parties-section'
@@ -12,6 +13,7 @@ export function BillCanvas() {
 
   return (
     <div className="safe-top safe-bottom safe-x flex min-h-dvh flex-col gap-8 px-4 py-8">
+      <AppHeader />
       <PayingPartiesSection bill={bill} />
       <ItemsSection bill={bill} />
       <LiveSummarySection bill={bill} />

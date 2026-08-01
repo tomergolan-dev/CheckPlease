@@ -1,12 +1,17 @@
 {
   "App": {
-    "tagline": "Split the bill.\nNot the friendship."
+    "tagline": "Split the bill.\nNot the friendship.",
+    "newBillAction": "Start a new bill",
+    "newBillConfirmTitle": "Start a new bill?",
+    "newBillConfirmDescription": "This clears your current bill for good — diners, dishes and tip included. This can't be undone.",
+    "newBillConfirmAction": "Start new bill"
   },
   "Home": {
     "startBillCta": "Start Splitting"
   },
   "Common": {
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "done": "Done"
   },
   "Diners": {
     "title": "Who's paying?",

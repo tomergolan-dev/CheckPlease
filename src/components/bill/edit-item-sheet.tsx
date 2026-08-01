@@ -6,7 +6,6 @@ import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import {
   Drawer,
-  DrawerClose,
   DrawerContent,
   DrawerFooter,
   DrawerHeader,
@@ -75,6 +74,13 @@ export function EditItemSheet({ bill, itemId, onOpenChange }: EditItemSheetProps
     onOpenChange(false)
   }
 
+  function handleDone() {
+    // Guarantee the price commits even if the field never blurred (e.g. Done was tapped
+    // while a different control had focus) — every other field here is already live-bound.
+    commitPrice()
+    onOpenChange(false)
+  }
+
   return (
     <Drawer open={Boolean(itemId)} onOpenChange={onOpenChange}>
       <DrawerContent>
@@ -124,9 +130,7 @@ export function EditItemSheet({ bill, itemId, onOpenChange }: EditItemSheetProps
         </div>
 
         <DrawerFooter>
-          <DrawerClose asChild>
-            <Button variant="outline">{tCommon('cancel')}</Button>
-          </DrawerClose>
+          <Button onClick={handleDone}>{tCommon('done')}</Button>
           <button
             type="button"
             onClick={handleDelete}
