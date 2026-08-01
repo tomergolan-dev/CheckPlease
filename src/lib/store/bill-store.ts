@@ -4,6 +4,7 @@ import { colorTokenForIndex } from './palette'
 import { getDinerRemovalImpact } from './selectors'
 import type { Bill, Diner, Item } from './types'
 import type { TipConfig } from '@/lib/money'
+import { generateId } from '@/lib/id'
 
 function nextSortIndex(items: Item[]): number {
   return items.reduce((max, item) => Math.max(max, item.sortIndex), -1) + 1
@@ -64,7 +65,7 @@ export const useBillStore = create<BillStore>()(
         const now = Date.now()
         set({
           bill: {
-            id: crypto.randomUUID(),
+            id: generateId(),
             createdAt: now,
             updatedAt: now,
             currency: 'ILS',
@@ -97,7 +98,7 @@ export const useBillStore = create<BillStore>()(
         if (!bill) throw new Error('Cannot add a diner: no active bill')
 
         const includeInExistingItems = options.includeInExistingItems ?? true
-        const id = crypto.randomUUID()
+        const id = generateId()
         const diner: Diner = {
           id,
           partySize: 1,
@@ -189,7 +190,7 @@ export const useBillStore = create<BillStore>()(
         const bill = get().bill
         if (!bill) throw new Error('Cannot add an item: no active bill')
 
-        const id = crypto.randomUUID()
+        const id = generateId()
         const item: Item = {
           id,
           name,

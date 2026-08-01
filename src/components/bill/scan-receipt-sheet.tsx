@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/drawer'
 import { useBillStore } from '@/lib/store/bill-store'
 import { formatCurrency, minorUnitsToInputValue, parseInputValueToMinorUnits } from '@/lib/money'
+import { generateId } from '@/lib/id'
 import { scanReceipt, ScanReceiptError, type ScanReceiptErrorCode } from '@/lib/receipt-scan'
 
 interface DraftRow {
@@ -80,7 +81,7 @@ export function ScanReceiptSheet() {
       }
       setRows(
         items.map((item) => ({
-          id: crypto.randomUUID(),
+          id: generateId(),
           name: item.name,
           priceValue: minorUnitsToInputValue(item.unitPriceMinorUnits, currency),
           quantity: item.quantity,
