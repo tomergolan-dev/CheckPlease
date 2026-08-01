@@ -83,6 +83,8 @@
     "subtotal": "סכום ביניים",
     "rounding": "עיגול סכומים",
     "totalToPay": "סה\"כ לתשלום",
-    "roundUpToggleLabel": "לעגל סכומים כלפי מעלה"
+    "roundUpTitle": "עיגול סכומים",
+    "roundUpSubtitle": "עיגול כלפי מעלה",
+    "eachPersonPays": "כל אחד משלם"
   }
 }

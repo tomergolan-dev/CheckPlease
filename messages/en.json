@@ -83,6 +83,8 @@
     "subtotal": "Subtotal",
     "rounding": "Payment rounding",
     "totalToPay": "Total to pay",
-    "roundUpToggleLabel": "Round up payments"
+    "roundUpTitle": "Round up",
+    "roundUpSubtitle": "Round up to the next whole number",
+    "eachPersonPays": "Each person pays"
   }
 }

@@ -56,7 +56,10 @@ export function TipAndRoundingCard({
 
         <label className="flex items-center gap-3 px-4 py-3">
           <IconBadge icon={ArrowUp} tone="green" size="sm" />
-          <span className="flex-1 text-sm font-medium">{tSummary('roundUpToggleLabel')}</span>
+          <span className="flex min-w-0 flex-1 flex-col">
+            <span className="text-sm font-medium">{tSummary('roundUpTitle')}</span>
+            <span className="text-xs text-muted-foreground">{tSummary('roundUpSubtitle')}</span>
+          </span>
           {showRoundingAmount && (
             <AnimatedCurrency
               amount={roundingSurplusMinorUnits}
@@ -67,7 +70,7 @@ export function TipAndRoundingCard({
           <Switch
             checked={bill.roundUpPayments}
             onCheckedChange={setRoundUpPayments}
-            aria-label={tSummary('roundUpToggleLabel')}
+            aria-label={tSummary('roundUpTitle')}
           />
         </label>
       </div>

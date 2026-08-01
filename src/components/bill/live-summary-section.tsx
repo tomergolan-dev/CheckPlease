@@ -28,10 +28,12 @@ export function LiveSummarySection({ bill }: { bill: Bill }) {
   const exactTotal = originalAmount + tipTotal
   const payable = getBillPayableSummary(bill)
 
-  // Subtotal only adds information once tip exists (original + 0 tip == subtotal), and
-  // the rounding row only matters once it actually changes what's collected.
-  const showSubtotalRow = tipTotal > 0
+  // The rounding row only matters once it actually changes what's collected. Subtotal is
+  // only worth its own row when there's a further row after it (rounding) that changes the
+  // number again — otherwise "original + tip" and "total to pay" are the same figure, and
+  // showing both is a redundant row rather than a real breakdown step.
   const showRoundingRow = bill.roundUpPayments && payable.roundingSurplusMinorUnits > 0
+  const showSubtotalRow = tipTotal > 0 && showRoundingRow
   const totalToPay = showRoundingRow ? payable.payableGrandTotalMinorUnits : exactTotal
   const tipPercent = basisPointsToPercentage(bill.tip.valueBasisPoints)
 
@@ -91,6 +93,10 @@ export function LiveSummarySection({ bill }: { bill: Bill }) {
         </div>
       </motion.div>
 
+      <p className="px-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+        {t('eachPersonPays')}
+      </p>
+
       <div className="grid grid-cols-3 gap-2.5">
         {payable.diners.map((dinerTotal) => {
           const diner = bill.diners.find((d) => d.id === dinerTotal.dinerId)
@@ -119,14 +125,14 @@ export function LiveSummarySection({ bill }: { bill: Bill }) {
                   <AnimatedCurrency
                     amount={dinerTotal.payableMinorUnits}
                     currency={bill.currency}
-                    className={`text-sm font-bold ${DINER_TEXT_CLASSES[diner.color]}`}
+                    className={`text-base font-extrabold ${DINER_TEXT_CLASSES[diner.color]}`}
                   />
                 </div>
               ) : (
                 <AnimatedCurrency
                   amount={dinerTotal.payableMinorUnits}
                   currency={bill.currency}
-                  className={`text-sm font-bold ${DINER_TEXT_CLASSES[diner.color]}`}
+                  className={`text-base font-extrabold ${DINER_TEXT_CLASSES[diner.color]}`}
                 />
               )}
             </div>
