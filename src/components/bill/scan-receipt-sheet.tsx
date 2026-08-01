@@ -1,9 +1,10 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { Camera, CircleX, Images, Loader2, Plus, ScanLine, X } from 'lucide-react'
+import { Camera, Check, CircleX, Images, Loader2, Pencil, Plus, ScanLine, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { IconBadge } from '@/components/shared/icon-badge'
@@ -50,15 +51,33 @@ export function ScanReceiptSheet() {
   const [errorCode, setErrorCode] = useState<ErrorCode | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [addMode, setAddMode] = useState<AddMode>('append')
+  // At most one row is ever editable — tapping a different row (or Done) always closes
+  // whichever was open, so the list stays a stable, read-only surface everywhere else.
+  const [editingRowId, setEditingRowId] = useState<string | null>(null)
 
   const cameraInputRef = useRef<HTMLInputElement>(null)
   const libraryInputRef = useRef<HTMLInputElement>(null)
+  const rowRefs = useRef<Record<string, HTMLDivElement | null>>({})
+
+  // The edited row is pinned (position: sticky) to the top of the list while active, so it
+  // can never end up lost behind the keyboard or scrolled out of view — this scrolls it into
+  // that pinned position the moment edit mode begins.
+  useEffect(() => {
+    if (!editingRowId) return
+    const node = rowRefs.current[editingRowId]
+    if (!node) return
+    const frame = requestAnimationFrame(() => {
+      node.scrollIntoView({ block: 'start', behavior: shouldReduceMotion ? 'auto' : 'smooth' })
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [editingRowId, shouldReduceMotion])
 
   function reset() {
     setStep('picker')
     setRows([])
     setErrorCode(null)
     setAddMode('append')
+    setEditingRowId(null)
     setPreviewUrl((prev) => {
       if (prev) URL.revokeObjectURL(prev)
       return null
@@ -173,7 +192,20 @@ export function ScanReceiptSheet() {
           </button>
         </DrawerTrigger>
 
-        <DrawerContent>
+        <DrawerContent
+          // Scoped to the review step only — every other step keeps normal swipe/backdrop
+          // dismiss. dismissible={false} was tried and rejected: vaul gates its *entire*
+          // internal close handler behind that flag, so it also silently swallowed the
+          // Cancel button. data-vaul-no-drag only exempts gesture-based dismissal, leaving
+          // DrawerClose (Cancel) — a direct, non-gesture close — fully intact.
+          data-vaul-no-drag={step === 'review' ? true : undefined}
+          onPointerDownOutside={(e) => {
+            if (step === 'review') e.preventDefault()
+          }}
+          onEscapeKeyDown={(e) => {
+            if (step === 'review') e.preventDefault()
+          }}
+        >
           <AnimatePresence mode="wait" initial={false}>
             {step === 'picker' && (
               <motion.div
@@ -187,7 +219,7 @@ export function ScanReceiptSheet() {
                 <DrawerHeader>
                   <DrawerTitle>{t('scanReceipt')}</DrawerTitle>
                 </DrawerHeader>
-                <div className="flex flex-col gap-2 px-4 pb-2">
+                <div className="flex flex-col gap-2 px-6 pb-2">
                   <Button
                     size="lg"
                     className="w-full justify-start gap-2.5"
@@ -282,59 +314,100 @@ export function ScanReceiptSheet() {
                   <DrawerDescription>{t('scanReviewHint', { count: rows.length })}</DrawerDescription>
                 </DrawerHeader>
 
-                <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-4 pb-2">
-                  {rows.map((row, index) => (
-                    <motion.div
-                      key={row.id}
-                      initial={shouldReduceMotion ? false : { opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.16, delay: shouldReduceMotion ? 0 : index * 0.03 }}
-                      className={`flex items-center gap-2 rounded-xl border border-border/40 bg-card px-3 py-2 transition-opacity ${
-                        row.included ? '' : 'opacity-40'
-                      }`}
-                    >
-                      <div className="flex flex-1 flex-col gap-1.5">
-                        <Input
-                          value={row.name}
-                          onChange={(e) => updateRow(row.id, { name: e.target.value })}
-                          disabled={!row.included}
-                        />
-                        <div className="flex items-center gap-2">
-                          <div className="relative w-28">
-                            <span className="pointer-events-none absolute inset-y-0 start-2.5 flex items-center text-xs text-muted-foreground">
-                              ₪
-                            </span>
-                            <Input
-                              inputMode="decimal"
-                              value={row.priceValue}
-                              onChange={(e) => updateRow(row.id, { priceValue: e.target.value })}
-                              disabled={!row.included}
-                              className="ps-6"
-                            />
-                          </div>
-                          <div className={row.included ? '' : 'pointer-events-none opacity-60'}>
-                            <Stepper
-                              value={row.quantity}
-                              onChange={(quantity) => updateRow(row.id, { quantity })}
-                              label={t('quantityLabel')}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => updateRow(row.id, { included: !row.included })}
-                        aria-label={row.included ? t('scanExcludeItem') : t('scanIncludeItem')}
-                        className="flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-6 pt-1 pb-2">
+                  {rows.map((row, index) => {
+                    const isEditing = editingRowId === row.id
+                    return (
+                      <motion.div
+                        key={row.id}
+                        ref={(node) => {
+                          rowRefs.current[row.id] = node
+                        }}
+                        layout={!shouldReduceMotion}
+                        initial={shouldReduceMotion ? false : { opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.16, delay: shouldReduceMotion ? 0 : index * 0.03 }}
+                        className={cn(
+                          'flex items-center gap-2 rounded-xl border border-border/40 bg-card px-4 py-2.5 transition-opacity',
+                          !row.included && 'opacity-40',
+                          // Pinned to the top of the scrollable list while active — the field
+                          // being edited can never end up hidden behind the keyboard or lost
+                          // by scrolling further down the list.
+                          isEditing && 'sticky top-1 z-10 shadow-elevated'
+                        )}
                       >
-                        {row.included ? <X className="size-4" /> : <Plus className="size-4" />}
-                      </button>
-                    </motion.div>
-                  ))}
+                        {isEditing ? (
+                          <div className="flex flex-1 flex-col gap-1.5">
+                            <Input
+                              autoFocus
+                              value={row.name}
+                              onChange={(e) => updateRow(row.id, { name: e.target.value })}
+                            />
+                            <div className="flex items-center gap-2">
+                              <div className="relative w-28">
+                                <span className="pointer-events-none absolute inset-y-0 start-2.5 flex items-center text-xs text-muted-foreground">
+                                  ₪
+                                </span>
+                                <Input
+                                  inputMode="decimal"
+                                  value={row.priceValue}
+                                  onChange={(e) => updateRow(row.id, { priceValue: e.target.value })}
+                                  className="ps-6"
+                                />
+                              </div>
+                              <Stepper
+                                value={row.quantity}
+                                onChange={(quantity) => updateRow(row.id, { quantity })}
+                                label={t('quantityLabel')}
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={!row.included}
+                            onClick={() => setEditingRowId(row.id)}
+                            className="flex flex-1 items-center gap-2 text-start disabled:pointer-events-none"
+                          >
+                            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                              <span className="truncate text-sm font-medium">
+                                {row.name || t('namePlaceholder')}
+                              </span>
+                              <span className="text-xs tabular-nums text-muted-foreground">
+                                {formatCurrency(parseInputValueToMinorUnits(row.priceValue, currency), currency)}
+                                {row.quantity > 1 && ` × ${row.quantity}`}
+                              </span>
+                            </div>
+                            <Pencil className="size-3.5 shrink-0 text-muted-foreground/60" aria-hidden="true" />
+                          </button>
+                        )}
+
+                        {isEditing ? (
+                          <button
+                            type="button"
+                            onClick={() => setEditingRowId(null)}
+                            aria-label={tCommon('done')}
+                            className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                          >
+                            <Check className="size-4" />
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => updateRow(row.id, { included: !row.included })}
+                            aria-label={row.included ? t('scanExcludeItem') : t('scanIncludeItem')}
+                            className="flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                          >
+                            {row.included ? <X className="size-4" /> : <Plus className="size-4" />}
+                          </button>
+                        )}
+                      </motion.div>
+                    )
+                  })}
                 </div>
 
                 {existingItemsCount > 0 && (
-                  <div className="flex flex-col gap-2 border-t border-border/40 px-4 pt-3">
+                  <div className="flex flex-col gap-2 border-t border-border/40 px-6 pt-3">
                     <span className="text-sm font-medium text-muted-foreground">
                       {t('scanExistingItemsQuestion')}
                     </span>
@@ -368,7 +441,7 @@ export function ScanReceiptSheet() {
                   </div>
                 )}
 
-                <div className="flex items-center justify-between border-t border-border/40 px-4 py-2.5">
+                <div className="flex items-center justify-between border-t border-border/40 px-6 py-2.5">
                   <span className="text-sm text-muted-foreground">{t('scanReviewTotal')}</span>
                   <span className="text-base font-semibold tabular-nums">
                     {formatCurrency(includedTotalMinorUnits, currency)}

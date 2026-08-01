@@ -8,7 +8,18 @@ import { cn } from "@/lib/utils"
 function Drawer({
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Root>) {
-  return <DrawerPrimitive.Root data-slot="drawer" {...props} />
+  return (
+    <DrawerPrimitive.Root
+      data-slot="drawer"
+      // vaul's own JS-driven keyboard-avoidance (measuring the input and repositioning the
+      // drawer) is what was leaving sheets stuck in the wrong place after the keyboard
+      // closed. The viewport's interactiveWidget: 'resizes-content' (see [locale]/layout.tsx)
+      // now makes the real layout viewport shrink for the keyboard, so vh-based sheet
+      // heights and native scroll-into-view are reliable without vaul's manual compensation.
+      repositionInputs={false}
+      {...props}
+    />
+  )
 }
 
 function DrawerTrigger({
@@ -73,7 +84,7 @@ function DrawerHeader({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="drawer-header"
       className={cn(
-        "flex flex-col gap-0.5 p-4 group-data-[vaul-drawer-direction=bottom]/drawer-content:text-center group-data-[vaul-drawer-direction=top]/drawer-content:text-center md:gap-0.5 md:text-start",
+        "flex flex-col gap-0.5 px-6 py-4 group-data-[vaul-drawer-direction=bottom]/drawer-content:text-center group-data-[vaul-drawer-direction=top]/drawer-content:text-center md:gap-0.5 md:text-start",
         className
       )}
       {...props}
@@ -85,7 +96,7 @@ function DrawerFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="drawer-footer"
-      className={cn("mt-auto flex flex-col gap-2 p-4", className)}
+      className={cn("mt-auto flex flex-col gap-2 px-6 py-4", className)}
       {...props}
     />
   )

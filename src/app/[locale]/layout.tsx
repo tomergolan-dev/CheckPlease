@@ -36,6 +36,11 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
+  // Makes the on-screen keyboard actually resize the layout viewport (like a native app)
+  // instead of just overlaying it — vh/dvh-based sheet heights, sticky positioning, and
+  // native scroll-into-view all become reliable once the keyboard opens, so bottom sheets
+  // no longer need JS-driven keyboard-avoidance hacks that can get stuck mid-transition.
+  interactiveWidget: 'resizes-content',
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#fcfcfc' },
     { media: '(prefers-color-scheme: dark)', color: '#1a1a1a' },
