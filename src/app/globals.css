@@ -5,26 +5,27 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --radius: 0.85rem;
+  --radius: 0.95rem;
 
-  /* Warm cream world — the restaurant/table feeling, not a cool finance-app gray.
-     Cards are pure white against the cream page, so they lift via color contrast alone. */
-  --background: #fcf4e8;
+  /* Light, airy neutral world — beige is now a subtle accent (muted/secondary/accent tokens),
+     not the dominant page color. Cards still lift off the page via contrast, just a much
+     quieter step down instead of a saturated cream. */
+  --background: #f7f6f3;
   --foreground: #2b2620;
   --card: #ffffff;
   --card-foreground: #2b2620;
   --popover: #ffffff;
   --popover-foreground: #2b2620;
-  --border: #ece1d0;
-  --input: #ece1d0;
+  --border: #eeece6;
+  --input: #eeece6;
   --ring: #d9722f;
-  --muted: #f4ece0;
-  --muted-foreground: #8a7f6c;
+  --muted: #f3ede1;
+  --muted-foreground: #948a7a;
   --primary: #d9722f;
   --primary-foreground: #fffaf3;
-  --secondary: #f4ece0;
+  --secondary: #f3ede1;
   --secondary-foreground: #2b2620;
-  --accent: #f7e2d1;
+  --accent: #f8e7d6;
   --accent-foreground: #a6551f;
   --destructive: #c94f3f;
 
@@ -34,18 +35,18 @@
   --chart-4: #6a4f9e;
   --chart-5: #2f6a8c;
 
-  --sidebar: #fcf4e8;
+  --sidebar: #f7f6f3;
   --sidebar-foreground: #2b2620;
   --sidebar-primary: #d9722f;
   --sidebar-primary-foreground: #fffaf3;
-  --sidebar-accent: #f7e2d1;
+  --sidebar-accent: #f8e7d6;
   --sidebar-accent-foreground: #a6551f;
-  --sidebar-border: #ece1d0;
+  --sidebar-border: #eeece6;
   --sidebar-ring: #d9722f;
 
-  /* Soft, close shadows — a surface resting gently on the table, not casting a hard drop shadow. */
-  --shadow-soft: 0 1px 2px rgba(43, 38, 32, 0.04), 0 6px 16px -8px rgba(43, 38, 32, 0.08);
-  --shadow-elevated: 0 1px 2px rgba(43, 38, 32, 0.04), 0 14px 28px -12px rgba(43, 38, 32, 0.12);
+  /* Softer still — a surface resting gently on the table, barely lifting off the page. */
+  --shadow-soft: 0 1px 2px rgba(43, 38, 32, 0.03), 0 4px 12px -7px rgba(43, 38, 32, 0.06);
+  --shadow-elevated: 0 1px 2px rgba(43, 38, 32, 0.03), 0 10px 22px -10px rgba(43, 38, 32, 0.09);
 }
 
 .dark {

@@ -185,7 +185,7 @@ export function ScanReceiptSheet() {
         <DrawerTrigger asChild>
           <button
             type="button"
-            className="flex items-center gap-1.5 self-start rounded-full border-[1.5px] border-border bg-transparent px-3.5 py-1.5 text-sm font-medium text-muted-foreground transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:text-foreground hover:shadow-soft active:translate-y-0 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-primary/15 bg-accent/60 px-4 py-3.5 text-sm font-semibold text-primary transition-all hover:-translate-y-0.5 hover:bg-accent/80 hover:shadow-soft active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
           >
             <ScanLine className="size-4" aria-hidden="true" />
             {t('scanReceipt')}
@@ -219,7 +219,7 @@ export function ScanReceiptSheet() {
                 <DrawerHeader>
                   <DrawerTitle>{t('scanReceipt')}</DrawerTitle>
                 </DrawerHeader>
-                <div className="flex flex-col gap-2 px-6 pb-2">
+                <div className="flex flex-col gap-2 px-7 pb-2">
                   <Button
                     size="lg"
                     className="w-full justify-start gap-2.5"
@@ -262,7 +262,7 @@ export function ScanReceiptSheet() {
                   )}
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background/75 text-center backdrop-blur-sm">
                     <IconBadge icon={Loader2} tone="violet" size="lg" iconClassName="animate-spin" />
-                    <div className="flex flex-col gap-0.5 px-6">
+                    <div className="flex flex-col gap-0.5 px-7">
                       <p className="text-sm font-medium">{t('scanProcessingTitle')}</p>
                       <p className="text-xs text-muted-foreground">{t('scanProcessingHint')}</p>
                     </div>
@@ -280,7 +280,7 @@ export function ScanReceiptSheet() {
                 exit={stepExit}
                 transition={stepTransition}
               >
-                <div className="flex flex-col items-center gap-4 px-6 py-8 text-center">
+                <div className="flex flex-col items-center gap-4 px-7 py-8 text-center">
                   <span className="flex size-14 items-center justify-center rounded-full bg-destructive/10 text-destructive">
                     <CircleX className="size-6" />
                   </span>
@@ -314,7 +314,7 @@ export function ScanReceiptSheet() {
                   <DrawerDescription>{t('scanReviewHint', { count: rows.length })}</DrawerDescription>
                 </DrawerHeader>
 
-                <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-6 pt-1 pb-2">
+                <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-7 pt-1 pb-2">
                   {rows.map((row, index) => {
                     const isEditing = editingRowId === row.id
                     return (
@@ -407,7 +407,7 @@ export function ScanReceiptSheet() {
                 </div>
 
                 {existingItemsCount > 0 && (
-                  <div className="flex flex-col gap-2 border-t border-border/40 px-6 pt-3">
+                  <div className="flex flex-col gap-2 border-t border-border/40 px-7 pt-3">
                     <span className="text-sm font-medium text-muted-foreground">
                       {t('scanExistingItemsQuestion')}
                     </span>
@@ -441,7 +441,7 @@ export function ScanReceiptSheet() {
                   </div>
                 )}
 
-                <div className="flex items-center justify-between border-t border-border/40 px-6 py-2.5">
+                <div className="flex items-center justify-between border-t border-border/40 px-7 py-2.5">
                   <span className="text-sm text-muted-foreground">{t('scanReviewTotal')}</span>
                   <span className="text-base font-semibold tabular-nums">
                     {formatCurrency(includedTotalMinorUnits, currency)}

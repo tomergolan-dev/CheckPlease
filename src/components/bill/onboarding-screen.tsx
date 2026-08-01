@@ -29,7 +29,7 @@ export function OnboardingScreen({ onStart }: { onStart: () => void }) {
         }
 
   return (
-    <div className="safe-top safe-bottom safe-x flex min-h-dvh flex-col items-center justify-center gap-10 px-6 text-center">
+    <div className="safe-top safe-bottom safe-x flex min-h-dvh flex-col items-center justify-center gap-10 px-7 text-center">
       <div className="relative flex h-52 w-full max-w-60 items-center justify-center">
         {FLOATING_DOTS.map((dot) => (
           <motion.span

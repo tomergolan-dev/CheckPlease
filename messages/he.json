@@ -63,11 +63,12 @@
     "scanRetakePhoto": "צלמו שוב",
     "scanExcludeItem": "הסר מהרשימה",
     "scanIncludeItem": "כלול ברשימה",
-    "scannedBadgeLabel": "נוסף מסריקת קבלה"
+    "scannedBadgeLabel": "נוסף מסריקת קבלה",
+    "showMore": "הצג עוד",
+    "showLess": "הצג פחות"
   },
   "Tip": {
     "title": "טיפ",
-    "addTip": "הוסף טיפ",
     "noTip": "בלי טיפ",
     "percentOnly": "{percent}%",
     "custom": "מותאם אישית",

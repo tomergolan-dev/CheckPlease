@@ -1,4 +1,4 @@
-import { ScanLine } from 'lucide-react'
+import { ChevronRight, ScanLine } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { formatCurrency } from '@/lib/money'
 import { FoodIcon } from '@/lib/food-icon'
@@ -24,30 +24,29 @@ export function ItemRow({
     <button
       type="button"
       onClick={() => onOpen(item.id)}
-      className="flex w-full items-center gap-3 rounded-2xl border border-border/40 bg-card px-3 py-2.5 text-start shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-elevated active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+      className="flex w-full items-center gap-3 px-4 py-3 text-start transition-colors hover:bg-muted/40 active:bg-muted/60"
     >
       <FoodIcon dishName={item.name} />
 
-      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="flex items-center gap-1 truncate text-sm font-medium">
-          {item.source === 'scanned' && (
-            <ScanLine
-              role="img"
-              aria-label={t('scannedBadgeLabel')}
-              className="size-3.5 shrink-0 text-muted-foreground/60"
-            />
-          )}
-          <span className="truncate">
-            {item.name}
-            {item.quantity > 1 && <span className="text-muted-foreground"> ×{item.quantity}</span>}
-          </span>
-        </span>
-        <span className="text-sm tabular-nums text-muted-foreground">
-          {formatCurrency(lineTotal, bill.currency)}
-        </span>
-      </div>
+      <span className="min-w-0 flex-1 truncate text-sm font-medium">
+        {item.source === 'scanned' && (
+          <ScanLine
+            role="img"
+            aria-label={t('scannedBadgeLabel')}
+            className="me-1 inline size-3.5 shrink-0 align-text-bottom text-muted-foreground/60"
+          />
+        )}
+        {item.name}
+        {item.quantity > 1 && <span className="text-muted-foreground"> ×{item.quantity}</span>}
+      </span>
+
+      <span className="shrink-0 text-sm tabular-nums text-muted-foreground">
+        {formatCurrency(lineTotal, bill.currency)}
+      </span>
 
       <ItemAvatarStack diners={sharedByDiners} positions={positions} />
+
+      <ChevronRight className="size-4 shrink-0 text-muted-foreground/60 rtl:rotate-180" aria-hidden="true" />
     </button>
   )
 }

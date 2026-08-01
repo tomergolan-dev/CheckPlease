@@ -14,7 +14,7 @@ export function DinerAvatar({ diner, defaultPosition, className }: DinerAvatarPr
   return (
     <div
       className={cn(
-        'flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-medium',
+        'flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-medium shadow-sm',
         DINER_COLOR_CLASSES[diner.color],
         className
       )}

@@ -71,7 +71,7 @@ export function DinerEditSheet({
           <DrawerTitle>{dinerLabel(active, defaultPosition)}</DrawerTitle>
         </DrawerHeader>
 
-        <div className="flex flex-col gap-4 px-6">
+        <div className="flex flex-col gap-4 px-7">
           <Input
             autoFocus
             value={name}

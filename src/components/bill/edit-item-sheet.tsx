@@ -108,7 +108,7 @@ export function EditItemSheet({ bill, itemId, onOpenChange }: EditItemSheetProps
             onQuantityChange={(quantity) => updateItem(item.id, { quantity })}
           />
 
-          <div className="flex flex-col gap-2 px-6">
+          <div className="flex flex-col gap-2 px-7">
             <span className="text-sm font-medium text-muted-foreground">{t('sharedByLabel')}</span>
             <div className="flex flex-wrap gap-2">
               {bill.diners.map((diner) => (

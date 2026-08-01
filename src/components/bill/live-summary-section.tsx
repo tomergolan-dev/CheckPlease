@@ -3,22 +3,19 @@
 import { ChevronRight, Receipt } from 'lucide-react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { useTranslations } from 'next-intl'
-import { computeBillSubtotal, computeTipTotal } from '@/lib/money'
-import { useBillStore } from '@/lib/store/bill-store'
+import { basisPointsToPercentage, computeBillSubtotal, computeTipTotal } from '@/lib/money'
 import { getBillPayableSummary, getDinerDefaultPositions } from '@/lib/store/selectors'
 import type { Bill } from '@/lib/store/types'
 import { AnimatedCurrency } from '@/components/shared/animated-currency'
 import { SectionHeading } from '@/components/shared/section-heading'
-import { Switch } from '@/components/ui/switch'
 import { DinerAvatar } from './diner-avatar'
-import { DINER_DOT_CLASSES } from './diner-display'
-import { TipChip } from './tip-chip'
+import { DINER_TEXT_CLASSES, DINER_TINT_CLASSES } from './diner-display'
+import { TipAndRoundingCard } from './tip-and-rounding-card'
 import { useDinerLabel } from './use-diner-label'
 
 export function LiveSummarySection({ bill }: { bill: Bill }) {
   const t = useTranslations('Summary')
   const dinerLabel = useDinerLabel()
-  const setRoundUpPayments = useBillStore((s) => s.setRoundUpPayments)
   const shouldReduceMotion = useReducedMotion()
 
   if (bill.items.length === 0) {
@@ -36,34 +33,33 @@ export function LiveSummarySection({ bill }: { bill: Bill }) {
   const showSubtotalRow = tipTotal > 0
   const showRoundingRow = bill.roundUpPayments && payable.roundingSurplusMinorUnits > 0
   const totalToPay = showRoundingRow ? payable.payableGrandTotalMinorUnits : exactTotal
+  const tipPercent = basisPointsToPercentage(bill.tip.valueBasisPoints)
 
   return (
     <section className="flex flex-col gap-3">
       <SectionHeading icon={Receipt} title={t('title')} tone="violet" />
 
-      <TipChip bill={bill} />
-
-      <label className="flex items-center justify-between rounded-2xl border border-border/40 bg-card px-4 py-2.5 shadow-soft transition-shadow hover:shadow-elevated">
-        <span className="text-sm font-medium">{t('roundUpToggleLabel')}</span>
-        <Switch
-          checked={bill.roundUpPayments}
-          onCheckedChange={setRoundUpPayments}
-          aria-label={t('roundUpToggleLabel')}
-        />
-      </label>
+      <TipAndRoundingCard
+        bill={bill}
+        tipTotalMinorUnits={tipTotal}
+        roundingSurplusMinorUnits={payable.roundingSurplusMinorUnits}
+        currency={bill.currency}
+      />
 
       <motion.div
         initial={shouldReduceMotion ? false : { opacity: 0, y: -14, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={shouldReduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 260, damping: 22 }}
-        className="flex flex-col gap-2 rounded-[22px] border border-border/40 bg-card px-4 pt-3.5 pb-4 shadow-elevated"
+        className="flex flex-col gap-2 rounded-[22px] border border-border/40 bg-card px-4 pt-3.5 pb-4 shadow-soft"
       >
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground">{t('originalAmount')}</span>
           <AnimatedCurrency amount={originalAmount} currency={bill.currency} />
         </div>
         <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">{t('tip')}</span>
+          <span className="text-muted-foreground">
+            {tipTotal > 0 ? `${t('tip')} (${tipPercent}%)` : t('tip')}
+          </span>
           <AnimatedCurrency amount={tipTotal} currency={bill.currency} />
         </div>
 
@@ -77,18 +73,16 @@ export function LiveSummarySection({ bill }: { bill: Bill }) {
         {showRoundingRow && (
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">{t('rounding')}</span>
-            <span className="flex items-center gap-0.5 text-muted-foreground">
-              +<AnimatedCurrency amount={payable.roundingSurplusMinorUnits} currency={bill.currency} />
-            </span>
+            <AnimatedCurrency amount={payable.roundingSurplusMinorUnits} currency={bill.currency} />
           </div>
         )}
 
-        <div className="flex items-end justify-between border-t border-dashed border-border pt-3">
+        <div className="flex items-end justify-between border-t border-border pt-3">
           <span className="text-sm font-semibold text-muted-foreground">{t('totalToPay')}</span>
           <AnimatedCurrency
             amount={totalToPay}
             currency={bill.currency}
-            className="text-[2rem] leading-none font-bold text-primary"
+            className="text-2xl leading-none font-bold text-primary"
           />
         </div>
       </motion.div>
@@ -101,7 +95,7 @@ export function LiveSummarySection({ bill }: { bill: Bill }) {
           return (
             <div
               key={dinerTotal.dinerId}
-              className="flex flex-col items-center gap-1.5 rounded-2xl border border-border/40 bg-card px-2 py-3 shadow-soft transition-shadow hover:shadow-elevated"
+              className={`flex flex-col items-center gap-1.5 rounded-2xl px-2 py-3 ${DINER_TINT_CLASSES[diner.color]}`}
             >
               <div className="flex min-w-0 items-center gap-1.5">
                 <DinerAvatar
@@ -121,18 +115,16 @@ export function LiveSummarySection({ bill }: { bill: Bill }) {
                   <AnimatedCurrency
                     amount={dinerTotal.payableMinorUnits}
                     currency={bill.currency}
-                    className="text-sm font-semibold"
+                    className={`text-sm font-bold ${DINER_TEXT_CLASSES[diner.color]}`}
                   />
                 </div>
               ) : (
                 <AnimatedCurrency
                   amount={dinerTotal.payableMinorUnits}
                   currency={bill.currency}
-                  className="text-sm font-semibold"
+                  className={`text-sm font-bold ${DINER_TEXT_CLASSES[diner.color]}`}
                 />
               )}
-
-              <span className={`h-1 w-10 rounded-full ${DINER_DOT_CLASSES[diner.color]}`} aria-hidden="true" />
             </div>
           )
         })}

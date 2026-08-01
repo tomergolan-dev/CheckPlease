@@ -55,7 +55,7 @@ export function AddDinerControl({ hasExistingItems }: { hasExistingItems: boolea
           <DrawerHeader>
             <DrawerTitle>{t('includeExistingItemsQuestion')}</DrawerTitle>
           </DrawerHeader>
-          <div className="flex flex-col gap-2 px-6">
+          <div className="flex flex-col gap-2 px-7">
             <Button
               type="button"
               variant={includeInExistingItems ? 'default' : 'outline'}

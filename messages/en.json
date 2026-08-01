@@ -63,11 +63,12 @@
     "scanRetakePhoto": "Retake photo",
     "scanExcludeItem": "Remove from list",
     "scanIncludeItem": "Include in list",
-    "scannedBadgeLabel": "Added by scanning a receipt"
+    "scannedBadgeLabel": "Added by scanning a receipt",
+    "showMore": "Show more",
+    "showLess": "Show less"
   },
   "Tip": {
     "title": "Tip",
-    "addTip": "Add tip",
     "noTip": "No tip",
     "percentOnly": "{percent}%",
     "custom": "Custom",

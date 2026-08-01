@@ -26,7 +26,7 @@ export function ItemFormFields({
   const t = useTranslations('Items')
 
   return (
-    <div className="flex flex-col gap-4 px-6">
+    <div className="flex flex-col gap-4 px-7">
       <label className="flex flex-col gap-1.5">
         <span className="text-sm font-medium text-muted-foreground">{t('nameLabel')}</span>
         <Input

@@ -1,24 +1,24 @@
 'use client'
 
-import { formatCurrency, type MinorUnits } from '@/lib/money'
-import type { CurrencyCode, Diner } from '@/lib/store/types'
+import type { Diner } from '@/lib/store/types'
 import { DinerAvatar } from './diner-avatar'
 
 interface DinerChipProps {
   diner: Diner
   label: string
   defaultPosition?: number
-  amountMinorUnits?: MinorUnits
-  currency?: CurrencyCode
   onOpen: () => void
 }
 
-export function DinerChip({ diner, label, defaultPosition, amountMinorUnits, currency, onOpen }: DinerChipProps) {
+/** Participant management only — no amount here. See LiveSummarySection's per-person cards
+ * for what each diner owes; keeping the two apart is what makes this section read as "who's
+ * at the table" rather than a running tab. */
+export function DinerChip({ diner, label, defaultPosition, onOpen }: DinerChipProps) {
   return (
     <button
       type="button"
       onClick={onOpen}
-      className="flex w-16 shrink-0 flex-col items-center gap-1 rounded-2xl py-1 transition-all hover:-translate-y-0.5 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+      className="flex w-16 shrink-0 flex-col items-center gap-1.5 rounded-2xl py-1 transition-all hover:-translate-y-0.5 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
     >
       <span className="relative inline-flex">
         <DinerAvatar diner={diner} defaultPosition={defaultPosition} className="size-14 text-base ring-2 ring-card" />
@@ -29,11 +29,6 @@ export function DinerChip({ diner, label, defaultPosition, amountMinorUnits, cur
         )}
       </span>
       <span className="w-full truncate text-center text-xs font-medium">{label}</span>
-      {amountMinorUnits !== undefined && currency && (
-        <span className="text-[11px] tabular-nums text-muted-foreground">
-          {formatCurrency(amountMinorUnits, currency)}
-        </span>
-      )}
     </button>
   )
 }

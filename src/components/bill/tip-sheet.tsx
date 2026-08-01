@@ -81,7 +81,7 @@ export function TipSheet({
           <DrawerTitle>{t('title')}</DrawerTitle>
         </DrawerHeader>
 
-        <div className="flex flex-col gap-1.5 px-6">
+        <div className="flex flex-col gap-1.5 px-7">
           {PRESET_BASIS_POINTS.map((bps) => {
             const selected = !customMode && currentBps === bps
             return (

@@ -12,7 +12,7 @@ export function BillCanvas() {
   if (!bill) return null
 
   return (
-    <div className="safe-top safe-bottom safe-x flex min-h-dvh flex-col gap-8 px-6 py-8">
+    <div className="safe-top safe-bottom safe-x flex min-h-dvh flex-col gap-10 px-7 py-8">
       <AppHeader />
       <PayingPartiesSection bill={bill} />
       <ItemsSection bill={bill} />
