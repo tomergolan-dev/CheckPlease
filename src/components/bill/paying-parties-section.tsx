@@ -34,20 +34,23 @@ export function PayingPartiesSection({ bill }: { bill: Bill }) {
   }, [])
 
   return (
-    <section className="flex flex-col gap-3">
+    <section className="flex flex-col gap-4 py-1">
       <SectionHeading icon={Users} title={t('title')} tone="blue" />
 
-      <div className="flex flex-wrap items-start gap-2">
+      <div className="flex flex-wrap items-start gap-3">
+        {/* Stays first, always, regardless of how many diners are already in the row. */}
+        <AddDinerControl hasExistingItems={bill.items.length > 0} />
+
         <AnimatePresence initial={false}>
           {bill.diners.map((diner) => (
             <motion.div
               key={diner.id}
               layout
-              initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.8 }}
+              initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.4 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={shouldReduceMotion ? undefined : { opacity: 0, scale: 0.85 }}
               transition={
-                shouldReduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 420, damping: 22 }
+                shouldReduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 340, damping: 24 }
               }
             >
               <DinerChip
@@ -59,8 +62,6 @@ export function PayingPartiesSection({ bill }: { bill: Bill }) {
             </motion.div>
           ))}
         </AnimatePresence>
-
-        <AddDinerControl hasExistingItems={bill.items.length > 0} />
       </div>
 
       <DinerEditSheet
