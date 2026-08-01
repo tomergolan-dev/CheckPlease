@@ -1,6 +1,6 @@
 'use client'
 
-import { ChevronRight, Receipt } from 'lucide-react'
+import { ChevronRight, Receipt, Wallet } from 'lucide-react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { useTranslations } from 'next-intl'
 import { basisPointsToPercentage, computeBillSubtotal, computeTipTotal } from '@/lib/money'
@@ -93,9 +93,7 @@ export function LiveSummarySection({ bill }: { bill: Bill }) {
         </div>
       </motion.div>
 
-      <p className="px-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-        {t('eachPersonPays')}
-      </p>
+      <SectionHeading icon={Wallet} title={t('eachPersonPays')} tone="teal" />
 
       <div className="grid grid-cols-3 gap-2.5">
         {payable.diners.map((dinerTotal) => {
@@ -125,14 +123,14 @@ export function LiveSummarySection({ bill }: { bill: Bill }) {
                   <AnimatedCurrency
                     amount={dinerTotal.payableMinorUnits}
                     currency={bill.currency}
-                    className={`text-base font-extrabold ${DINER_TEXT_CLASSES[diner.color]}`}
+                    className={`text-lg font-extrabold ${DINER_TEXT_CLASSES[diner.color]}`}
                   />
                 </div>
               ) : (
                 <AnimatedCurrency
                   amount={dinerTotal.payableMinorUnits}
                   currency={bill.currency}
-                  className={`text-base font-extrabold ${DINER_TEXT_CLASSES[diner.color]}`}
+                  className={`text-lg font-extrabold ${DINER_TEXT_CLASSES[diner.color]}`}
                 />
               )}
             </div>
