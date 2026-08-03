@@ -24,9 +24,9 @@ export function AppHeader() {
           type="button"
           onClick={() => setConfirmOpen(true)}
           aria-label={t('newBillAction')}
-          className="flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+          className="flex size-9 items-center justify-center rounded-full border border-border/60 bg-card text-foreground/70 shadow-soft transition-all hover:-translate-y-0.5 hover:text-foreground hover:shadow-elevated active:translate-y-0 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
         >
-          <RotateCcw className="size-[18px]" aria-hidden="true" />
+          <RotateCcw className="size-5" aria-hidden="true" />
         </button>
       </header>
 

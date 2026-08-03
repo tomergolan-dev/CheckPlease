@@ -7,20 +7,21 @@
 :root {
   --radius: 0.95rem;
 
-  /* Almost pure white, Apple-like world — the page background sits just a hair below pure
-     white so cards (still pure #ffffff) aren't perfectly flush with it, but the two are close
-     enough that cards now read as distinct surfaces mainly through their border + shadow,
-     not through a warm beige/background contrast gap. Beige stays a subtle accent (muted/
-     secondary/accent tokens) for chips and pale tints — it's just no longer doing the job of
-     separating cards from the page. */
-  --background: #fbfaf8;
+  /* Truly (near) pure white, Apple-like world — no cream/beige in the background or card
+     borders at all. `--background` is a barely-there neutral off-white, one shade below pure
+     `--card` white so there's still a hint of layering, but the gap is too small to do any real
+     separation work on its own — cards read as distinct surfaces through their neutral gray
+     border + soft shadow instead (see Card surfaces below). Warm beige/orange still lives in
+     `--muted`/`--accent`/`--primary` as a deliberate accent (chips, pale tints, the one primary
+     color) — that warmth is intentional there; it's just gone from the background and border. */
+  --background: #fcfcfc;
   --foreground: #2b2620;
   --card: #ffffff;
   --card-foreground: #2b2620;
   --popover: #ffffff;
   --popover-foreground: #2b2620;
-  --border: #eeece6;
-  --input: #eeece6;
+  --border: #e6e6e6;
+  --input: #e6e6e6;
   --ring: #d9722f;
   --muted: #f3ede1;
   --muted-foreground: #948a7a;
@@ -38,20 +39,20 @@
   --chart-4: #6a4f9e;
   --chart-5: #2f6a8c;
 
-  --sidebar: #fbfaf8;
+  --sidebar: #fcfcfc;
   --sidebar-foreground: #2b2620;
   --sidebar-primary: #d9722f;
   --sidebar-primary-foreground: #fffaf3;
   --sidebar-accent: #f8e7d6;
   --sidebar-accent-foreground: #a6551f;
-  --sidebar-border: #eeece6;
+  --sidebar-border: #e6e6e6;
   --sidebar-ring: #d9722f;
 
-  /* A touch more present than before — now that the background/card gap has narrowed, the
-     shadow (together with the card border) carries more of the job of lifting a card off the
-     page, so it's deepened slightly rather than left to rely on background contrast alone. */
-  --shadow-soft: 0 1px 1px rgba(43, 38, 32, 0.035), 0 3px 10px -7px rgba(43, 38, 32, 0.09);
-  --shadow-elevated: 0 1px 2px rgba(43, 38, 32, 0.04), 0 8px 20px -10px rgba(43, 38, 32, 0.13);
+  /* Neutral gray shadow tint (was a warm brown) — with the background/card gap now this
+     small, the shadow is doing real separation work rather than just adding ambience, so it
+     needs to read as clean/neutral rather than warm. Same softness as before, just re-tinted. */
+  --shadow-soft: 0 1px 1px rgba(20, 20, 20, 0.035), 0 3px 10px -7px rgba(20, 20, 20, 0.09);
+  --shadow-elevated: 0 1px 2px rgba(20, 20, 20, 0.04), 0 8px 20px -10px rgba(20, 20, 20, 0.13);
 }
 
 .dark {
