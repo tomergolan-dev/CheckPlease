@@ -86,5 +86,24 @@
     "roundUpTitle": "עיגול סכומים",
     "roundUpSubtitle": "עיגול כלפי מעלה",
     "eachPersonPays": "כל אחד משלם"
+  },
+  "Account": {
+    "signInAction": "התחברות",
+    "signInTitle": "התחברות",
+    "signInSubtitle": "לא חובה — הכול כבר עובד גם בלי חשבון.",
+    "continueWithGoogle": "המשך עם Google",
+    "orDivider": "או",
+    "emailLabel": "אימייל",
+    "passwordLabel": "סיסמה",
+    "passwordHint": "לפחות 8 תווים",
+    "createAccountAction": "יצירת חשבון",
+    "createAccountPrompt": "חדשים כאן?",
+    "signInPrompt": "כבר יש לכם חשבון?",
+    "invalidCredentials": "אימייל או סיסמה שגויים",
+    "emailTaken": "האימייל הזה כבר רשום במערכת",
+    "genericError": "משהו השתבש — נסו שוב",
+    "signedInAs": "מחוברים עם {email}",
+    "signOutAction": "התנתקות",
+    "accountAction": "החשבון שלי"
   }
 }

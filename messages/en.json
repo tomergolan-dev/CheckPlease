@@ -86,5 +86,24 @@
     "roundUpTitle": "Round up",
     "roundUpSubtitle": "Round up to the next whole number",
     "eachPersonPays": "Each person pays"
+  },
+  "Account": {
+    "signInAction": "Sign in",
+    "signInTitle": "Sign in",
+    "signInSubtitle": "Optional — everything already works without an account.",
+    "continueWithGoogle": "Continue with Google",
+    "orDivider": "or",
+    "emailLabel": "Email",
+    "passwordLabel": "Password",
+    "passwordHint": "At least 8 characters",
+    "createAccountAction": "Create account",
+    "createAccountPrompt": "New here?",
+    "signInPrompt": "Already have an account?",
+    "invalidCredentials": "Incorrect email or password",
+    "emailTaken": "That email is already registered",
+    "genericError": "Something went wrong — try again",
+    "signedInAs": "Signed in as {email}",
+    "signOutAction": "Sign out",
+    "accountAction": "Account"
   }
 }
