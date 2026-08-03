@@ -349,6 +349,6 @@ src/lib/credits/ — pure ledger/balance logic, tested with the same invariant r
 ### Phased rollout
 1. **Database + auth infrastructure** — Neon, Drizzle, and Auth.js wired up; sign-in exists but gates nothing yet. *(Done.)*
 2. **Optional sign-in ships** in the product UI, still gating nothing. *(Done.)*
-3. **Credit ledger and Stripe credit packs ship together** — receipt scanning becomes the first real behavior change (auth- and credit-gated, per the Scan-gating UX and reserve → finalize/refund lifecycle above), with the full loop already in place at launch: free scans → exhausted → purchase a pack → credits added. Deliberately not split across two phases — a signed-in user hitting 0 credits with no way to buy more would be a dead end, not an acceptable interim state. *(Current phase.)*
-4. **Cross-device sync + bill history**, including the guest-bill-claiming flow above.
+3. **Credit ledger and Stripe credit packs ship together** — receipt scanning becomes the first real behavior change (auth- and credit-gated, per the Scan-gating UX and reserve → finalize/refund lifecycle above), with the full loop already in place at launch: free scans → exhausted → purchase a pack → credits added. Deliberately not split across two phases — a signed-in user hitting 0 credits with no way to buy more would be a dead end, not an acceptable interim state. *(Done.)*
+4. **Cross-device sync + bill history**, including the guest-bill-claiming flow above. *(Current phase.)*
 5. *(Much later, only once native distribution is actually scheduled)* native IAP rail via RevenueCat.
