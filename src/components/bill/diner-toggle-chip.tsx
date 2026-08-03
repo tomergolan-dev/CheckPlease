@@ -35,7 +35,7 @@ export function DinerToggleChip({
         disabled && 'opacity-50'
       )}
     >
-      <DinerAvatar diner={diner} defaultPosition={defaultPosition} className="size-6 text-xs ring-2 ring-card" />
+      <DinerAvatar diner={diner} defaultPosition={defaultPosition} size={24} className="ring-2 ring-card" />
       {label}
     </button>
   )

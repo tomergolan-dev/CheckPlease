@@ -109,7 +109,8 @@ export function LiveSummarySection({ bill }: { bill: Bill }) {
                 <DinerAvatar
                   diner={diner}
                   defaultPosition={positions[diner.id]}
-                  className="size-5 shrink-0 text-[9px]"
+                  size={20}
+                  className="shrink-0"
                 />
                 <span className="truncate text-xs font-medium">{dinerLabel(diner, positions[diner.id])}</span>
               </div>

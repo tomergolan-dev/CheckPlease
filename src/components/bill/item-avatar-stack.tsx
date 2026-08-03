@@ -20,7 +20,7 @@ export function ItemAvatarStack({
           key={diner.id}
           diner={diner}
           defaultPosition={positions[diner.id]}
-          className="size-5 text-[9px]"
+          size={20}
         />
       ))}
       {overflow > 0 && (
