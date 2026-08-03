@@ -63,6 +63,16 @@ export const useBillStore = create<BillStore>()(
 
       startNewBill: () => {
         const now = Date.now()
+        // A fresh bill starts with 2 paying parties already in place, matching the most
+        // common real-life scenario and reducing first-tap friction — explicit here rather
+        // than backfilled by a mount effect, so behavior is identical in every environment.
+        const startingDinerCount = 2
+        const diners: Diner[] = Array.from({ length: startingDinerCount }, (_, index) => ({
+          id: generateId(),
+          partySize: 1,
+          color: colorTokenForIndex(index),
+        }))
+
         set({
           bill: {
             id: generateId(),
@@ -70,8 +80,8 @@ export const useBillStore = create<BillStore>()(
             updatedAt: now,
             currency: 'ILS',
             roundUpPayments: false,
-            nextDinerColorIndex: 0,
-            diners: [],
+            nextDinerColorIndex: startingDinerCount,
+            diners,
             items: [],
             tip: { mode: 'percentage', valueBasisPoints: 0 },
           },

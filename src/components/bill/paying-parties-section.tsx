@@ -1,11 +1,10 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Users } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { SectionHeading } from '@/components/shared/section-heading'
-import { useBillStore } from '@/lib/store/bill-store'
 import { getDinerDefaultPositions } from '@/lib/store/selectors'
 import type { Bill } from '@/lib/store/types'
 import { AddDinerControl } from './add-diner-control'
@@ -17,21 +16,12 @@ import { useDinerLabel } from './use-diner-label'
 export function PayingPartiesSection({ bill }: { bill: Bill }) {
   const t = useTranslations('Diners')
   const dinerLabel = useDinerLabel()
-  const addDiner = useBillStore((s) => s.addDiner)
   const shouldReduceMotion = useReducedMotion()
 
   const positions = useMemo(() => getDinerDefaultPositions(bill.diners), [bill.diners])
   const [editDinerId, setEditDinerId] = useState<string | null>(null)
   const [removeDinerId, setRemoveDinerId] = useState<string | null>(null)
   const editingDiner = bill.diners.find((d) => d.id === editDinerId) ?? null
-
-  // Reduce first-tap friction: a fresh bill starts with one diner already in place.
-  useEffect(() => {
-    if (bill.diners.length === 0) {
-      addDiner()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   return (
     <section className="flex flex-col gap-4">

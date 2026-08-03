@@ -10,23 +10,37 @@ function start() {
   useBillStore.getState().startNewBill()
 }
 
+/** Most tests below build up diners themselves to test a specific action in isolation,
+ * independent of startNewBill's product default of 2 starting diners (see the
+ * `startNewBill` describe block for a test of that default itself). */
+function startEmpty() {
+  start()
+  useBillStore.setState((state) => ({
+    bill: state.bill ? { ...state.bill, diners: [], nextDinerColorIndex: 0 } : state.bill,
+  }))
+}
+
 describe('startNewBill', () => {
-  it('creates an empty bill with the expected defaults', () => {
+  it('creates a bill with 2 default paying parties, matching the most common real-life scenario', () => {
     start()
     const { bill } = useBillStore.getState()
     expect(bill).toMatchObject({
       currency: 'ILS',
       roundUpPayments: false,
-      diners: [],
       items: [],
       tip: { mode: 'percentage', valueBasisPoints: 0 },
+      nextDinerColorIndex: 2,
     })
+    expect(bill!.diners).toEqual([
+      { id: bill!.diners[0]!.id, partySize: 1, color: 'blue' },
+      { id: bill!.diners[1]!.id, partySize: 1, color: 'green' },
+    ])
   })
 })
 
 describe('addDiner', () => {
   it('appends a diner with partySize 1 and a sequential palette color', () => {
-    start()
+    startEmpty()
     const { addDiner } = useBillStore.getState()
     const id1 = addDiner()
     const id2 = addDiner()
@@ -39,7 +53,7 @@ describe('addDiner', () => {
   })
 
   it('adds the new diner to every existing item by default', () => {
-    start()
+    startEmpty()
     const store = useBillStore.getState()
     const d1 = store.addDiner()
     store.addItem({ name: 'Pizza', unitPriceMinorUnits: 5000 })
@@ -50,7 +64,7 @@ describe('addDiner', () => {
   })
 
   it('does not touch existing items when includeInExistingItems is false', () => {
-    start()
+    startEmpty()
     const store = useBillStore.getState()
     const d1 = store.addDiner()
     store.addItem({ name: 'Pizza', unitPriceMinorUnits: 5000 })
@@ -63,7 +77,7 @@ describe('addDiner', () => {
 
 describe('renameDiner', () => {
   it('sets a custom name', () => {
-    start()
+    startEmpty()
     const store = useBillStore.getState()
     const id = store.addDiner()
     store.renameDiner(id, 'Daniel & Dana')
@@ -71,7 +85,7 @@ describe('renameDiner', () => {
   })
 
   it('clears back to the default label when renamed to an empty string', () => {
-    start()
+    startEmpty()
     const store = useBillStore.getState()
     const id = store.addDiner()
     store.renameDiner(id, 'Daniel & Dana')
@@ -82,7 +96,7 @@ describe('renameDiner', () => {
 
 describe('setDinerPartySize', () => {
   it('clamps to a minimum of 1', () => {
-    start()
+    startEmpty()
     const store = useBillStore.getState()
     const id = store.addDiner()
     store.setDinerPartySize(id, 0)
@@ -94,7 +108,7 @@ describe('setDinerPartySize', () => {
 
 describe('addItem / updateItem / removeItem', () => {
   it('defaults quantity to 1 and assigns every current diner', () => {
-    start()
+    startEmpty()
     const store = useBillStore.getState()
     const d1 = store.addDiner()
     const d2 = store.addDiner()
@@ -148,7 +162,7 @@ describe('addItem / updateItem / removeItem', () => {
 
 describe('clearItems', () => {
   it('removes every item, leaving diners untouched', () => {
-    start()
+    startEmpty()
     const store = useBillStore.getState()
     const d1 = store.addDiner()
     store.addItem({ name: 'Pizza', unitPriceMinorUnits: 5000 })
@@ -183,7 +197,7 @@ describe('setItemDiners', () => {
 
 describe('removeDiner', () => {
   it('throws when removing the only diner on the bill, even with no items', () => {
-    start()
+    startEmpty()
     const store = useBillStore.getState()
     const onlyDiner = store.addDiner()
     expect(() => store.removeDiner(onlyDiner)).toThrow()
@@ -191,7 +205,7 @@ describe('removeDiner', () => {
   })
 
   it('throws when removing the only diner even if reassignments are (uselessly) provided', () => {
-    start()
+    startEmpty()
     const store = useBillStore.getState()
     const onlyDiner = store.addDiner()
     const itemId = store.addItem({ name: 'Espresso', unitPriceMinorUnits: 1000 })
@@ -199,7 +213,7 @@ describe('removeDiner', () => {
   })
 
   it('throws if an orphaned item has no reassignment', () => {
-    start()
+    startEmpty()
     const store = useBillStore.getState()
     const d1 = store.addDiner()
     store.addItem({ name: 'Espresso', unitPriceMinorUnits: 1000 }) // shared by d1 only
@@ -209,7 +223,7 @@ describe('removeDiner', () => {
   })
 
   it('removes the diner from shared items without needing a reassignment', () => {
-    start()
+    startEmpty()
     const store = useBillStore.getState()
     const d1 = store.addDiner()
     const d2 = store.addDiner()
@@ -223,7 +237,7 @@ describe('removeDiner', () => {
   })
 
   it('applies the provided reassignment to an orphaned item and completes removal', () => {
-    start()
+    startEmpty()
     const store = useBillStore.getState()
     const d1 = store.addDiner()
     const d2 = store.addDiner()
@@ -238,7 +252,7 @@ describe('removeDiner', () => {
   })
 
   it('closes the gap in default diner labels after removal, matching the product example', () => {
-    start()
+    startEmpty()
     const store = useBillStore.getState()
     const d1 = store.addDiner()
     const d2 = store.addDiner()
