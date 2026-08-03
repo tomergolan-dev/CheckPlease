@@ -12,6 +12,12 @@
       "sourceType": "github",
       "skillPath": "skills/neon-postgres/SKILL.md",
       "computedHash": "7985b983f8ae5e36d88b82bcc2f3353726d22ced9be97d438681b308afed509e"
+    },
+    "stripe-best-practices": {
+      "source": "stripe/ai",
+      "sourceType": "github",
+      "skillPath": "skills/stripe-best-practices/SKILL.md",
+      "computedHash": "bb4292e01d7b0e7b58a85b3e590179792a0d410d2d5daadb572c39c5b28081f4"
     }
   }
 }

@@ -111,6 +111,11 @@
     "gateSubtitle": "New accounts get 10 free scans.",
     "insufficientCreditsTitle": "You're out of scans",
     "insufficientCreditsHint": "Buy a credit pack to keep scanning receipts.",
-    "buyCreditsAction": "Buy more credits"
+    "buyCreditsAction": "Buy more credits",
+    "packPickerTitle": "Buy credits",
+    "packLabel": "{count, plural, one {# scan} other {# scans}}",
+    "recommendedBadge": "Best value",
+    "purchaseError": "Something went wrong — try again",
+    "balanceLabel": "{count, plural, one {# credit left} other {# credits left}}"
   }
 }

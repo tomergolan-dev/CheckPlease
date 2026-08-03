@@ -9,6 +9,7 @@ import { SectionHeading } from '@/components/shared/section-heading'
 import { getDinerDefaultPositions } from '@/lib/store/selectors'
 import type { Bill } from '@/lib/store/types'
 import { AddItemSheet } from './add-item-sheet'
+import { CreditPackSheet } from './credit-pack-sheet'
 import { EditItemSheet } from './edit-item-sheet'
 import { ItemRow } from './item-row'
 import { ScanReceiptSheet } from './scan-receipt-sheet'
@@ -23,6 +24,7 @@ export function ItemsSection({ bill }: { bill: Bill }) {
   const positions = useMemo(() => getDinerDefaultPositions(bill.diners), [bill.diners])
   const [editItemId, setEditItemId] = useState<string | null>(null)
   const [showAll, setShowAll] = useState(false)
+  const [packSheetOpen, setPackSheetOpen] = useState(false)
 
   const sortedItems = useMemo(
     () => bill.items.slice().sort((a, b) => a.sortIndex - b.sortIndex),
@@ -40,7 +42,7 @@ export function ItemsSection({ bill }: { bill: Bill }) {
       <div className="flex flex-col gap-3">
         {/* Kept first, not last — stays one tap away regardless of how long the list grows. */}
         <div className="flex gap-3">
-          <ScanReceiptSheet />
+          <ScanReceiptSheet onInsufficientCredits={() => setPackSheetOpen(true)} />
           <AddItemSheet />
         </div>
 
@@ -95,6 +97,7 @@ export function ItemsSection({ bill }: { bill: Bill }) {
       </div>
 
       <EditItemSheet bill={bill} itemId={editItemId} onOpenChange={(open) => !open && setEditItemId(null)} />
+      <CreditPackSheet open={packSheetOpen} onOpenChange={setPackSheetOpen} />
     </section>
   )
 }

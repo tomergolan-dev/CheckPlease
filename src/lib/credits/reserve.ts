@@ -10,6 +10,13 @@ import { drizzleCreditsRepository, type CreditsRepository } from './repository'
 
 export type ReserveResult = { ok: true; balance: number } | { ok: false; reason: 'insufficient_credits' }
 
+export async function getCreditBalance(
+  userId: string,
+  repository: CreditsRepository = drizzleCreditsRepository
+): Promise<number> {
+  return repository.getBalance(userId)
+}
+
 export async function reserveCredit(
   userId: string,
   scanId: string,

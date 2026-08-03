@@ -28,8 +28,14 @@ export interface UserRepository {
  * error, not a raw SQL failure. */
 const UNIQUE_VIOLATION = '23505'
 
+/** Drizzle wraps the real driver error in a `DrizzleQueryError`, with the actual Postgres error
+ * (the one carrying `.code`) nested under `.cause` — a bare `error.code` check never matches a
+ * real database violation, only a hand-constructed test double, so this walks the `.cause` chain. */
 function isUniqueViolation(error: unknown): boolean {
-  return typeof error === 'object' && error !== null && 'code' in error && error.code === UNIQUE_VIOLATION
+  if (typeof error !== 'object' || error === null) return false
+  if ('code' in error && error.code === UNIQUE_VIOLATION) return true
+  if ('cause' in error) return isUniqueViolation(error.cause)
+  return false
 }
 
 /** The real repository, backed by the actual database. `registerUser` takes a repository as a
