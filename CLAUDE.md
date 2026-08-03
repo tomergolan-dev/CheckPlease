@@ -47,10 +47,10 @@ This is a standing rule, not a one-time redesign — every future screen must be
 These are real future-vision features. The architecture must stay clean enough to add them later without rewrites, but none of them are built now:
 
 - Tax/VAT calculation (target market is Israel; menu and receipt prices are already VAT-inclusive, so the app works directly with final item prices)
-- User accounts, saved history, shareable bill links
-- Payment integrations
 - Per-person average display derived from party size
-- Native app / React Native implementation
+- Native app / React Native implementation (Capacitor wrapping remains a later, separate step — see Post-MVP Architecture below)
+
+User accounts, saved bill history, and payments were listed here during the MVP but have since moved from "excluded" to "confirmed, actively being built" — see Post-MVP Architecture: SaaS Foundation below for the approved direction and current phase.
 
 ## Complete User Flow
 
@@ -238,7 +238,7 @@ Both manual entry and receipt scanning (see Receipt Scanning) produce the exact 
 - **Animation:** list insertion/removal (diners, dishes) and animated total updates use a lightweight animation layer (Framer Motion), respecting `prefers-reduced-motion`. Animated number/currency updates are a small custom hook (`useAnimatedNumber`) on top of it, not a separate dependency.
 - **Responsive layout:** below `md` (phones), a single centered column exactly as designed — this is the primary target and nothing here changes it. From `md` up the shell widens (`max-w-md → md:max-w-2xl → lg:max-w-4xl` on the wrapper in `BillEntry`, applied only once an active bill exists — the onboarding hero stays compact at every size). From `lg` up, `BillCanvas` switches from a single flex column to a two-column grid: paying parties + dishes on the left (the part that scrolls, and where the dish-list collapse still applies at every viewport size — see Visual System), tip/rounding + bill summary + per-person cards sticky (`lg:sticky lg:top-8`) on the right, so the total and per-person amounts stay in view next to a long dish list instead of requiring a scroll past it. This is a deliberate reversal of the app's earlier "always mobile-width, desktop is just a preview" stance — the two are different tools for different problems: the collapse control solves *limited vertical space* (a phone problem), the sticky column solves *reaching the summary without excessive scrolling* (a wide-screen opportunity a single mobile column can't take advantage of). Bottom sheets are unaffected either way — see Consumer-App Interaction Model's Responsive width bullet. Caveat if this column is restructured later: an ancestor with `overflow: hidden` (even one that never actually clips anything) creates its own scroll container and silently breaks `position: sticky` for everything inside it — `BillEntry`'s wrapper deliberately has no `overflow-hidden` for exactly this reason. The gap between sections (`BillCanvas`'s `gap-6`, tightened twice now — from an original `gap-12` down through `gap-8`) is deliberately tighter than a first instinct toward "generous" spacing might suggest: every section already carries its own `SectionHeading`, so the section boundary is already legible without needing a large gap to also do that job — the canvas reads as dense but comfortable, not stretched, without sacrificing the internal `gap-3`/`gap-4` breathing room within each section.
 - **PWA:** the MVP foundation is manifest, icons, safe-area (`env()`) insets, standalone display mode, theme color, and correct mobile viewport behavior — enough to be installable. A service worker and offline/asset caching are **explicitly deferred** until the primary bill flow is stable and tested, to avoid stale-asset and dev-caching issues while the app is still changing quickly. Native wrapping (Capacitor) is a later, separate step that should require no application code changes if the PWA layer is done correctly. No native or React Native implementation at this stage.
-- **Backend:** a single Next.js API route (`src/app/api/scan-receipt/route.ts`) is the app's only server-side code, existing solely to keep the `ANTHROPIC_API_KEY` off the client (see Receipt Scanning). It has no database, no auth, and no other responsibility — the app is otherwise still a static/client-persisted PWA.
+- **Backend:** through the end of the MVP, a single Next.js API route (`src/app/api/scan-receipt/route.ts`) was the app's only server-side code, existing solely to keep the `ANTHROPIC_API_KEY` off the client (see Receipt Scanning), with no database, no auth, and no other responsibility. This is the historical MVP state, not the current direction — see Post-MVP Architecture: SaaS Foundation below for the confirmed database/auth/credits/payments architecture now being built on top of it. The active-bill experience itself stays exactly as described here regardless: local-first, client-persisted, working fully offline for every user.
 
 ## Folder and Component Conventions
 
@@ -294,3 +294,54 @@ Build incrementally in this sequence; each stage should be working and reviewed 
 7. **Polish** — the premium onboarding/intro screen (replacing the temporary foundation placeholder), deeper transition/animation detail.
 
 Steps 3–5 are not separate pages — they're sections of one continuous canvas (see Consumer-App Interaction Model), built and reviewed in this order but always presented together. The onboarding/intro screen described under Complete User Flow is intentionally sequenced last (Polish), not first — the core bill-splitting mechanics need to exist and work before the first-impression experience is worth investing in.
+
+## Post-MVP Architecture: SaaS Foundation (Confirmed Direction)
+
+The MVP (see MVP Build Order above) is complete. This section documents the confirmed architecture for evolving Check Please into a production SaaS — accounts, a credit-based receipt-scanning economy, and payments — decided in conversation before any of it was implemented. As with the rest of this document, this is the authoritative source of truth; implementation must match what's written here, and any change to these decisions gets reflected here first, not discovered from the code.
+
+**Guiding constraint, non-negotiable: the current app keeps working exactly as it does today.** Manual bill splitting is never gated behind an account. The active-bill experience (Zustand + `localStorage`, fully offline, zero auth) remains the source of truth for every user, guest or signed-in — accounts and sync are additive on top of it, never a replacement for it.
+
+### Data layer
+- **Postgres via the Vercel Marketplace (Neon)** — relational and transactional, which the credit ledger genuinely needs (ACID guarantees prevent double-spend races that a KV store or a non-transactional store couldn't). Neon is Postgres-only and scales to zero; deliberately not Supabase, which bundles storage/realtime/edge-function surface this app doesn't need.
+- **Drizzle ORM** — fully type-safe, SQL-like, minimal runtime overhead versus Prisma's query engine (matters for Vercel Functions cold starts). Schema-as-code; migrations via `drizzle-kit`.
+
+### Authentication
+- **Auth.js (NextAuth v5)** — self-hosted, free, first-class Next.js App Router support, a Drizzle adapter, full data ownership (no third-party auth vendor holding the user table).
+- **Launch providers: Google OAuth + email/password.** Phone-based auth is explicitly deferred — unnecessary complexity and cost for the first release.
+- **Sign in with Apple is a known future requirement, not optional polish** — once the app ships natively via Capacitor, Apple's guidelines (4.8) require it as soon as any other third-party social login exists. Not built now; the provider list is designed so adding it later is additive, not a rework.
+- **Session strategy:** JWT for identity (fast, edge-compatible). Credit balance is always read fresh from the database, never trusted from a token claim — the same "never trust the client with money" discipline already applied throughout the bill-splitting engine (see Money Storage and Rounding Rules).
+
+### Credit system
+No subscription, no recurring billing — a **credit-based** economy: manual splitting is always free; every new account gets 10 free receipt scans; additional credits are purchased in packs; credits never expire.
+
+- **An append-only ledger, not a single mutable balance column.** `credit_ledger`: `id`, `user_id`, `type` (`signup_bonus` / `purchase` / `promo` / `referral` / `consumption` / `refund`), `amount` (signed integer), `related_scan_id?`, `idempotency_key`, `created_at`. `credit_balances`: `user_id`, `balance` — a read-optimized cache updated **atomically in the same DB transaction** as every ledger insert, with a `CHECK (balance >= 0)` constraint so a race can never push it negative. This is what makes future pack sizes, promotional credits, and referral bonuses cheap to add — they're new `type` values on the same ledger, not schema changes.
+- **Reserve → finalize/refund lifecycle for scan consumption** (confirmed): a scan **reserves/deducts one credit atomically**, then the scan is processed; the deduction is **finalized only on a usable result** (the user receives dishes they can review and edit) and **refunded on a hard failure or on zero usable items** — a credit is only permanently spent when the user actually gets something usable back. Failed and empty scans are still logged (for abuse visibility), and reasonable rate limiting applies so repeated unusable attempts can't be used to probe or abuse the refund path.
+- **Idempotency required on consumption** — a given `scan_id` can never deduct twice, so a network retry on the scan endpoint doesn't double-charge.
+- `purchases`: `id`, `user_id`, `pack_type`, `credits_granted`, `amount_paid_minor_units`, `currency`, `provider`, `provider_ref`, `status` — mirrors the existing minor-units discipline from Money Storage and Rounding Rules exactly, since this is now real money too.
+
+### Payments
+- **Stripe Checkout, one-time payment mode** — matches "no subscription" exactly, no Billing/subscription lifecycle to manage.
+- **Credits are granted only from the `checkout.session.completed` webhook, never from the client-side success redirect** — a spoofed or replayed redirect must never be able to grant credits.
+- **Future native rail (not built now):** once native distribution ships, Apple/Google require in-app purchase for digital credit packs bought inside the native app — Stripe alone won't be legal there. The credit-granting logic lives in one internal function (`grantPurchase(userId, pack, provider, providerRef)`) that any payment rail's webhook calls into, so adding a native rail later (likely via RevenueCat, which unifies StoreKit + Play Billing receipt validation) is a new webhook handler, not a rework of the ledger.
+
+### API layer
+Stays inside Next.js Route Handlers — no separate backend service, no tRPC; that would be complexity this stage doesn't need. New routes as each phase ships: `/api/credits/balance`, `/api/credits/purchase`, `/api/stripe/webhook`, `/api/bills/sync`. Request/response shapes validated with Zod schemas shared between client and server. `src/app/api/scan-receipt/route.ts` evolves in a later phase to require a session and run the reserve → finalize/refund lifecycle above; it stays untouched during the database/auth foundation phase.
+
+### Local-first sync and guest-bill continuity
+Zustand + `localStorage` remains the source of truth for the active bill for every user — signing in adds a background sync layer on top (a bill gets a server `id` + `updatedAt`, pushed/pulled opportunistically); it does not make the store server-authoritative. **Signing in must never clear or discard the current local bill.** If a guest is mid-bill and signs in (e.g. because they want to scan a receipt), the existing local bill is preserved exactly as-is and claimed/associated with the newly authenticated account — never wiped, never forcing a restart.
+
+### Folder structure additions
+```
+src/lib/db/      — Drizzle schema, client, migrations
+src/lib/auth/    — Auth.js config, session helpers
+src/lib/credits/ — pure ledger/balance logic, tested with the same invariant rigor as src/lib/money/ (balance always equals the sum of ledger entries; concurrent consumption never goes negative; a scan_id can never deduct twice)
+```
+`src/lib/money/` is untouched by any of this — still pure, still client-side, zero DB coupling.
+
+### Phased rollout
+1. **Database + auth infrastructure** — Neon, Drizzle, and Auth.js wired up; sign-in exists but gates nothing yet. *(Current phase.)*
+2. **Optional sign-in ships** in the product UI, still gating nothing.
+3. **Credit ledger goes live** — receipt scanning becomes the first real behavior change (auth- and credit-gated, reserve → finalize/refund).
+4. **Stripe credit packs.**
+5. **Cross-device sync + bill history**, including the guest-bill-claiming flow above.
+6. *(Much later, only once native distribution is actually scheduled)* native IAP rail via RevenueCat.
