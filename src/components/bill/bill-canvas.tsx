@@ -12,7 +12,7 @@ export function BillCanvas() {
   if (!bill) return null
 
   return (
-    <div className="safe-top safe-bottom safe-x flex min-h-dvh flex-col px-8 pt-4 pb-10 lg:px-12 xl:px-16">
+    <div className="safe-top safe-bottom safe-x flex min-h-dvh flex-col px-10 pt-6 pb-10 lg:px-14 xl:px-20">
       <AppHeader />
       {/* A smaller gap here than between the sections below — the header is chrome, not
           content, so it shouldn't push the first section down as far as the sections

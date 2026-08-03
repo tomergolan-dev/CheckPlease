@@ -14,8 +14,8 @@ export function AppHeader() {
     <>
       <header className="flex items-center justify-between pt-1">
         <div className="flex items-center gap-2">
-          <span className="flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <ReceiptText className="size-4" aria-hidden="true" />
+          <span className="flex size-10 items-center justify-center rounded-2xl bg-accent text-primary shadow-soft">
+            <ReceiptText className="size-5" aria-hidden="true" />
           </span>
           <span className="text-lg font-semibold tracking-tight">{BRAND_NAME}</span>
         </div>
