@@ -1,6 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { NextResponse } from 'next/server'
+import { auth } from '@/auth'
 import { parseInputValueToMinorUnits } from '@/lib/money'
+import { reserveCredit, refundCredit } from '@/lib/credits/reserve'
 
 export const runtime = 'nodejs'
 
@@ -69,10 +71,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'invalid_image' }, { status: 400 })
   }
 
-  const { image, mediaType, currency } = (body ?? {}) as {
+  const { image, mediaType, currency, scanId } = (body ?? {}) as {
     image?: unknown
     mediaType?: unknown
     currency?: unknown
+    scanId?: unknown
   }
 
   if (
@@ -80,9 +83,22 @@ export async function POST(request: Request) {
     image.length === 0 ||
     image.length > MAX_BASE64_LENGTH ||
     !isSupportedMediaType(mediaType) ||
-    typeof currency !== 'string'
+    typeof currency !== 'string' ||
+    typeof scanId !== 'string' ||
+    scanId.length === 0
   ) {
     return NextResponse.json({ error: 'invalid_image' }, { status: 400 })
+  }
+
+  const session = await auth()
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  }
+  const userId = session.user.id
+
+  const reserved = await reserveCredit(userId, scanId)
+  if (!reserved.ok) {
+    return NextResponse.json({ error: 'insufficient_credits' }, { status: 402 })
   }
 
   const client = new Anthropic({ apiKey })
@@ -108,16 +124,19 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     console.error('scan-receipt: Anthropic request failed', error)
+    await refundCredit(userId, scanId)
     return NextResponse.json({ error: 'upstream_error' }, { status: 502 })
   }
 
   if (response.stop_reason === 'refusal') {
+    await refundCredit(userId, scanId)
     return NextResponse.json({ error: 'refused' }, { status: 422 })
   }
 
   const textBlock = response.content.find((block) => block.type === 'text')
   if (!textBlock || textBlock.type !== 'text') {
     console.error('scan-receipt: no text block in response', response)
+    await refundCredit(userId, scanId)
     return NextResponse.json({ error: 'upstream_error' }, { status: 502 })
   }
 
@@ -126,6 +145,7 @@ export async function POST(request: Request) {
     parsed = JSON.parse(textBlock.text)
   } catch (error) {
     console.error('scan-receipt: failed to parse model output as JSON', error, textBlock.text)
+    await refundCredit(userId, scanId)
     return NextResponse.json({ error: 'upstream_error' }, { status: 502 })
   }
 
@@ -145,6 +165,14 @@ export async function POST(request: Request) {
         unitPriceMinorUnits: Math.round(lineTotalMinorUnits / quantity),
       }
     })
+
+  if (items.length === 0) {
+    // No usable result — the reservation from reserveCredit is only ever final on a usable
+    // outcome (see Post-MVP Architecture in CLAUDE.md), so this counts as a refundable failure
+    // even though it's still a 200 response — the client already treats an empty array as its
+    // own "no items found" state, no response-shape change needed here.
+    await refundCredit(userId, scanId)
+  }
 
   return NextResponse.json({ items })
 }

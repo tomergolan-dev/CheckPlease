@@ -12,6 +12,8 @@ export type ScanReceiptErrorCode =
   | 'refused'
   | 'upstream_error'
   | 'network_error'
+  | 'unauthorized'
+  | 'insufficient_credits'
 
 export class ScanReceiptError extends Error {
   code: ScanReceiptErrorCode
@@ -68,12 +70,17 @@ export async function scanReceipt(file: File, currency: CurrencyCode): Promise<S
     throw new ScanReceiptError('invalid_image')
   }
 
+  // Generated once per attempt and sent to the server, whose credit reservation is idempotent on
+  // this value — a transport-level duplicate of this exact request (e.g. a retried fetch) can
+  // never reserve a second credit for the same attempt (see Post-MVP Architecture in CLAUDE.md).
+  const scanId = crypto.randomUUID()
+
   let response: Response
   try {
     response = await fetch('/api/scan-receipt', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ image: payload.base64, mediaType: payload.mediaType, currency }),
+      body: JSON.stringify({ image: payload.base64, mediaType: payload.mediaType, currency, scanId }),
     })
   } catch {
     throw new ScanReceiptError('network_error')
