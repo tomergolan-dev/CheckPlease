@@ -10,10 +10,20 @@ function fakeRepository(overrides: Partial<UserRepository> = {}): UserRepository
   }
 }
 
+// Every call below passes this explicitly, rather than relying on the real `grantSignupBonus`
+// default — that default talks to the real database, which these unit tests must never do.
+function fakeGrantSignupBonus() {
+  return vi.fn().mockResolvedValue(undefined)
+}
+
 describe('registerUser', () => {
   it('registers a new user and returns only safe fields', async () => {
     const repository = fakeRepository()
-    const result = await registerUser({ email: 'diner@example.com', password: 'correct horse battery' }, repository)
+    const result = await registerUser(
+      { email: 'diner@example.com', password: 'correct horse battery' },
+      repository,
+      fakeGrantSignupBonus()
+    )
 
     expect(result).toEqual({ id: 'user-1', email: 'diner@example.com' })
     expect(repository.findByEmail).toHaveBeenCalledWith('diner@example.com')
@@ -21,7 +31,11 @@ describe('registerUser', () => {
 
   it('hashes the password before it reaches the repository — the plain password is never inserted', async () => {
     const repository = fakeRepository()
-    await registerUser({ email: 'diner@example.com', password: 'correct horse battery' }, repository)
+    await registerUser(
+      { email: 'diner@example.com', password: 'correct horse battery' },
+      repository,
+      fakeGrantSignupBonus()
+    )
 
     const insertedArg = vi.mocked(repository.insert).mock.calls[0]![0]
     expect(insertedArg.passwordHash).not.toBe('correct horse battery')
@@ -32,7 +46,11 @@ describe('registerUser', () => {
     const repository = fakeRepository({ findByEmail: vi.fn().mockResolvedValue({ id: 'existing-user' }) })
 
     await expect(
-      registerUser({ email: 'diner@example.com', password: 'correct horse battery' }, repository)
+      registerUser(
+        { email: 'diner@example.com', password: 'correct horse battery' },
+        repository,
+        fakeGrantSignupBonus()
+      )
     ).rejects.toThrow(EmailAlreadyRegisteredError)
     expect(repository.insert).not.toHaveBeenCalled()
   })
@@ -42,7 +60,11 @@ describe('registerUser', () => {
     const repository = fakeRepository({ insert: vi.fn().mockRejectedValue(uniqueViolation) })
 
     await expect(
-      registerUser({ email: 'diner@example.com', password: 'correct horse battery' }, repository)
+      registerUser(
+        { email: 'diner@example.com', password: 'correct horse battery' },
+        repository,
+        fakeGrantSignupBonus()
+      )
     ).rejects.toThrow(EmailAlreadyRegisteredError)
   })
 
@@ -50,7 +72,33 @@ describe('registerUser', () => {
     const repository = fakeRepository({ insert: vi.fn().mockRejectedValue(new Error('connection reset')) })
 
     await expect(
-      registerUser({ email: 'diner@example.com', password: 'correct horse battery' }, repository)
+      registerUser(
+        { email: 'diner@example.com', password: 'correct horse battery' },
+        repository,
+        fakeGrantSignupBonus()
+      )
     ).rejects.toThrow('connection reset')
+  })
+
+  it('grants the signup bonus for the newly created user', async () => {
+    const repository = fakeRepository()
+    const grantSignupBonusFn = fakeGrantSignupBonus()
+
+    await registerUser({ email: 'diner@example.com', password: 'correct horse battery' }, repository, grantSignupBonusFn)
+
+    expect(grantSignupBonusFn).toHaveBeenCalledWith('user-1')
+  })
+
+  it('does not fail registration if granting the signup bonus fails', async () => {
+    const repository = fakeRepository()
+    const grantSignupBonusFn = vi.fn().mockRejectedValue(new Error('credits db unavailable'))
+
+    const result = await registerUser(
+      { email: 'diner@example.com', password: 'correct horse battery' },
+      repository,
+      grantSignupBonusFn
+    )
+
+    expect(result).toEqual({ id: 'user-1', email: 'diner@example.com' })
   })
 })

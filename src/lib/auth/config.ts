@@ -4,6 +4,7 @@ import Credentials from 'next-auth/providers/credentials'
 import Google from 'next-auth/providers/google'
 import { db } from '@/lib/db/client'
 import { accounts, users } from '@/lib/db/schema'
+import { grantSignupBonus } from '@/lib/credits/grants'
 import { authenticateWithPassword } from './authenticate'
 
 export const authConfig: NextAuthConfig = {
@@ -41,6 +42,20 @@ export const authConfig: NextAuthConfig = {
         session.user.id = token.id
       }
       return session
+    },
+  },
+  events: {
+    // Fires only for adapter-created users — i.e. the Google OAuth path. The email/password path
+    // bypasses the adapter entirely (see src/lib/auth/register.ts, which grants the same bonus
+    // directly), so this is the *only* place Google signups get their bonus. Never fails the
+    // sign-in itself over a credits hiccup — grantSignupBonus is idempotent, safe to retry later.
+    async createUser({ user }) {
+      if (!user.id) return
+      try {
+        await grantSignupBonus(user.id)
+      } catch (error) {
+        console.error('auth: failed to grant signup bonus', error)
+      }
     },
   },
 }

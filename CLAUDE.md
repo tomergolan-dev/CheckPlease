@@ -330,6 +330,14 @@ Stays inside Next.js Route Handlers — no separate backend service, no tRPC; th
 ### Local-first sync and guest-bill continuity
 Zustand + `localStorage` remains the source of truth for the active bill for every user — signing in adds a background sync layer on top (a bill gets a server `id` + `updatedAt`, pushed/pulled opportunistically); it does not make the store server-authoritative. **Signing in must never clear or discard the current local bill.** If a guest is mid-bill and signs in (e.g. because they want to scan a receipt), the existing local bill is preserved exactly as-is and claimed/associated with the newly authenticated account — never wiped, never forcing a restart.
 
+### Scan-gating UX (guest → sign-in → resume scan)
+Confirmed flow for how a signed-out user encounters the credit-gated scan feature, decided specifically to avoid two things: doing real work (picking/taking a photo) before telling the user an account is required, and having to carry a photo across the Google OAuth full-page redirect.
+
+- Tapping "Scan receipt" while signed out shows a **sign-in-required sheet immediately**, in place of the usual photo-picker sheet — never the camera/library picker first. Its copy explains why (receipt scanning requires an account) and the incentive (new accounts get 10 free scans), reusing the same Google/email sign-in options as the header's `AccountSheet`.
+- After a successful sign-in, the user lands back on the exact same active bill (already guaranteed by the guest-bill-continuity rule above), and the receipt-scan flow **automatically reopens to the normal photo-picker step** — signing in doesn't just return them to the bill, it resumes the specific action they were trying to take.
+- Because the gate sits *before* any photo is picked, no image data ever needs to survive the OAuth redirect — only a lightweight "resume scanning" intent does (e.g. a flag read once on return), which is trivial to persist compared to an in-progress photo.
+- This gate applies to receipt scanning only. Manual bill splitting — diners, dishes, tip, everything else — remains fully available to guests, completely unaffected.
+
 ### Folder structure additions
 ```
 src/lib/db/      — Drizzle schema, client, migrations
@@ -339,9 +347,8 @@ src/lib/credits/ — pure ledger/balance logic, tested with the same invariant r
 `src/lib/money/` is untouched by any of this — still pure, still client-side, zero DB coupling.
 
 ### Phased rollout
-1. **Database + auth infrastructure** — Neon, Drizzle, and Auth.js wired up; sign-in exists but gates nothing yet. *(Current phase.)*
-2. **Optional sign-in ships** in the product UI, still gating nothing.
-3. **Credit ledger goes live** — receipt scanning becomes the first real behavior change (auth- and credit-gated, reserve → finalize/refund).
-4. **Stripe credit packs.**
-5. **Cross-device sync + bill history**, including the guest-bill-claiming flow above.
-6. *(Much later, only once native distribution is actually scheduled)* native IAP rail via RevenueCat.
+1. **Database + auth infrastructure** — Neon, Drizzle, and Auth.js wired up; sign-in exists but gates nothing yet. *(Done.)*
+2. **Optional sign-in ships** in the product UI, still gating nothing. *(Done.)*
+3. **Credit ledger and Stripe credit packs ship together** — receipt scanning becomes the first real behavior change (auth- and credit-gated, per the Scan-gating UX and reserve → finalize/refund lifecycle above), with the full loop already in place at launch: free scans → exhausted → purchase a pack → credits added. Deliberately not split across two phases — a signed-in user hitting 0 credits with no way to buy more would be a dead end, not an acceptable interim state. *(Current phase.)*
+4. **Cross-device sync + bill history**, including the guest-bill-claiming flow above.
+5. *(Much later, only once native distribution is actually scheduled)* native IAP rail via RevenueCat.

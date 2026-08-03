@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm'
 import { db } from '@/lib/db/client'
 import { users } from '@/lib/db/schema'
+import { grantSignupBonus } from '@/lib/credits/grants'
 import { hashPassword } from './password'
 import type { RegisterInput } from './validation'
 
@@ -56,7 +57,8 @@ export const drizzleUserRepository: UserRepository = {
  */
 export async function registerUser(
   input: RegisterInput,
-  repository: UserRepository = drizzleUserRepository
+  repository: UserRepository = drizzleUserRepository,
+  grantSignupBonusFn: (userId: string) => Promise<void> = grantSignupBonus
 ): Promise<RegisteredUser> {
   const existing = await repository.findByEmail(input.email)
   if (existing) {
@@ -65,12 +67,25 @@ export async function registerUser(
 
   const passwordHash = await hashPassword(input.password)
 
+  let user: RegisteredUser
   try {
-    return await repository.insert({ email: input.email, passwordHash })
+    user = await repository.insert({ email: input.email, passwordHash })
   } catch (error) {
     if (isUniqueViolation(error)) {
       throw new EmailAlreadyRegisteredError()
     }
     throw error
   }
+
+  // Google OAuth signup grants the same bonus via events.createUser in src/lib/auth/config.ts —
+  // this path bypasses @auth/drizzle-adapter entirely (the insert above is a direct call), so
+  // that adapter-only hook never fires here. Never fails registration over a credits hiccup: the
+  // grant is idempotent (see grantSignupBonus), so it's safe to retry/backfill later.
+  try {
+    await grantSignupBonusFn(user.id)
+  } catch (error) {
+    console.error('registerUser: failed to grant signup bonus', error)
+  }
+
+  return user
 }
