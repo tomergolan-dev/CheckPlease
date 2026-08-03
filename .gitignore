@@ -11,6 +11,7 @@ yarn-error.log*
 .vscode/*
 .idea/
 .DS_Store
+.claude/settings.local.json
 /dist
 
 # Next.js
