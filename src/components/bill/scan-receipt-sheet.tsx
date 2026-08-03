@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { Camera, Check, CircleX, Images, Loader2, Pencil, Plus, ScanLine, X } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -23,6 +24,8 @@ import { useBillStore } from '@/lib/store/bill-store'
 import { formatCurrency, minorUnitsToInputValue, parseInputValueToMinorUnits } from '@/lib/money'
 import { generateId } from '@/lib/id'
 import { scanReceipt, ScanReceiptError, type ScanReceiptErrorCode } from '@/lib/receipt-scan'
+import { RESUME_SCAN_KEY } from '@/lib/scan-resume'
+import { SignInForm, type SignInFormMode } from './sign-in-form'
 
 interface DraftRow {
   id: string
@@ -32,21 +35,25 @@ interface DraftRow {
   included: boolean
 }
 
-type Step = 'picker' | 'processing' | 'review' | 'error'
+type Step = 'gate' | 'picker' | 'processing' | 'review' | 'error'
 type ErrorCode = ScanReceiptErrorCode | 'no_items'
 type AddMode = 'append' | 'replace'
 
-export function ScanReceiptSheet() {
+export function ScanReceiptSheet({ onInsufficientCredits }: { onInsufficientCredits?: () => void } = {}) {
   const t = useTranslations('Items')
   const tCommon = useTranslations('Common')
+  const tAccount = useTranslations('Account')
+  const tCredits = useTranslations('Credits')
   const addItem = useBillStore((s) => s.addItem)
   const clearItems = useBillStore((s) => s.clearItems)
   const currency = useBillStore((s) => s.bill?.currency ?? 'ILS')
   const existingItemsCount = useBillStore((s) => s.bill?.items.length ?? 0)
   const shouldReduceMotion = useReducedMotion()
+  const { status } = useSession()
 
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState<Step>('picker')
+  const [gateMode, setGateMode] = useState<SignInFormMode>('sign-in')
   const [rows, setRows] = useState<DraftRow[]>([])
   const [errorCode, setErrorCode] = useState<ErrorCode | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
@@ -54,6 +61,21 @@ export function ScanReceiptSheet() {
   // At most one row is ever editable — tapping a different row (or Done) always closes
   // whichever was open, so the list stays a stable, read-only surface everywhere else.
   const [editingRowId, setEditingRowId] = useState<string | null>(null)
+
+  // Resumes an in-progress scan attempt after the Google OAuth full-page redirect (see the
+  // 'gate' step below) — the gate sits *before* any photo is picked, so only this lightweight
+  // intent flag needs to survive the redirect, never an actual image. A justified effect, not a
+  // derived-state anti-pattern: it's subscribing to an external system (sessionStorage) becoming
+  // readable once the session status resolves, exactly the case React's own docs carve out for
+  // calling setState from an effect.
+  useEffect(() => {
+    if (status !== 'authenticated') return
+    if (sessionStorage.getItem(RESUME_SCAN_KEY) !== '1') return
+    sessionStorage.removeItem(RESUME_SCAN_KEY)
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- external-system sync, see above
+    setStep('picker')
+    setOpen(true)
+  }, [status])
 
   const cameraInputRef = useRef<HTMLInputElement>(null)
   const libraryInputRef = useRef<HTMLInputElement>(null)
@@ -185,6 +207,10 @@ export function ScanReceiptSheet() {
         <DrawerTrigger asChild>
           <button
             type="button"
+            // `status === 'loading'` is treated as not-authenticated here — a UX nicety only
+            // (fail toward showing the gate), not the real security boundary. The server's own
+            // auth()/credit check in the scan-receipt route is what actually enforces gating.
+            onClick={() => setStep(status === 'authenticated' ? 'picker' : 'gate')}
             className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-border/60 bg-card px-4 py-3.5 text-sm font-medium text-primary transition-all hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-soft active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
           >
             <ScanLine className="size-4" aria-hidden="true" />
@@ -207,6 +233,37 @@ export function ScanReceiptSheet() {
           }}
         >
           <AnimatePresence mode="wait" initial={false}>
+            {step === 'gate' && (
+              <motion.div
+                key="gate"
+                className="flex min-h-0 flex-1 flex-col"
+                initial={stepInitial}
+                animate={{ opacity: 1, y: 0 }}
+                exit={stepExit}
+                transition={stepTransition}
+              >
+                <DrawerHeader>
+                  <DrawerTitle>
+                    {gateMode === 'create' ? tAccount('createAccountAction') : tCredits('gateTitle')}
+                  </DrawerTitle>
+                  <DrawerDescription>{tCredits('gateSubtitle')}</DrawerDescription>
+                </DrawerHeader>
+
+                <SignInForm
+                  key={open ? 'gate-open' : 'gate-closed'}
+                  onSuccess={() => setStep('picker')}
+                  onModeChange={setGateMode}
+                  onBeforeGoogleRedirect={() => sessionStorage.setItem(RESUME_SCAN_KEY, '1')}
+                />
+
+                <DrawerFooter>
+                  <DrawerClose asChild>
+                    <Button variant="outline">{tCommon('cancel')}</Button>
+                  </DrawerClose>
+                </DrawerFooter>
+              </motion.div>
+            )}
+
             {step === 'picker' && (
               <motion.div
                 key="picker"
@@ -286,13 +343,30 @@ export function ScanReceiptSheet() {
                   </span>
                   <div className="flex flex-col gap-1">
                     <p className="text-sm font-medium">
-                      {errorCode === 'no_items' ? t('scanNoItemsFound') : t('scanErrorGeneric')}
+                      {errorCode === 'insufficient_credits'
+                        ? tCredits('insufficientCreditsTitle')
+                        : errorCode === 'no_items'
+                          ? t('scanNoItemsFound')
+                          : t('scanErrorGeneric')}
                     </p>
-                    <p className="text-xs text-muted-foreground">{t('scanErrorHint')}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {errorCode === 'insufficient_credits' ? tCredits('insufficientCreditsHint') : t('scanErrorHint')}
+                    </p>
                   </div>
                 </div>
                 <DrawerFooter>
-                  <Button onClick={reset}>{t('scanTryAgain')}</Button>
+                  {errorCode === 'insufficient_credits' ? (
+                    <Button
+                      onClick={() => {
+                        setOpen(false)
+                        onInsufficientCredits?.()
+                      }}
+                    >
+                      {tCredits('buyCreditsAction')}
+                    </Button>
+                  ) : (
+                    <Button onClick={reset}>{t('scanTryAgain')}</Button>
+                  )}
                   <DrawerClose asChild>
                     <Button variant="outline">{t('scanAddManually')}</Button>
                   </DrawerClose>

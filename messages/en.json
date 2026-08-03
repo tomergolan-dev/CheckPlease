@@ -105,5 +105,12 @@
     "signedInAs": "Signed in as {email}",
     "signOutAction": "Sign out",
     "accountAction": "Account"
+  },
+  "Credits": {
+    "gateTitle": "Sign in to scan",
+    "gateSubtitle": "New accounts get 10 free scans.",
+    "insufficientCreditsTitle": "You're out of scans",
+    "insufficientCreditsHint": "Buy a credit pack to keep scanning receipts.",
+    "buyCreditsAction": "Buy more credits"
   }
 }
