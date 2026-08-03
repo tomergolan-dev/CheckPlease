@@ -13,9 +13,12 @@ import {
   Salad,
   Sandwich,
   Soup,
-  Wheat,
   Wine,
 } from 'lucide-react'
+// Lucide (the project's default icon set) has no fries or noodle-bowl glyph — IconPark's
+// outline theme matches Lucide's stroke weight/round caps closely enough to mix in for just
+// these two categories rather than forcing an inaccurate Lucide icon onto either dish.
+import { FrenchFries, Noodles } from '@icon-park/react'
 import { cn } from '@/lib/utils'
 
 type FoodCategory =
@@ -26,6 +29,7 @@ type FoodCategory =
   | 'salad'
   | 'soup'
   | 'pasta'
+  | 'fries'
   | 'fish'
   | 'chicken'
   | 'meat'
@@ -35,6 +39,10 @@ type FoodCategory =
   | 'beer'
   | 'soda'
   | 'generic'
+
+/** IconPark icons take an explicit `size` prop rather than sizing via className — this
+ * matches Tailwind's `size-5` (1.25rem) used everywhere else in `FoodIcon`. */
+const ICON_PARK_SIZE = '1.25rem'
 
 /**
  * Keyword-matched, not user-picked: a dish gets a small supportive icon automatically from its
@@ -58,6 +66,10 @@ const FOOD_CATEGORY_RULES: { category: FoodCategory; keywords: string[] }[] = [
       'pasta', 'spaghetti', 'noodle', 'noodles', 'lasagna', 'risotto', 'rice',
       'פסטה', 'ספגטי', 'נודלס', 'לזניה', 'ריזוטו', 'אורז',
     ],
+  },
+  {
+    category: 'fries',
+    keywords: ['fries', 'chips', 'טוגנים', "צ'יפס", 'צ׳יפס'],
   },
   {
     category: 'fish',
@@ -110,6 +122,7 @@ const CATEGORY_ICON_CLASSES: Record<FoodCategory, string> = {
   salad: 'text-[#3f7d20]',
   soup: 'text-[#b45309]',
   pasta: 'text-[#c9971f]',
+  fries: 'text-[#d99a2b]',
   fish: 'text-[#0f7490]',
   chicken: 'text-[#b8860b]',
   meat: 'text-[#a6392a]',
@@ -142,7 +155,13 @@ export function FoodIcon({ dishName, className }: { dishName: string; className?
     case 'soup':
       return <Soup className={iconClassName} aria-hidden="true" />
     case 'pasta':
-      return <Wheat className={iconClassName} aria-hidden="true" />
+      return (
+        <Noodles className={iconClassName} size={ICON_PARK_SIZE} theme="outline" aria-hidden="true" />
+      )
+    case 'fries':
+      return (
+        <FrenchFries className={iconClassName} size={ICON_PARK_SIZE} theme="outline" aria-hidden="true" />
+      )
     case 'fish':
       return <Fish className={iconClassName} aria-hidden="true" />
     case 'chicken':
