@@ -37,7 +37,7 @@ export function TipAndRoundingCard({
 
   return (
     <>
-      <div className="flex flex-col divide-y divide-border/40 overflow-hidden rounded-[22px] border border-border/40 bg-card shadow-soft">
+      <div className="flex flex-col divide-y divide-border/40 overflow-hidden rounded-[22px] border border-border/60 bg-card shadow-soft">
         <button
           type="button"
           onClick={() => setTipSheetOpen(true)}

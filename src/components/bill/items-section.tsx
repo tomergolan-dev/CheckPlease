@@ -45,7 +45,7 @@ export function ItemsSection({ bill }: { bill: Bill }) {
         </div>
 
         {sortedItems.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border/40 px-6 py-8 text-center">
+          <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border/60 px-6 py-8 text-center">
             <IconBadge icon={UtensilsCrossed} tone="amber" size="lg" />
             <p className="text-sm text-muted-foreground">{t('emptyState')}</p>
           </div>
@@ -56,7 +56,7 @@ export function ItemsSection({ bill }: { bill: Bill }) {
           // clipping the exiting rows' fade instead of shrinking around them.
           <motion.div
             layout
-            className="overflow-hidden rounded-[22px] border border-border/40 bg-card shadow-soft"
+            className="overflow-hidden rounded-[22px] border border-border/60 bg-card shadow-soft"
           >
             <div className="flex flex-col divide-y divide-border/40">
               <AnimatePresence initial={false} mode="popLayout">

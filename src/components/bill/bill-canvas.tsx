@@ -20,8 +20,8 @@ export function BillCanvas() {
           on the left (the part that scrolls), tip/summary sticky on the right — so a long
           dish list never pushes the total and per-person amounts out of view the way it can
           on a single mobile-width column. */}
-      <div className="mt-5 flex flex-col gap-12 lg:mt-8 lg:grid lg:grid-cols-[1.3fr_1fr] lg:items-start lg:gap-10 xl:gap-14">
-        <div className="flex flex-col gap-12">
+      <div className="mt-4 flex flex-col gap-8 lg:mt-6 lg:grid lg:grid-cols-[1.3fr_1fr] lg:items-start lg:gap-10 xl:gap-14">
+        <div className="flex flex-col gap-8">
           <PayingPartiesSection bill={bill} />
           <ItemsSection bill={bill} />
         </div>
