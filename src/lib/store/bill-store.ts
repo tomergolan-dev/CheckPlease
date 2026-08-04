@@ -30,6 +30,8 @@ export interface BillStore {
 
   startNewBill: () => void
   discardBill: () => void
+  markBillCompleted: () => void
+  loadBill: (bill: Bill) => void
 
   setRestaurantName: (name: string) => void
   setRoundUpPayments: (enabled: boolean) => void
@@ -84,11 +86,25 @@ export const useBillStore = create<BillStore>()(
             diners,
             items: [],
             tip: { mode: 'percentage', valueBasisPoints: 0 },
+            status: 'draft',
           },
         })
       },
 
       discardBill: () => set({ bill: null }),
+
+      // Pure local mutation, called only after a successful POST /api/bills/:id/complete — the
+      // store itself never talks to the network (see src/lib/bills/ for the orchestration that
+      // calls this). No-op if there's no active bill, matching every other action's guard style.
+      markBillCompleted: () => {
+        const bill = get().bill
+        if (!bill) return
+        set({ bill: { ...bill, status: 'completed', ...touch() } })
+      },
+
+      // Replaces the store wholesale — used when the user taps "Continue current bill" on a
+      // cloud-pulled draft that was held in transient React state until this exact moment.
+      loadBill: (bill) => set({ bill }),
 
       setRestaurantName: (name) => {
         const bill = get().bill
@@ -269,6 +285,20 @@ export const useBillStore = create<BillStore>()(
       name: 'check-please-bill',
       storage: createJSONStorage(getBrowserStorage),
       skipHydration: true,
+      // v1 added Bill.status ('draft' | 'completed', see Cross-device sync and bill history in
+      // CLAUDE.md). A bill persisted before that field existed reads back with `status`
+      // undefined — without backfilling it here, every status-gated check downstream (the
+      // debounced push-sync guard, the restart sheet's completed-vs-draft branch, "Confirm
+      // Payment"'s visibility check) would silently treat a real, editable, pre-existing draft as
+      // neither a draft nor completed and skip it entirely.
+      version: 1,
+      migrate: (persistedState, version) => {
+        const state = persistedState as { bill: Bill | null } | undefined
+        if (version < 1 && state?.bill && !state.bill.status) {
+          return { ...state, bill: { ...state.bill, status: 'draft' } }
+        }
+        return state as { bill: Bill | null }
+      },
     }
   )
 )

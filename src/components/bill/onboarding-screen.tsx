@@ -14,7 +14,13 @@ const FLOATING_DOTS = [
   { color: 'teal', className: 'end-6 bottom-0 size-6', delay: 1.05 },
 ] as const satisfies { color: keyof typeof DINER_COLOR_CLASSES; className: string; delay: number }[]
 
-export function OnboardingScreen({ onStart }: { onStart: () => void }) {
+interface OnboardingScreenProps {
+  hasActiveDraft: boolean
+  onContinue: () => void
+  onStartNew: () => void
+}
+
+export function OnboardingScreen({ hasActiveDraft, onContinue, onStartNew }: OnboardingScreenProps) {
   const t = useTranslations('App')
   const tHome = useTranslations('Home')
   const shouldReduceMotion = useReducedMotion()
@@ -87,10 +93,21 @@ export function OnboardingScreen({ onStart }: { onStart: () => void }) {
         </motion.p>
       </div>
 
-      <motion.div {...fadeUp(0.55)} className="w-full max-w-xs">
-        <Button size="lg" className="w-full" onClick={onStart}>
-          {tHome('startBillCta')}
-        </Button>
+      <motion.div {...fadeUp(0.55)} className="flex w-full max-w-xs flex-col gap-2.5">
+        {hasActiveDraft ? (
+          <>
+            <Button size="lg" className="w-full" onClick={onContinue}>
+              {tHome('continueBillCta')}
+            </Button>
+            <Button size="lg" variant="outline" className="w-full" onClick={onStartNew}>
+              {t('newBillAction')}
+            </Button>
+          </>
+        ) : (
+          <Button size="lg" className="w-full" onClick={onStartNew}>
+            {tHome('startBillCta')}
+          </Button>
+        )}
       </motion.div>
     </div>
   )

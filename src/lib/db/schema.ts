@@ -1,5 +1,6 @@
-import { pgTable, primaryKey, text, timestamp, integer, check } from 'drizzle-orm/pg-core'
+import { pgTable, primaryKey, text, timestamp, integer, check, jsonb } from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
+import type { Bill } from '@/lib/store/types'
 
 /**
  * Matches @auth/drizzle-adapter's expected default Postgres shape exactly (table/column names,
@@ -118,3 +119,33 @@ export const purchases = pgTable('purchases', {
   status: text('status').notNull(),
   createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
 })
+
+/**
+ * One row per bill — the active draft (status: 'draft') or a permanently read-only completed
+ * bill (status: 'completed'). See "Cross-device sync and bill history" in CLAUDE.md. `id` is the
+ * client-generated bill id, reused directly (never $defaultFn) so the client and server always
+ * agree on identity with no separate round trip. No separate diners/items tables — sync is
+ * last-write-wins, not collaborative editing, so a whole-blob overwrite loses nothing a relational
+ * mirror would give, and it keeps the server from tracking a second schema in parallel with
+ * src/lib/store/types.ts (data.$type<Bill>() is a type-only import, erased at compile time).
+ *
+ * `status`/`completed_at` are the sole source of truth for completion state — never `data`'s own
+ * embedded `status` field, which exists only so a client reading `data` directly never sees a
+ * self-contradictory blob. Trusting `data.status` instead would let a plain draft sync flip a
+ * bill's completion state itself, bypassing the guarded one-way /complete transition.
+ */
+export const bills = pgTable(
+  'bills',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    status: text('status').notNull().default('draft'),
+    data: jsonb('data').$type<Bill>().notNull(),
+    completedAt: timestamp('completed_at', { mode: 'date' }),
+    updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+    createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
+  },
+  (table) => [check('bills_status_valid', sql`${table.status} in ('draft', 'completed')`)]
+)

@@ -17,6 +17,7 @@ function bill(diners: Diner[], items: Item[]): Bill {
     diners,
     items,
     tip: { mode: 'percentage', valueBasisPoints: 0 },
+    status: 'draft',
   }
 }
 

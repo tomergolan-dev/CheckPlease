@@ -36,6 +36,13 @@ export interface Bill {
   diners: Diner[]
   items: Item[]
   tip: TipConfig
+  /**
+   * 'draft' (the active, editable bill) or 'completed' (permanently read-only, saved to "My
+   * Bills" via one deliberate action — see Cross-device sync and bill history in CLAUDE.md). This
+   * is a display/local-state convenience only — the server's `bills.status`/`completed_at`
+   * columns are the sole source of truth for completion state, never this field's synced copy.
+   */
+  status: 'draft' | 'completed'
 }
 
 export interface DinerRemovalImpact {

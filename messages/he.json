@@ -4,10 +4,34 @@
     "newBillAction": "התחלת חשבון חדש",
     "newBillConfirmTitle": "להתחיל חשבון חדש?",
     "newBillConfirmDescription": "הפעולה תמחק לצמיתות את החשבון הנוכחי — כולל הסועדים, המנות והטיפ. אי אפשר לבטל אותה.",
-    "newBillConfirmAction": "התחל חשבון חדש"
+    "newBillConfirmAction": "התחל חשבון חדש",
+    "newBillConfirmDraftDescription": "אפשר לשמור את החשבון הזה ב'החשבונות שלי' לפני שמתחילים חדש, או למחוק אותו לצמיתות.",
+    "newBillConfirmSaveAction": "שמירה ב'החשבונות שלי' והתחלת חשבון חדש",
+    "newBillConfirmDiscardAction": "מחיקת החשבון והתחלת חשבון חדש",
+    "newBillConfirmCompletedTitle": "להתחיל חשבון חדש?",
+    "newBillConfirmCompletedDescription": "החשבון הזה כבר שמור ב'החשבונות שלי' — התחלת חשבון חדש לא תשפיע עליו.",
+    "newBillConfirmCompletedAction": "התחלת חשבון חדש",
+    "newBillConfirmSyncError": "משהו השתבש. נסו שוב."
   },
   "Home": {
-    "startBillCta": "בואו נתחיל לפצל"
+    "startBillCta": "בואו נתחיל לפצל",
+    "continueBillCta": "המשך בחשבון הנוכחי"
+  },
+  "Bills": {
+    "confirmPaymentAction": "אישור תשלום",
+    "confirmPaymentDialogTitle": "לאשר את התשלום?",
+    "confirmPaymentDialogDescription": "הפעולה שומרת את הסכומים הסופיים ב'החשבונות שלי' ולא ניתן לשנות אותם אחר כך.",
+    "confirmPaymentDialogConfirm": "אישור תשלום",
+    "confirmPaymentSyncError": "משהו השתבש. נסו שוב.",
+    "confirmedNextActionTitle": "התשלום אושר",
+    "confirmedStartNewAction": "התחלת חשבון חדש",
+    "confirmedReturnHomeAction": "חזרה למסך הבית",
+    "myBillsAction": "החשבונות שלי",
+    "myBillsSheetTitle": "החשבונות שלי",
+    "myBillsEmptyState": "עדיין אין חשבונות — חשבונות שהושלמו יופיעו כאן.",
+    "myBillsListItemLabel": "חשבון",
+    "myBillsLoadError": "לא הצלחנו לטעון את החשבונות שלך. נסו שוב.",
+    "detailBackAction": "חזרה ל'החשבונות שלי'"
   },
   "Common": {
     "cancel": "ביטול",
@@ -102,8 +126,9 @@
     "invalidCredentials": "אימייל או סיסמה שגויים",
     "emailTaken": "האימייל הזה כבר רשום במערכת",
     "genericError": "משהו השתבש — נסו שוב",
-    "signedInAs": "מחוברים עם {email}",
     "signOutAction": "התנתקות",
+    "signOutConfirmTitle": "להתנתק?",
+    "signOutConfirmDescription": "אפשר להתחבר שוב בכל רגע — החשבון שלכם יישאר בדיוק כמו שהשארתם אותו.",
     "accountAction": "החשבון שלי"
   },
   "Credits": {
@@ -114,7 +139,8 @@
     "buyCreditsAction": "רכישת קרדיטים נוספים",
     "packPickerTitle": "רכישת קרדיטים",
     "packLabel": "{count, plural, one {סריקה אחת} other {# סריקות}}",
-    "recommendedBadge": "הכי משתלם",
+    "popularBadge": "הכי פופולרי",
+    "valueBadge": "הכי משתלם",
     "purchaseError": "משהו השתבש — נסו שוב",
     "balanceLabel": "{count, plural, one {נשאר קרדיט אחד} other {נשארו # קרדיטים}}"
   }

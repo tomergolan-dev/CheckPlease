@@ -2,6 +2,7 @@
 
 import { useBillStore } from '@/lib/store/bill-store'
 import { AppHeader } from './app-header'
+import { ConfirmPaymentSection } from './confirm-payment-section'
 import { ItemsSection } from './items-section'
 import { LiveSummarySection } from './live-summary-section'
 import { PayingPartiesSection } from './paying-parties-section'
@@ -26,8 +27,9 @@ export function BillCanvas() {
           <ItemsSection bill={bill} />
         </div>
 
-        <div className="lg:sticky lg:top-8">
+        <div className="flex flex-col gap-4 lg:sticky lg:top-8">
           <LiveSummarySection bill={bill} />
+          <ConfirmPaymentSection bill={bill} />
         </div>
       </div>
     </div>

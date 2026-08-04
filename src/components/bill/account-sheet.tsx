@@ -16,10 +16,12 @@ import {
 import { RESUME_SCAN_KEY } from '@/lib/scan-resume'
 import { AccountAvatar } from './account-avatar'
 import { CreditPackSheet } from './credit-pack-sheet'
+import { MyBillsSheet } from './my-bills-sheet'
 import { SignInForm, type SignInFormMode } from './sign-in-form'
 
 export function AccountSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const t = useTranslations('Account')
+  const tBills = useTranslations('Bills')
   const tCredits = useTranslations('Credits')
   const tCommon = useTranslations('Common')
   const { data: session } = useSession()
@@ -28,6 +30,8 @@ export function AccountSheet({ open, onOpenChange }: { open: boolean; onOpenChan
   const [mode, setMode] = useState<SignInFormMode>('sign-in')
   const [balance, setBalance] = useState<number | null>(null)
   const [packSheetOpen, setPackSheetOpen] = useState(false)
+  const [myBillsOpen, setMyBillsOpen] = useState(false)
+  const [confirmingSignOut, setConfirmingSignOut] = useState(false)
 
   useEffect(() => {
     if (!user || !open) return
@@ -51,32 +55,61 @@ export function AccountSheet({ open, onOpenChange }: { open: boolean; onOpenChan
   if (user) {
     return (
       <>
-        <Drawer open={open} onOpenChange={onOpenChange}>
+        <Drawer
+          open={open}
+          onOpenChange={(next) => {
+            onOpenChange(next)
+            if (!next) setConfirmingSignOut(false)
+          }}
+        >
           <DrawerContent>
-            <DrawerHeader>
-              <DrawerTitle>{t('accountAction')}</DrawerTitle>
-            </DrawerHeader>
+            {confirmingSignOut ? (
+              <>
+                <DrawerHeader>
+                  <DrawerTitle>{t('signOutConfirmTitle')}</DrawerTitle>
+                  <DrawerDescription>{t('signOutConfirmDescription')}</DrawerDescription>
+                </DrawerHeader>
+                <DrawerFooter>
+                  <Button variant="destructive" onClick={() => signOut()}>
+                    {t('signOutAction')}
+                  </Button>
+                  <Button variant="outline" onClick={() => setConfirmingSignOut(false)}>
+                    {tCommon('cancel')}
+                  </Button>
+                </DrawerFooter>
+              </>
+            ) : (
+              <>
+                <DrawerHeader>
+                  <DrawerTitle>{t('accountAction')}</DrawerTitle>
+                </DrawerHeader>
 
-            <div className="flex flex-col items-center gap-3 px-8 py-2">
-              <AccountAvatar user={user} size={56} />
-              <p className="text-sm text-muted-foreground">{t('signedInAs', { email: user.email ?? '' })}</p>
-              {balance !== null && (
-                <p className="text-sm font-medium">{tCredits('balanceLabel', { count: balance })}</p>
-              )}
-            </div>
+                <div className="flex flex-col items-center gap-3 px-8 py-2">
+                  <AccountAvatar user={user} size={56} />
+                  <p className="text-sm text-muted-foreground">{user.email}</p>
+                  {balance !== null && (
+                    <p className="text-sm font-medium">{tCredits('balanceLabel', { count: balance })}</p>
+                  )}
+                </div>
 
-            <DrawerFooter>
-              <Button variant="outline" onClick={() => setPackSheetOpen(true)}>
-                {tCredits('buyCreditsAction')}
-              </Button>
-              <Button variant="outline" onClick={() => signOut()}>
-                {t('signOutAction')}
-              </Button>
-            </DrawerFooter>
+                <DrawerFooter>
+                  <Button variant="outline" onClick={() => setMyBillsOpen(true)}>
+                    {tBills('myBillsAction')}
+                  </Button>
+                  <Button variant="outline" onClick={() => setPackSheetOpen(true)}>
+                    {tCredits('buyCreditsAction')}
+                  </Button>
+                  <Button variant="destructive" onClick={() => setConfirmingSignOut(true)}>
+                    {t('signOutAction')}
+                  </Button>
+                </DrawerFooter>
+              </>
+            )}
           </DrawerContent>
         </Drawer>
 
         <CreditPackSheet open={packSheetOpen} onOpenChange={setPackSheetOpen} />
+        <MyBillsSheet open={myBillsOpen} onOpenChange={setMyBillsOpen} />
       </>
     )
   }

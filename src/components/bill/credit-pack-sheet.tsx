@@ -65,14 +65,19 @@ export function CreditPackSheet({ open, onOpenChange }: { open: boolean; onOpenC
               disabled={submittingType !== null}
               className={cn(
                 'flex items-center justify-between rounded-xl border px-3 py-2.5 text-sm font-medium transition-all hover:-translate-y-0.5 hover:shadow-soft active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50',
-                pack.recommended ? 'border-primary bg-card' : 'border-border bg-background'
+                pack.badge === 'popular' ? 'border-primary bg-card' : 'border-border bg-background'
               )}
             >
               <span className="flex items-center gap-2">
                 {t('packLabel', { count: pack.credits })}
-                {pack.recommended && (
+                {pack.badge === 'popular' && (
                   <span className="rounded-full bg-primary px-2 py-0.5 text-[11px] font-semibold text-primary-foreground">
-                    {t('recommendedBadge')}
+                    {t('popularBadge')}
+                  </span>
+                )}
+                {pack.badge === 'value' && (
+                  <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
+                    {t('valueBadge')}
                   </span>
                 )}
               </span>

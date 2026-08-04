@@ -4,10 +4,34 @@
     "newBillAction": "Start a new bill",
     "newBillConfirmTitle": "Start a new bill?",
     "newBillConfirmDescription": "This clears your current bill for good — diners, dishes and tip included. This can't be undone.",
-    "newBillConfirmAction": "Start new bill"
+    "newBillConfirmAction": "Start new bill",
+    "newBillConfirmDraftDescription": "You can save this bill to My Bills before starting a new one, or discard it for good.",
+    "newBillConfirmSaveAction": "Save to My Bills and start a new bill",
+    "newBillConfirmDiscardAction": "Discard and start a new bill",
+    "newBillConfirmCompletedTitle": "Start a new bill?",
+    "newBillConfirmCompletedDescription": "This bill is already saved to My Bills — starting a new one won't affect it.",
+    "newBillConfirmCompletedAction": "Start a new bill",
+    "newBillConfirmSyncError": "Something went wrong. Please try again."
   },
   "Home": {
-    "startBillCta": "Start Splitting"
+    "startBillCta": "Start Splitting",
+    "continueBillCta": "Continue current bill"
+  },
+  "Bills": {
+    "confirmPaymentAction": "Confirm payment",
+    "confirmPaymentDialogTitle": "Confirm payment?",
+    "confirmPaymentDialogDescription": "This saves the final amounts to My Bills and can't be changed afterward.",
+    "confirmPaymentDialogConfirm": "Confirm payment",
+    "confirmPaymentSyncError": "Something went wrong. Please try again.",
+    "confirmedNextActionTitle": "Payment confirmed",
+    "confirmedStartNewAction": "Start a new bill",
+    "confirmedReturnHomeAction": "Return home",
+    "myBillsAction": "My Bills",
+    "myBillsSheetTitle": "My Bills",
+    "myBillsEmptyState": "No bills yet — completed bills will show up here.",
+    "myBillsListItemLabel": "Bill",
+    "myBillsLoadError": "Couldn't load your bills. Please try again.",
+    "detailBackAction": "Back to My Bills"
   },
   "Common": {
     "cancel": "Cancel",
@@ -102,8 +126,9 @@
     "invalidCredentials": "Incorrect email or password",
     "emailTaken": "That email is already registered",
     "genericError": "Something went wrong — try again",
-    "signedInAs": "Signed in as {email}",
     "signOutAction": "Sign out",
+    "signOutConfirmTitle": "Sign out?",
+    "signOutConfirmDescription": "You can always sign back in — your bill stays right where you left it.",
     "accountAction": "Account"
   },
   "Credits": {
@@ -114,7 +139,8 @@
     "buyCreditsAction": "Buy more credits",
     "packPickerTitle": "Buy credits",
     "packLabel": "{count, plural, one {# scan} other {# scans}}",
-    "recommendedBadge": "Best value",
+    "popularBadge": "Most popular",
+    "valueBadge": "Best value",
     "purchaseError": "Something went wrong — try again",
     "balanceLabel": "{count, plural, one {# credit left} other {# credits left}}"
   }

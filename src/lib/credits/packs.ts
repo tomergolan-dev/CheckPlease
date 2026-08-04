@@ -7,7 +7,9 @@ export interface CreditPack {
    * 1:1, so no conversion logic is needed anywhere this is used. */
   priceMinorUnits: number
   currency: 'ILS'
-  recommended?: boolean
+  /** 'popular' gets the highlighted-border treatment (there's only ever one); 'value' is a
+   * quieter badge with no border highlight, so the two never visually compete. */
+  badge?: 'popular' | 'value'
 }
 
 /**
@@ -17,8 +19,8 @@ export interface CreditPack {
  */
 export const CREDIT_PACKS: readonly CreditPack[] = [
   { type: 'pack_10', credits: 10, priceMinorUnits: 790, currency: 'ILS' },
-  { type: 'pack_25', credits: 25, priceMinorUnits: 1690, currency: 'ILS', recommended: true },
-  { type: 'pack_60', credits: 60, priceMinorUnits: 3490, currency: 'ILS' },
+  { type: 'pack_25', credits: 25, priceMinorUnits: 1690, currency: 'ILS', badge: 'popular' },
+  { type: 'pack_60', credits: 60, priceMinorUnits: 3490, currency: 'ILS', badge: 'value' },
 ]
 
 export function findCreditPack(type: string): CreditPack | undefined {
