@@ -146,6 +146,6 @@
     "valueBadge": "הכי משתלם",
     "purchaseError": "משהו השתבש — נסו שוב",
     "balanceLabel": "{count, plural, one {נשאר קרדיט אחד} other {נשארו # קרדיטים}}",
-    "unlimitedBalanceLabel": "ללא הגבלה"
+    "unlimitedBalanceLabel": "Unlimited"
   }
 }
