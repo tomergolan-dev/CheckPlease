@@ -29,6 +29,7 @@ export function AccountSheet({ open, onOpenChange }: { open: boolean; onOpenChan
 
   const [mode, setMode] = useState<SignInFormMode>('sign-in')
   const [balance, setBalance] = useState<number | null>(null)
+  const [unlimitedCredits, setUnlimitedCredits] = useState(false)
   const [packSheetOpen, setPackSheetOpen] = useState(false)
   const [myBillsOpen, setMyBillsOpen] = useState(false)
   const [confirmingSignOut, setConfirmingSignOut] = useState(false)
@@ -40,8 +41,9 @@ export function AccountSheet({ open, onOpenChange }: { open: boolean; onOpenChan
       .then((res) => (res.ok ? res.json() : null))
       .then((data: unknown) => {
         if (cancelled) return
-        const value = data && typeof data === 'object' && 'balance' in data ? data.balance : null
-        if (typeof value === 'number') setBalance(value)
+        if (!data || typeof data !== 'object') return
+        if ('balance' in data && typeof data.balance === 'number') setBalance(data.balance)
+        if ('unlimited' in data && typeof data.unlimited === 'boolean') setUnlimitedCredits(data.unlimited)
       })
       .catch(() => {
         // A stale/missing balance display is a minor cosmetic gap, not worth surfacing as an
@@ -88,7 +90,9 @@ export function AccountSheet({ open, onOpenChange }: { open: boolean; onOpenChan
                   <AccountAvatar user={user} size={56} />
                   <p className="text-sm text-muted-foreground">{user.email}</p>
                   {balance !== null && (
-                    <p className="text-sm font-medium">{tCredits('balanceLabel', { count: balance })}</p>
+                    <p className="text-sm font-medium">
+                      {unlimitedCredits ? tCredits('unlimitedBalanceLabel') : tCredits('balanceLabel', { count: balance })}
+                    </p>
                   )}
                 </div>
 

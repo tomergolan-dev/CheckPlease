@@ -38,7 +38,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'conflict' }, { status: 409 })
   }
   if (result.action === 'pushed') {
-    return NextResponse.json({ ok: true })
+    // id/data: the canonical draft after this push — may differ from what was sent if this
+    // account's one true cloud draft already lived under a different id (see syncDraft).
+    return NextResponse.json({ ok: true, id: result.id, data: result.data })
   }
   return NextResponse.json({ bill: result.bill })
 }

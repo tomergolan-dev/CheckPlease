@@ -145,6 +145,7 @@
     "popularBadge": "Most popular",
     "valueBadge": "Best value",
     "purchaseError": "Something went wrong — try again",
-    "balanceLabel": "{count, plural, one {# credit left} other {# credits left}}"
+    "balanceLabel": "{count, plural, one {# credit left} other {# credits left}}",
+    "unlimitedBalanceLabel": "Unlimited"
   }
 }

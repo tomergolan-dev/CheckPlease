@@ -22,9 +22,11 @@ function makeBill(overrides: Partial<Bill> = {}): Bill {
 describe('listCompletedBills', () => {
   it('only returns the caller\'s completed rows, excluding their own draft and other users\' rows', async () => {
     const { repository } = createInMemoryBillsRepository()
-    await repository.upsertDraft({ id: 'b-draft', userId: 'u1', data: makeBill({ id: 'b-draft' }) })
     await repository.upsertDraft({ id: 'b-done-1', userId: 'u1', data: makeBill({ id: 'b-done-1' }) })
     await repository.markCompleted({ id: 'b-done-1', userId: 'u1' })
+    // The caller's current active draft, started fresh after completing the bill above (only one
+    // draft row can ever exist per user) — must never show up in "My Bills".
+    await repository.upsertDraft({ id: 'b-draft', userId: 'u1', data: makeBill({ id: 'b-draft' }) })
     await repository.upsertDraft({ id: 'b-other', userId: 'u2', data: makeBill({ id: 'b-other' }) })
     await repository.markCompleted({ id: 'b-other', userId: 'u2' })
 

@@ -62,18 +62,22 @@ async function compressImage(file: File): Promise<{ base64: string; mediaType: s
   }
 }
 
-export async function scanReceipt(file: File, currency: CurrencyCode): Promise<ScannedItem[]> {
+/**
+ * `scanId` is owned by the caller, not generated here — one fresh id per photo attempt, never
+ * reused across a retake (see scan-receipt-sheet.tsx's retake() for why: a ledger idempotency key
+ * can only ever be consumed once, so reusing one after a refund would make that scanId permanently
+ * unchargeable). The server's credit reservation is still idempotent on this value, so a
+ * transport-level duplicate of this exact request (e.g. a retried fetch after a dropped response)
+ * can never reserve a second credit for the same attempt (see Post-MVP Architecture in CLAUDE.md
+ * and abandonScan below, which refunds one specific attempt's reservation).
+ */
+export async function scanReceipt(file: File, currency: CurrencyCode, scanId: string): Promise<ScannedItem[]> {
   let payload: { base64: string; mediaType: string }
   try {
     payload = await compressImage(file)
   } catch {
     throw new ScanReceiptError('invalid_image')
   }
-
-  // Generated once per attempt and sent to the server, whose credit reservation is idempotent on
-  // this value — a transport-level duplicate of this exact request (e.g. a retried fetch) can
-  // never reserve a second credit for the same attempt (see Post-MVP Architecture in CLAUDE.md).
-  const scanId = crypto.randomUUID()
 
   let response: Response
   try {
@@ -95,4 +99,24 @@ export async function scanReceipt(file: File, currency: CurrencyCode): Promise<S
   }
 
   return data.items as ScannedItem[]
+}
+
+/**
+ * Refunds the credit reserved for a scan session that's being abandoned mid-flow — a "Retake
+ * photo" / "Try again" within the same session, *not* a full close. Safe to call even when the
+ * session's credit was already auto-refunded server-side (a failed/zero-item attempt) or never
+ * reserved at all (the dev-only unlimited-credits allowlist) — both collapse to the same
+ * idempotent no-op. Best-effort: a network failure here just leaves the credit reserved, which is
+ * the safe-by-default direction to fail in (never lets a scan run for free).
+ */
+export async function abandonScan(scanId: string): Promise<void> {
+  try {
+    await fetch('/api/scan-receipt/refund', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scanId }),
+    })
+  } catch {
+    // See function comment — failure here is accepted, not retried.
+  }
 }

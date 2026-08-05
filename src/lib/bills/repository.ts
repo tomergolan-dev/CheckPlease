@@ -3,7 +3,20 @@ import { db } from '@/lib/db/client'
 import { bills } from '@/lib/db/schema'
 import type { Bill } from './types'
 
-export type UpsertDraftResult = { ok: true } | { ok: false; reason: 'conflict' }
+/** Postgres's unique_violation code — same pattern as src/lib/credits/repository.ts. */
+const UNIQUE_VIOLATION = '23505'
+
+/** Drizzle wraps the real driver error in a `DrizzleQueryError`, with the actual Postgres error
+ * (the one carrying `.code`) nested under `.cause` — mirrors src/lib/credits/repository.ts's
+ * `isUniqueViolation` exactly. */
+function isUniqueViolation(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null) return false
+  if ('code' in error && error.code === UNIQUE_VIOLATION) return true
+  if ('cause' in error) return isUniqueViolation(error.cause)
+  return false
+}
+
+export type UpsertDraftResult = { ok: true; id: string; data: Bill } | { ok: false; reason: 'conflict' }
 export type MarkCompletedResult = { ok: true; data: Bill } | { ok: false; reason: 'not_found' }
 export type DeleteDraftResult = { ok: true } | { ok: false; reason: 'not_found' }
 export type RenameCompletedResult = { ok: true; data: Bill } | { ok: false; reason: 'not_found' }
@@ -28,40 +41,79 @@ export interface BillsRepository {
  * The real repository, backed by the actual database. Every operation is a single guarded
  * statement (ownership/status enforced in the WHERE clause), not a select-then-branch
  * transaction — no race window, one round trip, mirroring src/lib/credits/repository.ts's
- * guarded-write style. Unlike that module, no `isUniqueViolation`/`.cause`-walking helper is
- * needed here — `upsertDraft`'s guarded `onConflictDoUpdate` never throws on the PK collision it
- * exists to handle, there's nothing to catch.
+ * guarded-write style.
  */
 export const drizzleBillsRepository: BillsRepository = {
   /**
-   * `id` is client-generated and reused directly as the PK — never server-assigned — so a plain
-   * `onConflictDoUpdate({ target })` would let any signed-in client overwrite any row it can guess
-   * the id of. The `where` clause is Postgres's `ON CONFLICT ... DO UPDATE ... WHERE <cond>`,
-   * evaluated against the *existing* row before the update — if false, the row is left untouched
-   * and excluded from RETURNING, which is what makes ownership+status enforcement possible in one
-   * statement. 0 rows returned means either the row belongs to someone else, or it's already
-   * `completed` (a draft sync must never resurrect/overwrite a completed bill).
+   * Enforces "exactly one active draft row per user" (see `bills_one_draft_per_user` in
+   * schema.ts) — `id` is client-generated, so two devices that have never synced can each hold a
+   * different local draft id for the same account. This never lets a second row be created for
+   * that account; it always converges onto the one canonical row and reports its id/data back so
+   * the caller (sync.ts → the client) can adopt it.
+   *
+   * Two statements, in order:
+   *
+   * 1. An atomic compare-and-swap `UPDATE ... WHERE user_id = ? AND status = 'draft'` — matches
+   *    the account's canonical draft row regardless of whether its id equals the incoming one.
+   *    The `CASE` picks the newer side by comparing each bill's own app-level `data.updatedAt`
+   *    (never the DB `updated_at` column, which only reflects request-arrival order, not which
+   *    edit actually happened later) — entirely within the single UPDATE statement, so Postgres's
+   *    row lock makes this immune to the lost-update race a separate SELECT-then-UPDATE would
+   *    have under real concurrent pushes. `jsonb_set(..., '{id}', to_jsonb(id))` normalizes the
+   *    winning data's embedded `id` to the row's own id (referencing the table's own `id` column
+   *    mid-statement) — the persisted blob's `id` always matches the row it lives in, even when
+   *    the incoming push's data carried a different (losing) local id.
+   * 2. If that UPDATE touches 0 rows, this account has no draft row yet — insert the incoming id
+   *    as its first one, still guarded by the same ownership/status `where` as before (never
+   *    resurrect a row that turns out to belong to someone else, or one of this user's own
+   *    completed bills that happens to share this exact id). If a *second* device is racing to
+   *    create this account's very first draft row at the same moment, one of the two inserts
+   *    wins outright; the other trips `bills_one_draft_per_user`'s unique_violation, caught below
+   *    and resolved by recursing once — the retry's UPDATE now finds the winner's row and merges
+   *    into it via the same newer-wins comparison as any other convergence.
    */
   async upsertDraft({ id, userId, data }) {
     const now = new Date()
-    const rows = await db
-      .insert(bills)
-      .values({ id, userId, status: 'draft', data, updatedAt: now, createdAt: now })
-      .onConflictDoUpdate({
-        target: bills.id,
-        set: { data, updatedAt: now },
-        where: and(eq(bills.userId, userId), eq(bills.status, 'draft')),
+    const incomingJson = JSON.stringify(data)
+
+    const [merged] = await db
+      .update(bills)
+      .set({
+        data: sql`case
+          when (${bills.data}->>'updatedAt')::bigint <= ${data.updatedAt}
+          then jsonb_set(${incomingJson}::jsonb, '{id}', to_jsonb(${bills.id}))
+          else ${bills.data}
+        end`,
+        updatedAt: now,
       })
-      .returning({ id: bills.id })
-    return rows.length > 0 ? { ok: true } : { ok: false, reason: 'conflict' }
+      .where(and(eq(bills.userId, userId), eq(bills.status, 'draft')))
+      .returning({ id: bills.id, data: bills.data })
+
+    if (merged) {
+      return { ok: true, id: merged.id, data: merged.data }
+    }
+
+    try {
+      const [inserted] = await db
+        .insert(bills)
+        .values({ id, userId, status: 'draft', data, updatedAt: now, createdAt: now })
+        .onConflictDoUpdate({
+          target: bills.id,
+          set: { data, updatedAt: now },
+          where: and(eq(bills.userId, userId), eq(bills.status, 'draft')),
+        })
+        .returning({ id: bills.id, data: bills.data })
+      return inserted ? { ok: true, id: inserted.id, data: inserted.data } : { ok: false, reason: 'conflict' }
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        return drizzleBillsRepository.upsertDraft({ id, userId, data })
+      }
+      throw error
+    }
   },
 
-  /**
-   * `ORDER BY updated_at DESC LIMIT 1` is the tie-break for the documented edge case of more than
-   * one draft row existing for a user (two devices each started an independent guest bill before
-   * either ever signed in, both later signing into the same account) — most-recently-touched wins,
-   * the other is simply never surfaced. A deliberate scope limit, not solved with UI this phase.
-   */
+  /** At most one draft row per user now (see `bills_one_draft_per_user`), so this always returns
+   * that account's one canonical draft — `.limit(1)` stays as defense-in-depth, not a tie-break. */
   async pullDraft(userId) {
     const [row] = await db
       .select({ id: bills.id, data: bills.data, updatedAt: bills.updatedAt })

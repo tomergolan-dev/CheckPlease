@@ -3,8 +3,11 @@
 import { useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { useBillStore } from '@/lib/store/bill-store'
+import type { Bill } from './types'
 
 const DEBOUNCE_MS = 3000
+
+type PushResponse = { ok: true; id: string; data: Bill } | { error: string }
 
 /**
  * Pushes the active draft to the cloud a few seconds after any edit (debounced) — see "The
@@ -30,11 +33,38 @@ export function useDraftPushSync(): void {
       // is a stale timer and must no-op rather than push.
       const current = useBillStore.getState().bill
       if (!current || current.id !== billId || current.status !== 'draft') return
-      void fetch('/api/bills/sync', {
+
+      fetch('/api/bills/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ bill: current }),
       })
+        .then((res) => (res.ok ? (res.json() as Promise<PushResponse>) : null))
+        .then((result) => {
+          if (!result || !('ok' in result) || !result.ok) return
+
+          // Same staleness guard as above, re-checked after the round trip: only reconcile the
+          // draft we actually just pushed, never one the user has since restarted/completed.
+          const live = useBillStore.getState().bill
+          if (!live || live.id !== billId || live.status !== 'draft') return
+
+          // The server's canonical draft can differ in id (this account's one true cloud draft
+          // already lived under a different id — see upsertDraft in repository.ts) and/or in
+          // data (a losing side of that same merge). Adopting the id is always safe and always
+          // needed, so future pushes land on the right row; adopting the *data* is only safe
+          // when it's actually newer than what's live now — otherwise a fresher edit made while
+          // this request was in flight would be silently discarded. When the id changed but our
+          // live data is newer, keep the live data and just relabel it with the canonical id —
+          // the next debounced push (triggered by this very state change) re-pushes it under
+          // that id and wins the merge there, since it's genuinely the newer side.
+          if (result.id !== live.id) {
+            const winner: Bill = live.updatedAt > result.data.updatedAt ? { ...live, id: result.id } : result.data
+            useBillStore.getState().loadBill(winner)
+          } else if (result.data.updatedAt > live.updatedAt) {
+            useBillStore.getState().loadBill(result.data)
+          }
+        })
+        .catch(() => {})
     }, DEBOUNCE_MS)
 
     return () => {

@@ -21,9 +21,18 @@ export interface FakeBillRow {
 /**
  * A stateful in-memory fake `BillsRepository`, for unit-testing sync.ts/complete.ts/discard.ts/
  * list.ts without a live Postgres connection — same shape as
- * src/lib/credits/test-helpers.ts's `createInMemoryCreditsRepository` for consistency, but
- * without its deliberate single-yield-point-for-concurrency-modeling subtlety: this module is
- * last-write-wins, not a guarded decrement with a "never goes negative" race to model.
+ * src/lib/credits/test-helpers.ts's `createInMemoryCreditsRepository` for consistency, including
+ * its single-yield-point-for-concurrency-modeling technique (see `upsertDraft` below): one
+ * `await Promise.resolve()` right at the top, before any read, and nothing after it ever awaits
+ * again. That's what makes `Promise.all`-driven "concurrent" pushes in tests interleave the way
+ * concurrent DB transactions do — each call yields once, then the microtask queue resumes queued
+ * calls one at a time in order, and since a resumed call never yields again, its read-decide-write
+ * runs as one atomic block before the next call gets a turn. This is needed here for the same
+ * reason as the credits fake: `upsertDraft` must enforce "at most one draft row per user" the way
+ * the real repository's `bills_one_draft_per_user` unique index does (see schema.ts) — without
+ * the single yield point, two concurrent calls could both observe "no draft row for this user yet"
+ * before either writes, letting a race create two rows in the fake that the real database would
+ * have collapsed to one.
  */
 export function createInMemoryBillsRepository(): {
   repository: BillsRepository
@@ -33,24 +42,40 @@ export function createInMemoryBillsRepository(): {
 
   const repository: BillsRepository = {
     async upsertDraft({ id, userId, data }): Promise<UpsertDraftResult> {
+      await Promise.resolve()
+
       const now = new Date()
-      const existing = rows.get(id)
-      if (existing && (existing.userId !== userId || existing.status !== 'draft')) {
+
+      // This account's one canonical draft row, if it already exists — regardless of whether its
+      // id matches the incoming one (see repository.ts's real `upsertDraft` for why: two devices
+      // that have never synced can each hold a different local draft id for the same account).
+      const existingForUser = [...rows.values()].find((row) => row.userId === userId && row.status === 'draft')
+
+      if (existingForUser) {
+        // Newer-wins by each side's own app-level `data.updatedAt` — never by arrival order —
+        // and the winning data's `id` is normalized to the row's own id either way, so the
+        // persisted blob never disagrees with the row it lives in.
+        const incomingIsNewer = data.updatedAt >= existingForUser.data.updatedAt
+        const finalData: Bill = incomingIsNewer ? { ...data, id: existingForUser.id } : existingForUser.data
+        rows.set(existingForUser.id, { ...existingForUser, data: finalData, updatedAt: now })
+        return { ok: true, id: existingForUser.id, data: finalData }
+      }
+
+      // No draft row for this user yet. `id` might still collide with an unrelated row — another
+      // user's, or this same user's own completed bill that happens to share this id — which must
+      // never be resurrected or overwritten by a plain draft push.
+      const existingById = rows.get(id)
+      if (existingById && (existingById.userId !== userId || existingById.status !== 'draft')) {
         return { ok: false, reason: 'conflict' }
       }
-      rows.set(id, {
-        id,
-        userId,
-        status: 'draft',
-        data,
-        completedAt: existing?.completedAt ?? null,
-        updatedAt: now,
-        createdAt: existing?.createdAt ?? now,
-      })
-      return { ok: true }
+
+      rows.set(id, { id, userId, status: 'draft', data, completedAt: null, updatedAt: now, createdAt: now })
+      return { ok: true, id, data }
     },
 
     async pullDraft(userId) {
+      // At most one draft row per user (see `bills_one_draft_per_user`), so this is really just
+      // "find the one," not a tie-break — `.sort`/take-first stays as defense-in-depth only.
       const drafts = [...rows.values()]
         .filter((row) => row.userId === userId && row.status === 'draft')
         .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())

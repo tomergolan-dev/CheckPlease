@@ -1,4 +1,4 @@
-import { pgTable, primaryKey, text, timestamp, integer, check, jsonb } from 'drizzle-orm/pg-core'
+import { pgTable, primaryKey, text, timestamp, integer, check, jsonb, uniqueIndex } from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
 import type { Bill } from '@/lib/store/types'
 
@@ -133,6 +133,12 @@ export const purchases = pgTable('purchases', {
  * embedded `status` field, which exists only so a client reading `data` directly never sees a
  * self-contradictory blob. Trusting `data.status` instead would let a plain draft sync flip a
  * bill's completion state itself, bypassing the guarded one-way /complete transition.
+ *
+ * `bills_one_draft_per_user` enforces "exactly one active draft per signed-in user" at the data
+ * layer, not just in application logic — see upsertDraft in repository.ts, which relies on a
+ * violation of this exact index to detect and resolve a race between two devices each pushing a
+ * different local draft id for the same user at the same time. Partial (`WHERE status = 'draft'`)
+ * so a user can still have any number of completed bills.
  */
 export const bills = pgTable(
   'bills',
@@ -147,5 +153,8 @@ export const bills = pgTable(
     updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
     createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
   },
-  (table) => [check('bills_status_valid', sql`${table.status} in ('draft', 'completed')`)]
+  (table) => [
+    check('bills_status_valid', sql`${table.status} in ('draft', 'completed')`),
+    uniqueIndex('bills_one_draft_per_user').on(table.userId).where(sql`${table.status} = 'draft'`),
+  ]
 )

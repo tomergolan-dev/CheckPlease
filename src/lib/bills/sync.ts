@@ -2,16 +2,18 @@ import { drizzleBillsRepository, type BillsRepository } from './repository'
 import type { Bill } from './types'
 
 export type SyncDraftResult =
-  | { action: 'pushed' }
+  | { action: 'pushed'; id: string; data: Bill }
   | { action: 'push_rejected' }
   | { action: 'pulled'; bill: Bill | null }
 
 /**
  * A single bidirectional operation, mirroring the one `/api/bills/sync` route named in CLAUDE.md:
  * `bill` present pushes it as the caller's active draft; `bill: null` pulls whatever draft the
- * caller already has in the cloud (or null). "Last-write-wins on updated_at" requires no
- * client-timestamp comparison — a push unconditionally overwrites, so whoever's push lands last
- * wins, which is correct precisely because concurrent multi-device editing isn't a target scenario.
+ * caller already has in the cloud (or null). A push always returns the canonical draft's id/data
+ * — see `upsertDraft` in repository.ts — since a user's one true cloud draft can end up under a
+ * different id and/or with different data than what was just pushed (another device's draft won
+ * the "keep the newer one" merge); the caller (the client's push-sync hook) uses this to adopt
+ * the canonical id and never silently lose a fresher local edit.
  */
 export async function syncDraft(
   userId: string,
@@ -20,7 +22,7 @@ export async function syncDraft(
 ): Promise<SyncDraftResult> {
   if (bill) {
     const result = await repository.upsertDraft({ id: bill.id, userId, data: bill })
-    return result.ok ? { action: 'pushed' } : { action: 'push_rejected' }
+    return result.ok ? { action: 'pushed', id: result.id, data: result.data } : { action: 'push_rejected' }
   }
   const draft = await repository.pullDraft(userId)
   return { action: 'pulled', bill: draft?.data ?? null }

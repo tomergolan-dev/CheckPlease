@@ -23,7 +23,7 @@ import {
 import { useBillStore } from '@/lib/store/bill-store'
 import { formatCurrency, minorUnitsToInputValue, parseInputValueToMinorUnits } from '@/lib/money'
 import { generateId } from '@/lib/id'
-import { scanReceipt, ScanReceiptError, type ScanReceiptErrorCode } from '@/lib/receipt-scan'
+import { abandonScan, scanReceipt, ScanReceiptError, type ScanReceiptErrorCode } from '@/lib/receipt-scan'
 import { RESUME_SCAN_KEY } from '@/lib/scan-resume'
 import { SignInForm, type SignInFormMode } from './sign-in-form'
 
@@ -61,6 +61,10 @@ export function ScanReceiptSheet({ onInsufficientCredits }: { onInsufficientCred
   // At most one row is ever editable — tapping a different row (or Done) always closes
   // whichever was open, so the list stays a stable, read-only surface everywhere else.
   const [editingRowId, setEditingRowId] = useState<string | null>(null)
+  // The current/last photo attempt's scanId — a fresh one is generated per attempt (see
+  // handleFile), and it's what retake() refunds when the user abandons that attempt. Never
+  // reused across attempts — see retake() for why.
+  const [scanId, setScanId] = useState<string | null>(null)
 
   // Resumes an in-progress scan attempt after the Google OAuth full-page redirect (see the
   // 'gate' step below) — the gate sits *before* any photo is picked, so only this lightweight
@@ -94,11 +98,40 @@ export function ScanReceiptSheet({ onInsufficientCredits }: { onInsufficientCred
     return () => cancelAnimationFrame(frame)
   }, [editingRowId, shouldReduceMotion])
 
+  // Full reset — clears everything, including the last attempt's scanId. Used when the sheet
+  // closes entirely, or after a session actually finishes (successfully or not).
   function reset() {
     setStep('picker')
     setRows([])
     setErrorCode(null)
     setAddMode('append')
+    setEditingRowId(null)
+    setScanId(null)
+    setPreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev)
+      return null
+    })
+  }
+
+  // Abandons the current photo attempt — used by both "Try again" (error step) and "Retake
+  // photo" (review step). Refunds whatever credit is reserved for *this specific attempt* (a
+  // harmless idempotent no-op if the server already auto-refunded a failed/empty attempt), then
+  // clears the scanId so the next attempt reserves under a brand new one.
+  //
+  // Deliberately does NOT reuse the same scanId for the next attempt: a ledger idempotency key
+  // can only ever be consumed once, permanently — once `consumption:X` has been recorded for a
+  // given scanId, no later reserve call for that same id can ever charge again, even after a
+  // refund. Reusing it across retakes would mean a session that failed once could never be
+  // charged again even if a later attempt in the same session succeeds. Each attempt getting its
+  // own fresh scanId is what makes "at most one credit consumed per session" hold: any retaken
+  // attempt is fully refunded on its own id, and only the one attempt that's ultimately kept
+  // (committed, or abandoned via Cancel after processing) stays charged.
+  function retake() {
+    if (scanId) void abandonScan(scanId)
+    setScanId(null)
+    setStep('picker')
+    setRows([])
+    setErrorCode(null)
     setEditingRowId(null)
     setPreviewUrl((prev) => {
       if (prev) URL.revokeObjectURL(prev)
@@ -113,8 +146,11 @@ export function ScanReceiptSheet({ onInsufficientCredits }: { onInsufficientCred
       return URL.createObjectURL(file)
     })
     setStep('processing')
+    // A fresh scanId for every attempt — see retake() for why this must never be reused.
+    const attemptScanId = crypto.randomUUID()
+    setScanId(attemptScanId)
     try {
-      const items = await scanReceipt(file, currency)
+      const items = await scanReceipt(file, currency, attemptScanId)
       if (items.length === 0) {
         setErrorCode('no_items')
         setStep('error')
@@ -365,7 +401,7 @@ export function ScanReceiptSheet({ onInsufficientCredits }: { onInsufficientCred
                       {tCredits('buyCreditsAction')}
                     </Button>
                   ) : (
-                    <Button onClick={reset}>{t('scanTryAgain')}</Button>
+                    <Button onClick={retake}>{t('scanTryAgain')}</Button>
                   )}
                   <DrawerClose asChild>
                     <Button variant="outline">{t('scanAddManually')}</Button>
@@ -533,7 +569,7 @@ export function ScanReceiptSheet({ onInsufficientCredits }: { onInsufficientCred
                   </DrawerClose>
                   <button
                     type="button"
-                    onClick={reset}
+                    onClick={retake}
                     className="rounded-md py-1 text-center text-sm text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
                   >
                     {t('scanRetakePhoto')}
