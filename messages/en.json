@@ -31,7 +31,10 @@
     "myBillsEmptyState": "No bills yet — completed bills will show up here.",
     "myBillsListItemLabel": "Bill",
     "myBillsLoadError": "Couldn't load your bills. Please try again.",
-    "detailBackAction": "Back to My Bills"
+    "detailBackAction": "Back to My Bills",
+    "renameAction": "Rename bill",
+    "renamePlaceholder": "Bill name",
+    "renameError": "Something went wrong. Please try again."
   },
   "Common": {
     "cancel": "Cancel",

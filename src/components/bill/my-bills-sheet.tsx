@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { ChevronRight } from 'lucide-react'
+import { Check, ChevronRight, Pencil, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Drawer, DrawerClose, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer'
+import { Input } from '@/components/ui/input'
 import { formatCurrency } from '@/lib/money'
 import type { Bill } from '@/lib/store/types'
 import { CompletedBillDetail } from './completed-bill-detail'
@@ -32,6 +33,10 @@ export function MyBillsSheet({ open, onOpenChange }: { open: boolean; onOpenChan
   const [entries, setEntries] = useState<CompletedBillEntry[] | null>(null)
   const [loadError, setLoadError] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [renaming, setRenaming] = useState(false)
+  const [nameDraft, setNameDraft] = useState('')
+  const [renameSubmitting, setRenameSubmitting] = useState(false)
+  const [renameError, setRenameError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!open) return
@@ -56,6 +61,46 @@ export function MyBillsSheet({ open, onOpenChange }: { open: boolean; onOpenChan
     if (!next) {
       setStep('list')
       setSelectedId(null)
+      setRenaming(false)
+    }
+  }
+
+  function openDetail(id: string) {
+    setSelectedId(id)
+    setStep('detail')
+    setRenaming(false)
+  }
+
+  function backToList() {
+    setStep('list')
+    setRenaming(false)
+  }
+
+  function startRename(current: string | undefined) {
+    setNameDraft(current ?? '')
+    setRenameError(null)
+    setRenaming(true)
+  }
+
+  async function handleSaveRename() {
+    if (!selected) return
+    setRenameSubmitting(true)
+    setRenameError(null)
+    try {
+      const res = await fetch(`/api/bills/${selected.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ restaurantName: nameDraft }),
+      })
+      if (!res.ok) throw new Error('failed to rename bill')
+      const data: { bill: Bill } = await res.json()
+      const renamedId = selected.id
+      setEntries((prev) => prev?.map((entry) => (entry.id === renamedId ? { ...entry, bill: data.bill } : entry)) ?? prev)
+      setRenaming(false)
+    } catch {
+      setRenameError(t('renameError'))
+    } finally {
+      setRenameSubmitting(false)
     }
   }
 
@@ -95,10 +140,7 @@ export function MyBillsSheet({ open, onOpenChange }: { open: boolean; onOpenChan
                         <button
                           key={entry.id}
                           type="button"
-                          onClick={() => {
-                            setSelectedId(entry.id)
-                            setStep('detail')
-                          }}
+                          onClick={() => openDetail(entry.id)}
                           className="flex w-full items-center gap-3 px-4 py-3 text-start transition-colors hover:bg-muted/40 active:bg-muted/60"
                         >
                           <span className="min-w-0 flex-1 truncate">
@@ -141,7 +183,52 @@ export function MyBillsSheet({ open, onOpenChange }: { open: boolean; onOpenChan
               className="flex min-h-0 flex-1 flex-col"
             >
               <DrawerHeader>
-                <DrawerTitle>{selected.bill.restaurantName ?? t('myBillsListItemLabel')}</DrawerTitle>
+                {renaming ? (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      autoFocus
+                      value={nameDraft}
+                      onChange={(e) => setNameDraft(e.target.value)}
+                      placeholder={t('renamePlaceholder')}
+                      maxLength={60}
+                      disabled={renameSubmitting}
+                      className="h-9 flex-1 text-start"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSaveRename}
+                      disabled={renameSubmitting}
+                      aria-label={tCommon('done')}
+                      className="flex size-9 shrink-0 items-center justify-center rounded-full text-primary transition-colors hover:bg-muted disabled:opacity-50"
+                    >
+                      <Check className="size-5" aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRenaming(false)}
+                      disabled={renameSubmitting}
+                      aria-label={tCommon('cancel')}
+                      className="flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted disabled:opacity-50"
+                    >
+                      <X className="size-5" aria-hidden="true" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <DrawerTitle className="min-w-0 flex-1 truncate">
+                      {selected.bill.restaurantName ?? t('myBillsListItemLabel')}
+                    </DrawerTitle>
+                    <button
+                      type="button"
+                      onClick={() => startRename(selected.bill.restaurantName)}
+                      aria-label={t('renameAction')}
+                      className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    >
+                      <Pencil className="size-4" aria-hidden="true" />
+                    </button>
+                  </div>
+                )}
+                {renameError && <p className="mt-1 text-xs text-destructive">{renameError}</p>}
               </DrawerHeader>
 
               <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-2">
@@ -149,7 +236,7 @@ export function MyBillsSheet({ open, onOpenChange }: { open: boolean; onOpenChan
               </div>
 
               <DrawerFooter>
-                <Button variant="outline" onClick={() => setStep('list')}>
+                <Button variant="outline" onClick={backToList}>
                   {t('detailBackAction')}
                 </Button>
               </DrawerFooter>

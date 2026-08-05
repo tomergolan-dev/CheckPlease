@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { billDataSchema } from './validation'
+import { billDataSchema, renameRequestSchema } from './validation'
 
 function validBill() {
   return {
@@ -61,5 +61,19 @@ describe('billDataSchema', () => {
     const bill = validBill()
     bill.items[0]!.sharedBy = []
     expect(billDataSchema.safeParse(bill).success).toBe(false)
+  })
+})
+
+describe('renameRequestSchema', () => {
+  it('accepts a normal name', () => {
+    expect(renameRequestSchema.safeParse({ restaurantName: 'Japanika' }).success).toBe(true)
+  })
+
+  it('accepts an empty string (clears the name)', () => {
+    expect(renameRequestSchema.safeParse({ restaurantName: '' }).success).toBe(true)
+  })
+
+  it('rejects a name over 60 characters', () => {
+    expect(renameRequestSchema.safeParse({ restaurantName: 'a'.repeat(61) }).success).toBe(false)
   })
 })

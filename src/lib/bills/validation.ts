@@ -48,3 +48,9 @@ export const billDataSchema = z.object({
 export const syncRequestSchema = z.object({ bill: billDataSchema.nullable() })
 
 export type SyncRequestInput = z.infer<typeof syncRequestSchema>
+
+/** `restaurantName` is trimmed and emptied-out server-side too (see renameCompleted) — the max
+ * length here is just a sane upper bound on what a bill title should ever need to be. */
+export const renameRequestSchema = z.object({ restaurantName: z.string().max(60) })
+
+export type RenameRequestInput = z.infer<typeof renameRequestSchema>

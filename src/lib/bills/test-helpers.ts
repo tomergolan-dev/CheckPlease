@@ -3,6 +3,7 @@ import type {
   CompletedBillRow,
   DeleteDraftResult,
   MarkCompletedResult,
+  RenameCompletedResult,
   UpsertDraftResult,
 } from './repository'
 import type { Bill } from './types'
@@ -75,6 +76,20 @@ export function createInMemoryBillsRepository(): {
       }
       rows.delete(id)
       return { ok: true }
+    },
+
+    async renameCompleted({ id, userId, restaurantName }): Promise<RenameCompletedResult> {
+      const existing = rows.get(id)
+      if (!existing || existing.userId !== userId || existing.status !== 'completed') {
+        return { ok: false, reason: 'not_found' }
+      }
+      const trimmed = restaurantName.trim()
+      const data: Bill =
+        trimmed.length > 0
+          ? { ...existing.data, restaurantName: trimmed }
+          : { ...existing.data, restaurantName: undefined }
+      rows.set(id, { ...existing, data })
+      return { ok: true, data }
     },
 
     async listCompleted(userId): Promise<CompletedBillRow[]> {

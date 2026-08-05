@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { parseInputValueToMinorUnits } from '@/lib/money'
 import { reserveCredit, refundCredit } from '@/lib/credits/reserve'
+import { hasUnlimitedCredits } from '@/lib/credits/dev-override'
 
 export const runtime = 'nodejs'
 
@@ -95,10 +96,25 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   }
   const userId = session.user.id
+  // Dev/demo-only allowlist override — see src/lib/credits/dev-override.ts. Disabled unless
+  // UNLIMITED_CREDITS_EMAILS is set; an allowlisted user's scans skip the ledger entirely rather
+  // than reserving/refunding, so this never touches real credit accounting either way.
+  const bypassCredits = hasUnlimitedCredits(session.user.email)
 
-  const reserved = await reserveCredit(userId, scanId)
-  if (!reserved.ok) {
-    return NextResponse.json({ error: 'insufficient_credits' }, { status: 402 })
+  if (!bypassCredits) {
+    const reserved = await reserveCredit(userId, scanId)
+    if (!reserved.ok) {
+      return NextResponse.json({ error: 'insufficient_credits' }, { status: 402 })
+    }
+  }
+
+  // Captured as a freshly-typed const so the closure below keeps the `string` narrowing already
+  // established above — TS drops flow-narrowing for outer-scope values referenced inside a
+  // nested function.
+  const validatedScanId: string = scanId
+
+  async function maybeRefund() {
+    if (!bypassCredits) await refundCredit(userId, validatedScanId)
   }
 
   const client = new Anthropic({ apiKey })
@@ -124,19 +140,19 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     console.error('scan-receipt: Anthropic request failed', error)
-    await refundCredit(userId, scanId)
+    await maybeRefund()
     return NextResponse.json({ error: 'upstream_error' }, { status: 502 })
   }
 
   if (response.stop_reason === 'refusal') {
-    await refundCredit(userId, scanId)
+    await maybeRefund()
     return NextResponse.json({ error: 'refused' }, { status: 422 })
   }
 
   const textBlock = response.content.find((block) => block.type === 'text')
   if (!textBlock || textBlock.type !== 'text') {
     console.error('scan-receipt: no text block in response', response)
-    await refundCredit(userId, scanId)
+    await maybeRefund()
     return NextResponse.json({ error: 'upstream_error' }, { status: 502 })
   }
 
@@ -145,7 +161,7 @@ export async function POST(request: Request) {
     parsed = JSON.parse(textBlock.text)
   } catch (error) {
     console.error('scan-receipt: failed to parse model output as JSON', error, textBlock.text)
-    await refundCredit(userId, scanId)
+    await maybeRefund()
     return NextResponse.json({ error: 'upstream_error' }, { status: 502 })
   }
 
@@ -171,7 +187,7 @@ export async function POST(request: Request) {
     // outcome (see Post-MVP Architecture in CLAUDE.md), so this counts as a refundable failure
     // even though it's still a 200 response — the client already treats an empty array as its
     // own "no items found" state, no response-shape change needed here.
-    await refundCredit(userId, scanId)
+    await maybeRefund()
   }
 
   return NextResponse.json({ items })

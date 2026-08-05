@@ -31,7 +31,10 @@
     "myBillsEmptyState": "עדיין אין חשבונות — חשבונות שהושלמו יופיעו כאן.",
     "myBillsListItemLabel": "חשבון",
     "myBillsLoadError": "לא הצלחנו לטעון את החשבונות שלך. נסו שוב.",
-    "detailBackAction": "חזרה ל'החשבונות שלי'"
+    "detailBackAction": "חזרה ל'החשבונות שלי'",
+    "renameAction": "שינוי שם החשבון",
+    "renamePlaceholder": "שם החשבון",
+    "renameError": "משהו השתבש. נסו שוב."
   },
   "Common": {
     "cancel": "ביטול",

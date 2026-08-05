@@ -6,6 +6,7 @@ import type { Bill } from './types'
 export type UpsertDraftResult = { ok: true } | { ok: false; reason: 'conflict' }
 export type MarkCompletedResult = { ok: true; data: Bill } | { ok: false; reason: 'not_found' }
 export type DeleteDraftResult = { ok: true } | { ok: false; reason: 'not_found' }
+export type RenameCompletedResult = { ok: true; data: Bill } | { ok: false; reason: 'not_found' }
 
 export interface CompletedBillRow {
   id: string
@@ -19,6 +20,7 @@ export interface BillsRepository {
   pullDraft(userId: string): Promise<{ id: string; data: Bill; updatedAt: Date } | null>
   markCompleted(input: { id: string; userId: string }): Promise<MarkCompletedResult>
   deleteDraft(input: { id: string; userId: string }): Promise<DeleteDraftResult>
+  renameCompleted(input: { id: string; userId: string; restaurantName: string }): Promise<RenameCompletedResult>
   listCompleted(userId: string): Promise<CompletedBillRow[]>
 }
 
@@ -103,6 +105,28 @@ export const drizzleBillsRepository: BillsRepository = {
       .where(and(eq(bills.id, id), eq(bills.userId, userId), eq(bills.status, 'draft')))
       .returning({ id: bills.id })
     return row ? { ok: true } : { ok: false, reason: 'not_found' }
+  },
+
+  /**
+   * The one mutation a completed bill's `data` can still receive — guarded by `status =
+   * 'completed'` (renaming a draft goes through the normal edit flow instead, not this route),
+   * ownership, and never touches `completed_at`. An empty/whitespace-only name removes the key
+   * entirely (via jsonb's `-` operator) rather than storing an empty string, so the bill falls
+   * back to the same generic default label as a bill that was never renamed.
+   */
+  async renameCompleted({ id, userId, restaurantName }) {
+    const trimmed = restaurantName.trim()
+    const now = new Date()
+    const dataExpr =
+      trimmed.length > 0
+        ? sql`jsonb_set(${bills.data}, '{restaurantName}', to_jsonb(${trimmed}::text))`
+        : sql`(${bills.data} - 'restaurantName')`
+    const [row] = await db
+      .update(bills)
+      .set({ data: dataExpr, updatedAt: now })
+      .where(and(eq(bills.id, id), eq(bills.userId, userId), eq(bills.status, 'completed')))
+      .returning({ data: bills.data })
+    return row ? { ok: true, data: row.data } : { ok: false, reason: 'not_found' }
   },
 
   async listCompleted(userId) {
