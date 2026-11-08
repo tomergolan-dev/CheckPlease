@@ -155,7 +155,15 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground transition-colors duration-300;
+  }
+
+  /* An installed iOS web app can't draw under the status bar, which takes the page's color
+     instead. Matching the sheet overlay's dimmed color here keeps that strip from staying bright
+     above the dimmed page. Mirrors DrawerOverlay's bg-black/10. */
+  html:has(body > [data-slot='drawer-overlay']),
+  body:has(> [data-slot='drawer-overlay']) {
+    background-color: color-mix(in srgb, var(--background) 90%, black);
   }
 }
 

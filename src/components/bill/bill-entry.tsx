@@ -7,7 +7,6 @@ import { useBillStore } from '@/lib/store/bill-store'
 import { useActiveDraft } from '@/lib/bills/use-active-draft'
 import { useDraftPushSync } from '@/lib/bills/use-draft-push-sync'
 import { BRAND_NAME } from '@/lib/brand'
-import { DoodleAccents } from '@/components/shared/doodle-accents'
 import { BillCanvas } from './bill-canvas'
 import { NewBillConfirmSheet } from './new-bill-confirm-sheet'
 import { OnboardingScreen } from './onboarding-screen'
@@ -52,7 +51,7 @@ export function BillEntry() {
   }
 
   return (
-    <div className={cn('flex min-h-dvh justify-center bg-muted/40', bill && 'lg:bg-background')}>
+    <div className="flex min-h-dvh justify-center">
       <div
         className={cn(
           // No overflow-hidden here — the sticky summary column on wide screens needs the
@@ -61,15 +60,14 @@ export function BillEntry() {
           // that would silently break position:sticky for everything inside it.
           'relative w-full bg-background',
           // The onboarding hero stays a compact, centered moment at any viewport size — only
-          // the active bill canvas widens to make real use of tablet/desktop space, since
-          // that's where a wider layout (and the sticky summary column) actually pays off.
-          // From lg up, the outer page background matches this container's own background
-          // (above), so there's no visible "card floating in a frame" edge — just generous,
-          // natural margins, not a boxed-in centered container.
-          bill ? 'max-w-md md:max-w-2xl lg:max-w-5xl xl:max-w-6xl' : 'max-w-md'
+          // the active bill canvas widens to make real use of tablet/desktop space. The boot
+          // state uses the wide shell too, so a returning user's page doesn't jump in width
+          // once the bill resolves. There's deliberately no page background outside this
+          // shell: a contrasting one framed every narrow state as a phone-shaped column on
+          // desktop.
+          bill || !resolved ? 'max-w-md md:max-w-2xl lg:max-w-5xl xl:max-w-6xl' : 'max-w-md'
         )}
       >
-        <DoodleAccents />
         {/* No `mode="wait"` here — unlike the MVP-era single hasHydrated gate this replaced,
             `resolved` can now settle after an async cloud-draft check (see useActiveDraft), which
             reliably left AnimatePresence's exit-tracking permanently stuck on the boot screen

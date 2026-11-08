@@ -13,19 +13,27 @@ export function BillCanvas() {
   if (!bill) return null
 
   return (
-    // Two nested layers on purpose: the safe-* utilities set padding themselves, so sharing one
+    // Nested layers on purpose: the safe-* utilities set padding themselves, so sharing one
     // element with px-*/pt-*/pb-* makes them override each other (the design padding silently
-    // computed to 0). Outer layer = device insets, inner layer = design spacing.
-    <div className="safe-top safe-bottom safe-x flex min-h-dvh flex-col">
-      <div className="flex flex-1 flex-col px-5 pt-4 pb-10 md:px-10 md:pt-6 lg:px-14 xl:px-20">
-        <AppHeader />
+    // computed to 0). Outer layers = device insets, inner layers = design spacing.
+    <div className="safe-bottom safe-x flex min-h-dvh flex-col">
+      {/* Sticky and fully opaque below lg: iOS 26 draws a system blur under the status bar of
+          installed web apps that CSS can't turn off, so page content must scroll beneath this
+          bar rather than carrying the header up into that blur. Not sticky from lg up, where
+          the summary column has its own sticky offset and there's no status bar. */}
+      <div className="safe-top sticky top-0 z-30 bg-background lg:static lg:bg-transparent">
+        <div className="px-5 pt-4 pb-3 md:px-10 md:pt-6 lg:px-14 lg:pb-0 xl:px-20">
+          <AppHeader />
+        </div>
+      </div>
+      <div className="flex flex-1 flex-col px-5 pb-10 md:px-10 lg:px-14 xl:px-20">
         {/* A smaller gap here than between the sections below — the header is chrome, not
             content, so it shouldn't push the first section down as far as the sections
             push each other apart. From lg up, this becomes two columns: participants+dishes
             on the left (the part that scrolls), tip/summary sticky on the right — so a long
             dish list never pushes the total and per-person amounts out of view the way it can
             on a single mobile-width column. */}
-        <div className="mt-4 flex flex-col gap-6 lg:mt-5 lg:grid lg:grid-cols-[1.3fr_1fr] lg:items-start lg:gap-10 xl:gap-14">
+        <div className="mt-1 flex flex-col gap-6 lg:mt-5 lg:grid lg:grid-cols-[1.3fr_1fr] lg:items-start lg:gap-10 xl:gap-14">
           <div className="flex flex-col gap-6">
             <PayingPartiesSection bill={bill} />
             <ItemsSection bill={bill} />
