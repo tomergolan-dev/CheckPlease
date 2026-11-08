@@ -147,5 +147,9 @@
     "purchaseError": "Something went wrong — try again",
     "balanceLabel": "{count, plural, one {# credit left} other {# credits left}}",
     "unlimitedBalanceLabel": "Unlimited"
+  },
+  "Settings": {
+    "title": "Settings",
+    "languageLabel": "Language"
   }
 }

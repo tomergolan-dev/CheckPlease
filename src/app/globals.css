@@ -147,6 +147,10 @@
 
   html {
     color-scheme: light dark;
+    /* Every tappable element already has its own press-down state, so iOS's gray tap flash is
+       redundant. touch-action removes the double-tap-zoom delay on buttons and links. */
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
     @apply font-sans;
   }
 
