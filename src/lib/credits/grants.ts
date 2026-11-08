@@ -5,7 +5,7 @@ import {
   type GrantPurchaseResult,
 } from './repository'
 
-export const SIGNUP_BONUS_CREDITS = 10
+export const SIGNUP_BONUS_CREDITS = 3
 
 /**
  * Granted once per user, idempotent on `signup_bonus:{userId}` — safe to call from both signup
