@@ -14,6 +14,9 @@ export type ScanReceiptErrorCode =
   | 'network_error'
   | 'unauthorized'
   | 'insufficient_credits'
+  | 'duplicate_scan'
+  | 'rate_limited'
+  | 'daily_limit'
 
 export class ScanReceiptError extends Error {
   code: ScanReceiptErrorCode
@@ -66,10 +69,10 @@ async function compressImage(file: File): Promise<{ base64: string; mediaType: s
  * `scanId` is owned by the caller, not generated here — one fresh id per photo attempt, never
  * reused across a retake (see scan-receipt-sheet.tsx's retake() for why: a ledger idempotency key
  * can only ever be consumed once, so reusing one after a refund would make that scanId permanently
- * unchargeable). The server's credit reservation is still idempotent on this value, so a
- * transport-level duplicate of this exact request (e.g. a retried fetch after a dropped response)
- * can never reserve a second credit for the same attempt (see Post-MVP Architecture in CLAUDE.md
- * and abandonScan below, which refunds one specific attempt's reservation).
+ * unchargeable). The server runs each id at most once, so a transport-level duplicate of this
+ * exact request (e.g. a retried fetch after a dropped response) can never reserve a second credit
+ * or reach the model again (see Post-MVP Architecture in CLAUDE.md and abandonScan below, which
+ * refunds one specific attempt's reservation).
  */
 export async function scanReceipt(file: File, currency: CurrencyCode, scanId: string): Promise<ScannedItem[]> {
   let payload: { base64: string; mediaType: string }

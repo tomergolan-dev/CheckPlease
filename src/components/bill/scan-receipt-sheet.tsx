@@ -383,10 +383,20 @@ export function ScanReceiptSheet({ onInsufficientCredits }: { onInsufficientCred
                         ? tCredits('insufficientCreditsTitle')
                         : errorCode === 'no_items'
                           ? t('scanNoItemsFound')
-                          : t('scanErrorGeneric')}
+                          : errorCode === 'rate_limited'
+                            ? t('scanRateLimitedTitle')
+                            : errorCode === 'daily_limit'
+                              ? t('scanDailyLimitTitle')
+                              : t('scanErrorGeneric')}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {errorCode === 'insufficient_credits' ? tCredits('insufficientCreditsHint') : t('scanErrorHint')}
+                      {errorCode === 'insufficient_credits'
+                        ? tCredits('insufficientCreditsHint')
+                        : errorCode === 'rate_limited'
+                          ? t('scanRateLimitedHint')
+                          : errorCode === 'daily_limit'
+                            ? t('scanDailyLimitHint')
+                            : t('scanErrorHint')}
                     </p>
                   </div>
                 </div>
@@ -401,7 +411,9 @@ export function ScanReceiptSheet({ onInsufficientCredits }: { onInsufficientCred
                       {tCredits('buyCreditsAction')}
                     </Button>
                   ) : (
-                    <Button onClick={retake}>{t('scanTryAgain')}</Button>
+                    // Trying again can't help until the shared cap frees up, so manual entry is
+                    // the only action offered in that case.
+                    errorCode !== 'daily_limit' && <Button onClick={retake}>{t('scanTryAgain')}</Button>
                   )}
                   <DrawerClose asChild>
                     <Button variant="outline">{t('scanAddManually')}</Button>

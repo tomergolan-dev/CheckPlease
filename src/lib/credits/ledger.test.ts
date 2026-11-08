@@ -62,6 +62,28 @@ describe('reserveCredit / refundCredit', () => {
     expect(getLedgerEntries().filter((e) => e.idempotencyKey === 'consumption:scan-1')).toHaveLength(1)
   })
 
+  it('never refunds a scan id that was never charged', async () => {
+    const { repository, getLedgerEntries } = createInMemoryCreditsRepository()
+    await grantSignupBonus('u1', repository)
+
+    const result = await refundCredit('u1', 'made-up-id', repository)
+
+    expect(result).toEqual({ ok: false, reason: 'not_charged', balance: SIGNUP_BONUS_CREDITS })
+    expect(getLedgerEntries().some((e) => e.type === 'refund')).toBe(false)
+  })
+
+  it("never refunds a user for another user's scan", async () => {
+    const { repository } = createInMemoryCreditsRepository()
+    await grantSignupBonus('u1', repository)
+    await grantSignupBonus('u2', repository)
+    await reserveCredit('u1', 'scan-1', repository)
+
+    const result = await refundCredit('u2', 'scan-1', repository)
+
+    expect(result).toEqual({ ok: false, reason: 'not_charged', balance: SIGNUP_BONUS_CREDITS })
+    expect(await repository.getBalance('u1')).toBe(SIGNUP_BONUS_CREDITS - 1)
+  })
+
   it('a duplicate refund for an already-refunded scan is a safe no-op', async () => {
     const { repository, getLedgerEntries } = createInMemoryCreditsRepository()
     await grantSignupBonus('u1', repository)

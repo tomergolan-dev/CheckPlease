@@ -30,6 +30,7 @@ export type GrantPurchaseResult = { granted: true; balance: number } | { granted
 
 export interface CreditsRepository {
   getBalance(userId: string): Promise<number>
+  hasConsumption(userId: string, scanId: string): Promise<boolean>
   applyLedgerEntry(input: LedgerEntryInput): Promise<ApplyLedgerResult>
   recordPurchaseAndCredit(input: GrantPurchaseInput): Promise<GrantPurchaseResult>
 }
@@ -48,6 +49,15 @@ export const drizzleCreditsRepository: CreditsRepository = {
       .where(eq(creditBalances.userId, userId))
       .limit(1)
     return row?.balance ?? 0
+  },
+
+  async hasConsumption(userId, scanId) {
+    const [row] = await db
+      .select({ id: creditLedger.id })
+      .from(creditLedger)
+      .where(and(eq(creditLedger.idempotencyKey, `consumption:${scanId}`), eq(creditLedger.userId, userId)))
+      .limit(1)
+    return row !== undefined
   },
 
   /**

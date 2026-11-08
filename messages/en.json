@@ -92,7 +92,11 @@
     "scanIncludeItem": "Include in list",
     "scannedBadgeLabel": "Added by scanning a receipt",
     "showMore": "Show more",
-    "showLess": "Show less"
+    "showLess": "Show less",
+    "scanRateLimitedTitle": "That’s a lot of scans in a short time",
+    "scanRateLimitedHint": "Try again in a few minutes, or add the dishes yourself.",
+    "scanDailyLimitTitle": "We’ve reached today’s scan limit",
+    "scanDailyLimitHint": "Try again tomorrow, or add the dishes yourself."
   },
   "Tip": {
     "title": "Tip",

@@ -4,8 +4,12 @@ import { auth } from '@/auth'
 import { parseInputValueToMinorUnits } from '@/lib/money'
 import { reserveCredit, refundCredit } from '@/lib/credits/reserve'
 import { hasUnlimitedCredits } from '@/lib/credits/dev-override'
+import { beginScanAttempt, type ScanAttemptStatus } from '@/lib/scans/limits'
+import { drizzleScanAttemptsRepository } from '@/lib/scans/repository'
 
 export const runtime = 'nodejs'
+
+const SCAN_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 const SUPPORTED_MEDIA_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const
 type SupportedMediaType = (typeof SUPPORTED_MEDIA_TYPES)[number]
@@ -86,7 +90,7 @@ export async function POST(request: Request) {
     !isSupportedMediaType(mediaType) ||
     typeof currency !== 'string' ||
     typeof scanId !== 'string' ||
-    scanId.length === 0
+    !SCAN_ID_PATTERN.test(scanId)
   ) {
     return NextResponse.json({ error: 'invalid_image' }, { status: 400 })
   }
@@ -101,20 +105,45 @@ export async function POST(request: Request) {
   // than reserving/refunding, so this never touches real credit accounting either way.
   const bypassCredits = hasUnlimitedCredits(session.user.email)
 
-  if (!bypassCredits) {
-    const reserved = await reserveCredit(userId, scanId)
-    if (!reserved.ok) {
-      return NextResponse.json({ error: 'insufficient_credits' }, { status: 402 })
+  const attempt = await beginScanAttempt(
+    { scanId, userId, exempt: bypassCredits },
+    drizzleScanAttemptsRepository
+  )
+  if (!attempt.ok) {
+    if (attempt.reason === 'duplicate') {
+      return NextResponse.json({ error: 'duplicate_scan' }, { status: 409 })
     }
+    return NextResponse.json({ error: attempt.reason }, { status: 429 })
   }
 
-  // Captured as a freshly-typed const so the closure below keeps the `string` narrowing already
+  // Captured as a freshly-typed const so the closures below keep the `string` narrowing already
   // established above — TS drops flow-narrowing for outer-scope values referenced inside a
   // nested function.
   const validatedScanId: string = scanId
 
+  // Bookkeeping only: a failed write here must never cost the user a scan that already worked.
+  async function finish(status: ScanAttemptStatus, usage?: Anthropic.Usage) {
+    try {
+      await drizzleScanAttemptsRepository.finishAttempt(
+        validatedScanId,
+        status,
+        usage && { inputTokens: usage.input_tokens, outputTokens: usage.output_tokens }
+      )
+    } catch (error) {
+      console.error('scan-receipt: failed to record scan outcome', error)
+    }
+  }
+
   async function maybeRefund() {
     if (!bypassCredits) await refundCredit(userId, validatedScanId)
+  }
+
+  if (!bypassCredits) {
+    const reserved = await reserveCredit(userId, scanId)
+    if (!reserved.ok) {
+      await finish('no_credits')
+      return NextResponse.json({ error: 'insufficient_credits' }, { status: 402 })
+    }
   }
 
   const client = new Anthropic({ apiKey })
@@ -141,11 +170,13 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('scan-receipt: Anthropic request failed', error)
     await maybeRefund()
+    await finish('failed')
     return NextResponse.json({ error: 'upstream_error' }, { status: 502 })
   }
 
   if (response.stop_reason === 'refusal') {
     await maybeRefund()
+    await finish('failed', response.usage)
     return NextResponse.json({ error: 'refused' }, { status: 422 })
   }
 
@@ -153,6 +184,7 @@ export async function POST(request: Request) {
   if (!textBlock || textBlock.type !== 'text') {
     console.error('scan-receipt: no text block in response', response)
     await maybeRefund()
+    await finish('failed', response.usage)
     return NextResponse.json({ error: 'upstream_error' }, { status: 502 })
   }
 
@@ -162,6 +194,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('scan-receipt: failed to parse model output as JSON', error, textBlock.text)
     await maybeRefund()
+    await finish('failed', response.usage)
     return NextResponse.json({ error: 'upstream_error' }, { status: 502 })
   }
 
@@ -189,6 +222,8 @@ export async function POST(request: Request) {
     // own "no items found" state, no response-shape change needed here.
     await maybeRefund()
   }
+
+  await finish(items.length === 0 ? 'empty' : 'succeeded', response.usage)
 
   return NextResponse.json({ items })
 }

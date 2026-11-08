@@ -38,11 +38,19 @@ export async function reserveCredit(
   return { ok: true, balance: result.balance }
 }
 
+/**
+ * `scanId` can come straight from the client, so a refund only applies if this same user was
+ * actually charged for this scan. Otherwise any made-up id would mint a free credit.
+ */
 export async function refundCredit(
   userId: string,
   scanId: string,
   repository: CreditsRepository = drizzleCreditsRepository
-): Promise<{ ok: true; balance: number }> {
+): Promise<{ ok: true; balance: number } | { ok: false; reason: 'not_charged'; balance: number }> {
+  if (!(await repository.hasConsumption(userId, scanId))) {
+    return { ok: false, reason: 'not_charged', balance: await repository.getBalance(userId) }
+  }
+
   const result = await repository.applyLedgerEntry({
     userId,
     type: 'refund',

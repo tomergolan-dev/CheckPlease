@@ -37,6 +37,10 @@ export function createInMemoryCreditsRepository(): {
       return balances.get(userId) ?? 0
     },
 
+    async hasConsumption(userId, scanId) {
+      return ledger.some((entry) => entry.userId === userId && entry.idempotencyKey === `consumption:${scanId}`)
+    },
+
     async applyLedgerEntry(input: LedgerEntryInput): Promise<ApplyLedgerResult> {
       await Promise.resolve()
 

@@ -92,7 +92,11 @@
     "scanIncludeItem": "כלול ברשימה",
     "scannedBadgeLabel": "נוסף מסריקת קבלה",
     "showMore": "הצג עוד",
-    "showLess": "הצג פחות"
+    "showLess": "הצג פחות",
+    "scanRateLimitedTitle": "סרקתם הרבה בזמן קצר",
+    "scanRateLimitedHint": "נסו שוב בעוד כמה דקות, או הוסיפו את המנות בעצמכם.",
+    "scanDailyLimitTitle": "הגענו למכסת הסריקות להיום",
+    "scanDailyLimitHint": "נסו שוב מחר, או הוסיפו את המנות בעצמכם."
   },
   "Tip": {
     "title": "טיפ",
