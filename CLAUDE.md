@@ -330,7 +330,8 @@ No subscription, no recurring billing — a **credit-based** economy: manual spl
 
 ### Payments
 - **Stripe Checkout, one-time payment mode** — matches "no subscription" exactly, no Billing/subscription lifecycle to manage.
-- **Credits are granted only from the `checkout.session.completed` webhook, never from the client-side success redirect** — a spoofed or replayed redirect must never be able to grant credits.
+- **Credits are granted only from the Stripe webhook, never from the client-side success redirect** — a spoofed or replayed redirect must never be able to grant credits. The webhook grants on `checkout.session.completed` only when `payment_status` is `paid`; a delayed payment method grants later, on `checkout.session.async_payment_succeeded`.
+- **Returning from Checkout confirms what the server recorded, not what the URL claims.** The success URL carries the Checkout Session id, and a bottom sheet (`PurchaseReturnSheet`) asks `GET /api/credits/purchase/status` whether that signed-in user has a recorded purchase for it. The webhook can arrive after the redirect, so the sheet checks for up to 20 seconds, then says the scans will appear shortly rather than claiming success. It names the scans added rather than the balance, since an unlimited account shows no number. Cancelling returns to the bill with no message. Either way the query parameters are removed from the URL.
 - **Future native rail (not built now):** once native distribution ships, Apple/Google require in-app purchase for digital credit packs bought inside the native app — Stripe alone won't be legal there. The credit-granting logic lives in one internal function (`grantPurchase(userId, pack, provider, providerRef)`) that any payment rail's webhook calls into, so adding a native rail later (likely via RevenueCat, which unifies StoreKit + Play Billing receipt validation) is a new webhook handler, not a rework of the ledger.
 
 ### API layer

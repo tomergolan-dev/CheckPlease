@@ -55,7 +55,8 @@ export async function POST(request: Request) {
         },
       ],
       metadata: { userId: session.user.id, packType: pack.type },
-      success_url: `${origin}/?purchase=success`,
+      // {CHECKOUT_SESSION_ID} is a literal placeholder that Stripe fills in on redirect.
+      success_url: `${origin}/?purchase=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/?purchase=cancelled`,
     })
   } catch (error) {

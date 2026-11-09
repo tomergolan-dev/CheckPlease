@@ -149,6 +149,11 @@
     "popularBadge": "הכי פופולרי",
     "valueBadge": "הכי משתלם",
     "purchaseError": "משהו השתבש — נסו שוב",
+    "purchaseCheckingTitle": "מאשרים את הרכישה…",
+    "purchaseGrantedTitle": "הכול מוכן",
+    "purchaseGrantedHint": "{count, plural, one {נוספה סריקה אחת} other {נוספו # סריקות}} — אפשר להתחיל לסרוק.",
+    "purchasePendingTitle": "עוד רגע",
+    "purchasePendingHint": "הסריקות יופיעו אצלכם בעוד כמה רגעים.",
     "balanceLabel": "{count, plural, one {נשאר קרדיט אחד} other {נשארו # קרדיטים}}",
     "unlimitedBalanceLabel": "Unlimited"
   },

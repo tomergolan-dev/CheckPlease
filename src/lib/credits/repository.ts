@@ -35,6 +35,16 @@ export interface CreditsRepository {
   recordPurchaseAndCredit(input: GrantPurchaseInput): Promise<GrantPurchaseResult>
 }
 
+/** The credits a user's recorded purchase granted, or null if that user has no such purchase. */
+export async function findPurchasedCredits(userId: string, providerRef: string): Promise<number | null> {
+  const [purchase] = await db
+    .select({ credits: purchases.creditsGranted })
+    .from(purchases)
+    .where(and(eq(purchases.userId, userId), eq(purchases.providerRef, providerRef)))
+    .limit(1)
+  return purchase?.credits ?? null
+}
+
 /**
  * The real repository, backed by the actual database. Functions in reserve.ts/grants.ts take a
  * repository as a parameter rather than importing `db` directly, specifically so they can be

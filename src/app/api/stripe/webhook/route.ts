@@ -35,8 +35,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'invalid_signature' }, { status: 400 })
   }
 
-  if (event.type === 'checkout.session.completed') {
+  if (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded') {
     const checkoutSession = event.data.object
+
+    // A completed Checkout isn't always a paid one: delayed payment methods complete first and
+    // report the outcome later, through async_payment_succeeded.
+    if (checkoutSession.payment_status !== 'paid') {
+      return NextResponse.json({ received: true })
+    }
+
     const userId = checkoutSession.metadata?.userId
     const packType = checkoutSession.metadata?.packType
 

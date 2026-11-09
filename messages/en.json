@@ -149,6 +149,11 @@
     "popularBadge": "Most popular",
     "valueBadge": "Best value",
     "purchaseError": "Something went wrong — try again",
+    "purchaseCheckingTitle": "Confirming your purchase…",
+    "purchaseGrantedTitle": "You're all set",
+    "purchaseGrantedHint": "{count, plural, one {# scan added} other {# scans added}} — ready when you are.",
+    "purchasePendingTitle": "Almost there",
+    "purchasePendingHint": "Your scans should appear in a few moments.",
     "balanceLabel": "{count, plural, one {# credit left} other {# credits left}}",
     "unlimitedBalanceLabel": "Unlimited"
   },

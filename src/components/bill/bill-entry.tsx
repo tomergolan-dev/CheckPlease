@@ -10,6 +10,7 @@ import { BRAND_NAME } from '@/lib/brand'
 import { BillCanvas } from './bill-canvas'
 import { NewBillConfirmSheet } from './new-bill-confirm-sheet'
 import { OnboardingScreen } from './onboarding-screen'
+import { PurchaseReturnSheet } from './purchase-return-sheet'
 
 function BootSplash() {
   return (
@@ -101,6 +102,8 @@ export function BillEntry() {
           )}
         </AnimatePresence>
       </div>
+
+      <PurchaseReturnSheet />
 
       {showsCloudDraftChoice && (
         <NewBillConfirmSheet
