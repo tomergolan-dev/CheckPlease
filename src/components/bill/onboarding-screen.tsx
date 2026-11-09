@@ -1,11 +1,13 @@
 'use client'
 
+import { useState } from 'react'
 import { Check } from 'lucide-react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { BRAND_NAME } from '@/lib/brand'
-import { SettingsControl } from '@/components/shared/settings-control'
+import { AccountButton } from './account-button'
+import { AccountSheet } from './account-sheet'
 import { DINER_COLOR_CLASSES } from './diner-display'
 
 const FLOATING_DOTS = [
@@ -25,6 +27,7 @@ export function OnboardingScreen({ hasActiveDraft, onContinue, onStartNew }: Onb
   const t = useTranslations('App')
   const tHome = useTranslations('Home')
   const shouldReduceMotion = useReducedMotion()
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const fadeUp = (delay: number) =>
     shouldReduceMotion
@@ -39,7 +42,7 @@ export function OnboardingScreen({ hasActiveDraft, onContinue, onStartNew }: Onb
     <div className="safe-top safe-bottom safe-x flex min-h-dvh flex-col">
       <div className="relative flex flex-1 flex-col items-center justify-center gap-10 px-8 py-8 text-center">
       <div className="absolute end-5 top-4 z-10 md:end-10 md:top-6">
-        <SettingsControl />
+        <AccountButton onClick={() => setMenuOpen(true)} />
       </div>
       <div className="relative flex h-52 w-full max-w-60 items-center justify-center">
         {FLOATING_DOTS.map((dot) => (
@@ -115,6 +118,7 @@ export function OnboardingScreen({ hasActiveDraft, onContinue, onStartNew }: Onb
         )}
       </motion.div>
       </div>
+      <AccountSheet open={menuOpen} onOpenChange={setMenuOpen} />
     </div>
   )
 }

@@ -136,7 +136,7 @@
     "signOutAction": "התנתקות",
     "signOutConfirmTitle": "להתנתק?",
     "signOutConfirmDescription": "אפשר להתחבר שוב בכל רגע — החשבון שלכם יישאר בדיוק כמו שהשארתם אותו.",
-    "accountAction": "החשבון שלי"
+    "menuTitle": "החשבון שלי"
   },
   "Credits": {
     "gateTitle": "התחברות לסריקה",
@@ -144,6 +144,7 @@
     "insufficientCreditsTitle": "נגמרו לכם הקרדיטים",
     "insufficientCreditsHint": "רכשו חבילת קרדיטים כדי להמשיך לסרוק קבלות.",
     "buyCreditsAction": "רכישת קרדיטים נוספים",
+    "buyCreditsShortAction": "רכישה",
     "packPickerTitle": "רכישת קרדיטים",
     "packLabel": "{count, plural, one {סריקה אחת} other {# סריקות}}",
     "popularBadge": "הכי פופולרי",
@@ -158,7 +159,6 @@
     "unlimitedBalanceLabel": "Unlimited"
   },
   "Settings": {
-    "title": "הגדרות",
     "languageLabel": "שפה"
   }
 }

@@ -1,18 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { ReceiptText, RotateCcw } from 'lucide-react'
+import { ReceiptText } from 'lucide-react'
 import { useSession } from 'next-auth/react'
-import { useTranslations } from 'next-intl'
 import { BRAND_NAME } from '@/lib/brand'
 import { useBillStore } from '@/lib/store/bill-store'
-import { SettingsControl } from '@/components/shared/settings-control'
 import { AccountButton } from './account-button'
 import { AccountSheet } from './account-sheet'
 import { NewBillConfirmSheet } from './new-bill-confirm-sheet'
 
 export function AppHeader() {
-  const t = useTranslations('App')
   const { status } = useSession()
   const bill = useBillStore((s) => s.bill)
   const startNewBill = useBillStore((s) => s.startNewBill)
@@ -68,19 +65,7 @@ export function AppHeader() {
           <span className="truncate text-lg font-semibold tracking-tight">{BRAND_NAME}</span>
         </div>
 
-        <div className="flex shrink-0 items-center gap-2">
-          <SettingsControl />
-          <AccountButton onClick={() => setAccountOpen(true)} />
-
-          <button
-            type="button"
-            onClick={() => setConfirmOpen(true)}
-            aria-label={t('newBillAction')}
-            className="flex size-11 shrink-0 items-center justify-center rounded-full border border-border/60 bg-card text-foreground/70 shadow-soft transition-all hover:-translate-y-0.5 hover:text-foreground hover:shadow-elevated active:translate-y-0 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-          >
-            <RotateCcw className="size-5" aria-hidden="true" />
-          </button>
-        </div>
+        <AccountButton onClick={() => setAccountOpen(true)} />
       </header>
 
       <NewBillConfirmSheet
@@ -91,7 +76,7 @@ export function AppHeader() {
         onDiscardAndStartNew={handleDiscardAndStartNew}
         onStartNewOnly={handleStartNewOnly}
       />
-      <AccountSheet open={accountOpen} onOpenChange={setAccountOpen} />
+      <AccountSheet open={accountOpen} onOpenChange={setAccountOpen} onStartNewBill={() => setConfirmOpen(true)} />
     </>
   )
 }
