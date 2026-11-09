@@ -148,18 +148,26 @@ export function AccountSheet({
             </>
           ) : (
             <>
+              {/* The title says who this is: the email when signed in, otherwise "Not signed in?"
+                  with what signing in adds. A generic "Menu" would only repeat the button. */}
               <DrawerHeader>
-                <DrawerTitle>{t('menuTitle')}</DrawerTitle>
-                {user && <DrawerDescription className="truncate">{user.email}</DrawerDescription>}
+                <DrawerTitle className="truncate">{user ? user.email : t('menuSignInTitle')}</DrawerTitle>
+                {!user && <DrawerDescription>{t('menuSignInHint')}</DrawerDescription>}
               </DrawerHeader>
 
               <div className="flex flex-col gap-3 px-4 pb-2">
                 {user ? (
                   <div className={`${CARD} flex min-h-16 items-center gap-3 px-4 py-3`}>
                     <span className="flex-1 text-sm font-medium tabular-nums">{balanceText ?? '…'}</span>
-                    <Button size="sm" onClick={() => setPackSheetOpen(true)}>
+                    {/* Filled orange; on hover it lightens with a deeper shadow but stays in place, so
+                        it reads as an action to take rather than a selected state. */}
+                    <button
+                      type="button"
+                      onClick={() => setPackSheetOpen(true)}
+                      className="h-10 shrink-0 rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground shadow-sm shadow-primary/20 transition-all hover:bg-primary/90 hover:shadow-md hover:shadow-primary/30 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                    >
                       {tCredits('buyCreditsShortAction')}
-                    </Button>
+                    </button>
                   </div>
                 ) : (
                   <div className={CARD}>
@@ -181,9 +189,14 @@ export function AccountSheet({
 
               <DrawerFooter>
                 {user ? (
-                  <Button variant="ghost" className="text-destructive hover:text-destructive" onClick={() => setView('sign-out')}>
+                  // Quiet like "Remove diner": signing out deletes nothing, and it asks first anyway.
+                  <button
+                    type="button"
+                    onClick={() => setView('sign-out')}
+                    className="rounded-md py-1 text-center text-sm text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                  >
                     {t('signOutAction')}
-                  </Button>
+                  </button>
                 ) : (
                   <DrawerClose asChild>
                     <Button variant="outline">{tCommon('cancel')}</Button>

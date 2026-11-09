@@ -136,7 +136,9 @@
     "signOutAction": "Sign out",
     "signOutConfirmTitle": "Sign out?",
     "signOutConfirmDescription": "You can always sign back in — your bill stays right where you left it.",
-    "menuTitle": "Account"
+    "menuTitle": "Menu",
+    "menuSignInTitle": "Not signed in?",
+    "menuSignInHint": "Sign in to scan receipts too"
   },
   "Credits": {
     "gateTitle": "Sign in to scan",
@@ -144,7 +146,7 @@
     "insufficientCreditsTitle": "You're out of scans",
     "insufficientCreditsHint": "Buy a credit pack to keep scanning receipts.",
     "buyCreditsAction": "Buy more credits",
-    "buyCreditsShortAction": "Buy more",
+    "buyCreditsShortAction": "Buy credits",
     "packPickerTitle": "Buy credits",
     "packLabel": "{count, plural, one {# scan} other {# scans}}",
     "popularBadge": "Most popular",

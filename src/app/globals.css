@@ -158,6 +158,13 @@
     @apply bg-background text-foreground transition-colors duration-300;
   }
 
+  /* Tailwind 4 leaves buttons with the default arrow cursor; on a computer, a hand is the
+     clearest sign that something can be clicked. */
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']) {
+    cursor: pointer;
+  }
+
   /* An installed iOS web app can't draw under the status bar, which takes the page's color
      instead. Matching the sheet overlay's dimmed color here keeps that strip from staying bright
      above the dimmed page. Mirrors DrawerOverlay's bg-black/10. */
