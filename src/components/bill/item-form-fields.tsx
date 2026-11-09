@@ -9,9 +9,10 @@ interface ItemFormFieldsProps {
   onNameChange: (name: string) => void
   priceValue: string
   onPriceChange: (value: string) => void
-  onPriceBlur: () => void
   quantity: number
   onQuantityChange: (quantity: number) => void
+  /** For adding a new dish, where typing its name is the next step. */
+  autoFocusName?: boolean
 }
 
 export function ItemFormFields({
@@ -19,9 +20,9 @@ export function ItemFormFields({
   onNameChange,
   priceValue,
   onPriceChange,
-  onPriceBlur,
   quantity,
   onQuantityChange,
+  autoFocusName = false,
 }: ItemFormFieldsProps) {
   const t = useTranslations('Items')
 
@@ -30,7 +31,8 @@ export function ItemFormFields({
       <label className="flex flex-col gap-1.5">
         <span className="text-sm font-medium text-muted-foreground">{t('nameLabel')}</span>
         <Input
-          autoFocus
+          autoFocus={autoFocusName}
+          autoComplete="off"
           value={name}
           onChange={(e) => onNameChange(e.target.value)}
           placeholder={t('namePlaceholder')}
@@ -48,7 +50,6 @@ export function ItemFormFields({
               inputMode="decimal"
               value={priceValue}
               onChange={(e) => onPriceChange(e.target.value)}
-              onBlur={onPriceBlur}
               className="ps-7"
             />
           </div>

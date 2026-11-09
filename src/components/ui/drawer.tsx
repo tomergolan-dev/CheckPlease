@@ -56,9 +56,23 @@ function DrawerOverlay({
   )
 }
 
+/**
+ * Tapping a button would normally take focus from the field being typed in, which closes the
+ * phone keyboard and drops the whole sheet. Stopping the focus change keeps the sheet still;
+ * the tap itself still registers as a click.
+ */
+function keepKeyboardOpenOnButtonPress(event: React.MouseEvent) {
+  const focused = document.activeElement
+  const isTyping = focused instanceof HTMLInputElement || focused instanceof HTMLTextAreaElement
+  if (isTyping && (event.target as Element).closest('button, [role="button"]')) {
+    event.preventDefault()
+  }
+}
+
 function DrawerContent({
   className,
   children,
+  onMouseDownCapture,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Content>) {
   return (
@@ -70,6 +84,10 @@ function DrawerContent({
           "group/drawer-content fixed z-50 flex h-auto flex-col bg-popover text-sm text-popover-foreground data-[vaul-drawer-direction=bottom]:inset-x-0 data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:mt-24 data-[vaul-drawer-direction=bottom]:max-h-[80vh] data-[vaul-drawer-direction=bottom]:pb-[env(safe-area-inset-bottom)] data-[vaul-drawer-direction=bottom]:rounded-t-2xl data-[vaul-drawer-direction=bottom]:border-t data-[vaul-drawer-direction=left]:inset-y-0 data-[vaul-drawer-direction=left]:start-0 data-[vaul-drawer-direction=left]:w-3/4 data-[vaul-drawer-direction=left]:rounded-e-xl data-[vaul-drawer-direction=left]:border-e data-[vaul-drawer-direction=right]:inset-y-0 data-[vaul-drawer-direction=right]:end-0 data-[vaul-drawer-direction=right]:w-3/4 data-[vaul-drawer-direction=right]:rounded-s-xl data-[vaul-drawer-direction=right]:border-s data-[vaul-drawer-direction=top]:inset-x-0 data-[vaul-drawer-direction=top]:top-0 data-[vaul-drawer-direction=top]:mb-24 data-[vaul-drawer-direction=top]:max-h-[80vh] data-[vaul-drawer-direction=top]:rounded-b-xl data-[vaul-drawer-direction=top]:border-b data-[vaul-drawer-direction=left]:sm:max-w-sm data-[vaul-drawer-direction=right]:sm:max-w-sm data-[vaul-drawer-direction=bottom]:sm:inset-x-auto data-[vaul-drawer-direction=bottom]:sm:left-1/2 data-[vaul-drawer-direction=bottom]:sm:w-full data-[vaul-drawer-direction=bottom]:sm:max-w-md data-[vaul-drawer-direction=bottom]:sm:-translate-x-1/2 data-[vaul-drawer-direction=bottom]:sm:shadow-elevated data-[vaul-drawer-direction=top]:sm:inset-x-auto data-[vaul-drawer-direction=top]:sm:left-1/2 data-[vaul-drawer-direction=top]:sm:w-full data-[vaul-drawer-direction=top]:sm:max-w-md data-[vaul-drawer-direction=top]:sm:-translate-x-1/2",
           className
         )}
+        onMouseDownCapture={(event) => {
+          keepKeyboardOpenOnButtonPress(event)
+          onMouseDownCapture?.(event)
+        }}
         {...props}
       >
         <div className="mx-auto mt-4 hidden h-1 w-[100px] shrink-0 rounded-full bg-muted group-data-[vaul-drawer-direction=bottom]/drawer-content:block" />

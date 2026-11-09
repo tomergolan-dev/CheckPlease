@@ -73,9 +73,9 @@ export function AddItemSheet() {
           onNameChange={setName}
           priceValue={priceValue}
           onPriceChange={setPriceValue}
-          onPriceBlur={() => {}}
           quantity={quantity}
           onQuantityChange={setQuantity}
+          autoFocusName
         />
 
         <DrawerFooter>

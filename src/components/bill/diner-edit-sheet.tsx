@@ -73,7 +73,7 @@ export function DinerEditSheet({
 
         <div className="flex flex-col gap-4 px-8">
           <Input
-            autoFocus
+            autoComplete="off"
             value={name}
             onChange={(e) => handleNameChange(e.target.value)}
             placeholder={t('defaultLabel', { number: defaultPosition ?? 0 })}

@@ -56,8 +56,9 @@ export function EditItemSheet({ bill, itemId, onOpenChange }: EditItemSheetProps
     setPriceItemId(item.id)
   }
 
-  function commitPrice() {
-    updateItem(item!.id, { unitPriceMinorUnits: parseInputValueToMinorUnits(priceValue, bill.currency) })
+  function handlePriceChange(value: string) {
+    setPriceValue(value)
+    updateItem(item!.id, { unitPriceMinorUnits: parseInputValueToMinorUnits(value, bill.currency) })
   }
 
   function toggleDiner(dinerId: string) {
@@ -71,13 +72,6 @@ export function EditItemSheet({ bill, itemId, onOpenChange }: EditItemSheetProps
 
   function handleDelete() {
     removeItem(item!.id)
-    onOpenChange(false)
-  }
-
-  function handleDone() {
-    // Guarantee the price commits even if the field never blurred (e.g. Done was tapped
-    // while a different control had focus) — every other field here is already live-bound.
-    commitPrice()
     onOpenChange(false)
   }
 
@@ -102,8 +96,7 @@ export function EditItemSheet({ bill, itemId, onOpenChange }: EditItemSheetProps
             name={item.name}
             onNameChange={(name) => updateItem(item.id, { name })}
             priceValue={priceValue}
-            onPriceChange={setPriceValue}
-            onPriceBlur={commitPrice}
+            onPriceChange={handlePriceChange}
             quantity={item.quantity}
             onQuantityChange={(quantity) => updateItem(item.id, { quantity })}
           />
@@ -130,7 +123,7 @@ export function EditItemSheet({ bill, itemId, onOpenChange }: EditItemSheetProps
         </div>
 
         <DrawerFooter>
-          <Button onClick={handleDone}>{tCommon('done')}</Button>
+          <Button onClick={() => onOpenChange(false)}>{tCommon('done')}</Button>
           <button
             type="button"
             onClick={handleDelete}
