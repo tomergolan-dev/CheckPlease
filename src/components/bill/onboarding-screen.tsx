@@ -38,7 +38,7 @@ export function OnboardingScreen({ hasActiveDraft, onContinue, onStartNew }: Onb
   return (
     <div className="safe-top safe-bottom safe-x flex min-h-dvh flex-col">
       <div className="relative flex flex-1 flex-col items-center justify-center gap-10 px-8 py-8 text-center">
-      <div className="absolute end-5 top-4 z-10">
+      <div className="absolute end-5 top-4 z-10 md:end-10 md:top-6">
         <SettingsControl />
       </div>
       <div className="relative flex h-52 w-full max-w-60 items-center justify-center">

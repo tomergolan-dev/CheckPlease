@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { cn } from '@/lib/utils'
 import { useBillStore } from '@/lib/store/bill-store'
 import { useActiveDraft } from '@/lib/bills/use-active-draft'
 import { useDraftPushSync } from '@/lib/bills/use-draft-push-sync'
@@ -53,22 +52,11 @@ export function BillEntry() {
 
   return (
     <div className="flex min-h-dvh justify-center">
-      <div
-        className={cn(
-          // No overflow-hidden here — the sticky summary column on wide screens needs the
-          // real page scroll container, and an ancestor with overflow:hidden (even one that
-          // never actually clips anything, like this one) creates its own scroll context
-          // that would silently break position:sticky for everything inside it.
-          'relative w-full bg-background',
-          // The onboarding hero stays a compact, centered moment at any viewport size — only
-          // the active bill canvas widens to make real use of tablet/desktop space. The boot
-          // state uses the wide shell too, so a returning user's page doesn't jump in width
-          // once the bill resolves. There's deliberately no page background outside this
-          // shell: a contrasting one framed every narrow state as a phone-shaped column on
-          // desktop.
-          bill || !resolved ? 'max-w-md md:max-w-2xl lg:max-w-5xl xl:max-w-6xl' : 'max-w-md'
-        )}
-      >
+      {/* Full width at every size, so no state can show an edge around the app. The bg stays
+          opaque because the page behind it darkens while a sheet is open (see globals.css).
+          No overflow-hidden here: it would create its own scroll container and silently break
+          position:sticky for the summary column on wide screens. */}
+      <div className="relative w-full bg-background">
         {/* No `mode="wait"` here — unlike the MVP-era single hasHydrated gate this replaced,
             `resolved` can now settle after an async cloud-draft check (see useActiveDraft), which
             reliably left AnimatePresence's exit-tracking permanently stuck on the boot screen
