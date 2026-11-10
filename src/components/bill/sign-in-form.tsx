@@ -1,11 +1,13 @@
 'use client'
 
 import { useState } from 'react'
+import { Check } from 'lucide-react'
 import { signIn } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { GoogleIcon } from '@/components/shared/google-icon'
+import { PasswordInput } from '@/components/shared/password-input'
 
 export type SignInFormMode = 'sign-in' | 'create'
 
@@ -33,6 +35,7 @@ export function SignInForm({ onSuccess, onBeforeGoogleRedirect, onModeChange }: 
   const [mode, setMode] = useState<SignInFormMode>('sign-in')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -40,6 +43,7 @@ export function SignInForm({ onSuccess, onBeforeGoogleRedirect, onModeChange }: 
     const next: SignInFormMode = mode === 'create' ? 'sign-in' : 'create'
     setMode(next)
     setError(null)
+    setConfirmPassword('')
     onModeChange?.(next)
   }
 
@@ -81,8 +85,16 @@ export function SignInForm({ onSuccess, onBeforeGoogleRedirect, onModeChange }: 
     }
   }
 
+  const passwordLongEnough = password.length >= 8
+
+  // Flagged only once the confirmation is as long as the password, so it never nags mid-typing.
+  const passwordsMismatch =
+    mode === 'create' && confirmPassword.length >= password.length && confirmPassword.length > 0 && confirmPassword !== password
+
   const canSubmit =
-    mode === 'create' ? email.trim().length > 0 && password.length >= 8 : email.trim().length > 0 && password.length > 0
+    mode === 'create'
+      ? email.trim().length > 0 && password.length >= 8 && confirmPassword === password
+      : email.trim().length > 0 && password.length > 0
 
   return (
     <div className="flex flex-col gap-4 px-8">
@@ -109,14 +121,35 @@ export function SignInForm({ onSuccess, onBeforeGoogleRedirect, onModeChange }: 
 
       <label className="flex flex-col gap-1.5">
         <span className="text-sm font-medium text-muted-foreground">{t('passwordLabel')}</span>
-        <Input
-          type="password"
+        <PasswordInput
           autoComplete={mode === 'create' ? 'new-password' : 'current-password'}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-        {mode === 'create' && <span className="text-xs text-muted-foreground">{t('passwordHint')}</span>}
+        {/* Live, never red: gray until the length is met, then green with a check. A field the
+            user is still typing in isn't an error. */}
+        {mode === 'create' && (
+          <span
+            className={`flex items-center gap-1 text-xs transition-colors ${passwordLongEnough ? 'text-[#2a8a5f]' : 'text-muted-foreground'}`}
+          >
+            {passwordLongEnough && <Check className="size-3.5" aria-hidden="true" />}
+            {t('passwordHint')}
+          </span>
+        )}
       </label>
+
+      {mode === 'create' && (
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium text-muted-foreground">{t('confirmPasswordLabel')}</span>
+          <PasswordInput
+            autoComplete="new-password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            aria-invalid={passwordsMismatch || undefined}
+          />
+          {passwordsMismatch && <span className="text-xs text-destructive">{t('passwordsMismatch')}</span>}
+        </label>
+      )}
 
       {error && <p className="text-xs text-destructive">{error}</p>}
 
