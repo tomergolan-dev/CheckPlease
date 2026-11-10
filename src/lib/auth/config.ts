@@ -1,11 +1,19 @@
 import { DrizzleAdapter } from '@auth/drizzle-adapter'
 import type { NextAuthConfig } from 'next-auth'
+import { CredentialsSignin } from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 import Google from 'next-auth/providers/google'
 import { db } from '@/lib/db/client'
 import { accounts, users } from '@/lib/db/schema'
 import { grantSignupBonus } from '@/lib/credits/grants'
-import { authenticateWithPassword } from './authenticate'
+import { authenticateWithPassword, UNVERIFIED } from './authenticate'
+import { drizzleUserRepository } from './register'
+import { normalizeEmail } from './validation'
+
+/** Right password, unconfirmed email: the client asks for the emailed code instead of failing. */
+class EmailNotVerifiedError extends CredentialsSignin {
+  code = 'email_not_verified'
+}
 
 export const authConfig: NextAuthConfig = {
   adapter: DrizzleAdapter(db, { usersTable: users, accountsTable: accounts }),
@@ -26,11 +34,21 @@ export const authConfig: NextAuthConfig = {
         const password = typeof credentials?.password === 'string' ? credentials.password : null
         if (!email || !password) return null
 
-        return authenticateWithPassword(email, password)
+        const result = await authenticateWithPassword(email, password)
+        if (result === UNVERIFIED) throw new EmailNotVerifiedError()
+        return result
       },
     }),
   ],
   callbacks: {
+    // Google has verified the address, so it outranks a password account that never did: that
+    // one is removed first, otherwise the email would be "taken" and Google sign-in would fail.
+    async signIn({ account, profile }) {
+      if (account?.provider === 'google' && typeof profile?.email === 'string') {
+        await drizzleUserRepository.deleteUnverified(normalizeEmail(profile.email))
+      }
+      return true
+    },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
@@ -51,6 +69,9 @@ export const authConfig: NextAuthConfig = {
     // sign-in itself over a credits hiccup — grantSignupBonus is idempotent, safe to retry later.
     async createUser({ user }) {
       if (!user.id) return
+      // A Google account for a mailbox that already has a password account (e.g. name+x@gmail.com)
+      // is allowed in, but the free scans were already given to that mailbox.
+      if (user.email && (await drizzleUserRepository.mailboxTakenByOther(normalizeEmail(user.email)))) return
       try {
         await grantSignupBonus(user.id)
       } catch (error) {

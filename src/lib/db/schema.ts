@@ -203,3 +203,17 @@ export const scanAttempts = pgTable(
     index('scan_attempts_created_idx').on(table.createdAt),
   ]
 )
+
+/**
+ * The latest email-verification code per address (see src/lib/auth/email-verification.ts). Only
+ * an HMAC of the code is stored; the row is deleted once the code is used.
+ */
+export const emailVerificationCodes = pgTable('email_verification_codes', {
+  email: text('email').primaryKey(),
+  codeHash: text('code_hash').notNull(),
+  expiresAt: timestamp('expires_at', { mode: 'date' }).notNull(),
+  attempts: integer('attempts').notNull().default(0),
+  lastSentAt: timestamp('last_sent_at', { mode: 'date' }).notNull(),
+  windowStartedAt: timestamp('window_started_at', { mode: 'date' }).notNull(),
+  sendsInWindow: integer('sends_in_window').notNull().default(0),
+})

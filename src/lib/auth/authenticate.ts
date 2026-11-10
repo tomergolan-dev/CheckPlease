@@ -13,7 +13,11 @@ interface CredentialsRow {
   id: string
   email: string | null
   passwordHash: string | null
+  emailVerified: Date | null
 }
+
+/** The right password, for an account that hasn't confirmed its email yet. */
+export const UNVERIFIED = 'unverified' as const
 
 export interface CredentialsRepository {
   findByEmail(email: string): Promise<CredentialsRow | undefined>
@@ -22,7 +26,7 @@ export interface CredentialsRepository {
 export const drizzleCredentialsRepository: CredentialsRepository = {
   async findByEmail(email) {
     const [row] = await db
-      .select({ id: users.id, email: users.email, passwordHash: users.passwordHash })
+      .select({ id: users.id, email: users.email, passwordHash: users.passwordHash, emailVerified: users.emailVerified })
       .from(users)
       .where(eq(users.email, email))
       .limit(1)
@@ -41,12 +45,14 @@ export async function authenticateWithPassword(
   email: string,
   password: string,
   repository: CredentialsRepository = drizzleCredentialsRepository
-): Promise<AuthenticatedUser | null> {
+): Promise<AuthenticatedUser | typeof UNVERIFIED | null> {
   const user = await repository.findByEmail(normalizeEmail(email))
   if (!user?.passwordHash || !user.email) return null
 
   const valid = await verifyPassword(password, user.passwordHash)
   if (!valid) return null
+  // Only after the password checked out, so this never reveals anything to someone guessing.
+  if (!user.emailVerified) return UNVERIFIED
 
   return { id: user.id, email: user.email }
 }

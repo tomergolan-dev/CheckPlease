@@ -1,7 +1,8 @@
-import { eq } from 'drizzle-orm'
+import { and, eq, isNotNull, isNull, ne, or } from 'drizzle-orm'
 import { db } from '@/lib/db/client'
 import { users } from '@/lib/db/schema'
 import { grantSignupBonus } from '@/lib/credits/grants'
+import { canonicalMailbox, canonicalMailboxSql } from './mailbox'
 import { hashPassword } from './password'
 import type { RegisterInput } from './validation'
 
@@ -17,9 +18,31 @@ export interface RegisteredUser {
   email: string
 }
 
+export interface ExistingUser {
+  id: string
+  passwordHash: string | null
+  emailVerified: Date | null
+}
+
 export interface UserRepository {
-  findByEmail(email: string): Promise<{ id: string } | undefined>
+  findByEmail(email: string): Promise<ExistingUser | undefined>
   insert(data: { email: string; passwordHash: string }): Promise<RegisteredUser>
+  updatePassword(id: string, passwordHash: string): Promise<void>
+  /** Marks an unverified password account verified; returns its id, or undefined if none. */
+  markVerified(email: string): Promise<string | undefined>
+  /** Deletes a password account that never verified, freeing its email for its real owner. */
+  deleteUnverified(email: string): Promise<void>
+  /**
+   * Whether another account (a different address, verified or Google) already uses the same real
+   * mailbox, e.g. `name@gmail.com` for `name+x@gmail.com`. Unverified accounts don't count, for the
+   * same reason they never "take" an email.
+   */
+  mailboxTakenByOther(email: string): Promise<boolean>
+}
+
+/** A password account that hasn't proven it owns its email yet. Google accounts never are. */
+export function isUnverifiedPasswordAccount(user: ExistingUser): boolean {
+  return user.passwordHash !== null && user.emailVerified === null
 }
 
 /** Postgres's unique_violation code — the database's own constraint on `users.email` is the
@@ -38,60 +61,104 @@ function isUniqueViolation(error: unknown): boolean {
   return false
 }
 
-/** The real repository, backed by the actual database. `registerUser` takes a repository as a
- * parameter rather than importing `db` directly, specifically so it can be unit-tested against
- * an in-memory fake without a live Postgres connection. */
+/** The real repository, backed by the actual database. Injected so the rules can be unit-tested
+ * against an in-memory fake without a live Postgres connection. */
 export const drizzleUserRepository: UserRepository = {
   async findByEmail(email) {
-    const [row] = await db.select({ id: users.id }).from(users).where(eq(users.email, email)).limit(1)
+    const [row] = await db
+      .select({ id: users.id, passwordHash: users.passwordHash, emailVerified: users.emailVerified })
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1)
     return row
   },
   async insert({ email, passwordHash }) {
-    const [row] = await db
-      .insert(users)
-      .values({ email, passwordHash })
-      .returning({ id: users.id, email: users.email })
+    const [row] = await db.insert(users).values({ email, passwordHash }).returning({ id: users.id, email: users.email })
     // Non-null: we just inserted this row with a definite email value.
     return { id: row!.id, email: row!.email! }
+  },
+  async updatePassword(id, passwordHash) {
+    await db.update(users).set({ passwordHash }).where(eq(users.id, id))
+  },
+  async markVerified(email) {
+    const [row] = await db
+      .update(users)
+      .set({ emailVerified: new Date() })
+      .where(and(eq(users.email, email), isNotNull(users.passwordHash), isNull(users.emailVerified)))
+      .returning({ id: users.id })
+    return row?.id
+  },
+  async deleteUnverified(email) {
+    await db.delete(users).where(and(eq(users.email, email), isNotNull(users.passwordHash), isNull(users.emailVerified)))
+  },
+  async mailboxTakenByOther(email) {
+    const [row] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(
+        and(
+          ne(users.email, email),
+          eq(canonicalMailboxSql, canonicalMailbox(email)),
+          or(isNull(users.passwordHash), isNotNull(users.emailVerified))
+        )
+      )
+      .limit(1)
+    return row !== undefined
   },
 }
 
 /**
- * Registers a new email/password account. `input` is expected to already be validated and
- * normalized via `registerInputSchema` (see validation.ts) before reaching here. Returns only
- * the safe fields (id, email) — the password hash is never returned to a caller.
+ * Registers a new email/password account, unverified: it can't sign in or receive the signup
+ * bonus until `verifyRegisteredEmail` confirms the emailed code. `input` is expected to already be
+ * validated and normalized via `registerInputSchema`.
+ *
+ * An email held by an account that never verified is not "taken": registering again replaces that
+ * account's password, so someone who typed another person's address can't lock its owner out.
+ * Only the code sent to the address decides who keeps it.
+ *
+ * One real mailbox, one account: `name+x@gmail.com` is refused once `name@gmail.com` has an
+ * account, so the free scans can't be collected again with an address variant.
  */
-export async function registerUser(
-  input: RegisterInput,
-  repository: UserRepository = drizzleUserRepository,
-  grantSignupBonusFn: (userId: string) => Promise<void> = grantSignupBonus
-): Promise<RegisteredUser> {
-  const existing = await repository.findByEmail(input.email)
-  if (existing) {
-    throw new EmailAlreadyRegisteredError()
-  }
-
+export async function registerUser(input: RegisterInput, repository: UserRepository = drizzleUserRepository): Promise<RegisteredUser> {
   const passwordHash = await hashPassword(input.password)
+  const existing = await repository.findByEmail(input.email)
 
-  let user: RegisteredUser
+  if (existing) {
+    if (!isUnverifiedPasswordAccount(existing)) throw new EmailAlreadyRegisteredError()
+    if (await repository.mailboxTakenByOther(input.email)) throw new EmailAlreadyRegisteredError()
+    await repository.updatePassword(existing.id, passwordHash)
+    return { id: existing.id, email: input.email }
+  }
+  if (await repository.mailboxTakenByOther(input.email)) throw new EmailAlreadyRegisteredError()
+
   try {
-    user = await repository.insert({ email: input.email, passwordHash })
+    return await repository.insert({ email: input.email, passwordHash })
   } catch (error) {
     if (isUniqueViolation(error)) {
       throw new EmailAlreadyRegisteredError()
     }
     throw error
   }
+}
 
-  // Google OAuth signup grants the same bonus via events.createUser in src/lib/auth/config.ts —
-  // this path bypasses @auth/drizzle-adapter entirely (the insert above is a direct call), so
-  // that adapter-only hook never fires here. Never fails registration over a credits hiccup: the
-  // grant is idempotent (see grantSignupBonus), so it's safe to retry/backfill later.
+/**
+ * Completes registration once the emailed code checked out: the account becomes verified and gets
+ * its free scans (Google signups get theirs from events.createUser in config.ts). Never fails over
+ * a credits hiccup, since the grant is idempotent and can be retried.
+ */
+export async function verifyRegisteredEmail(
+  email: string,
+  repository: UserRepository = drizzleUserRepository,
+  grantSignupBonusFn: (userId: string) => Promise<void> = grantSignupBonus
+): Promise<{ ok: true; userId: string } | { ok: false }> {
+  // Two variants of one mailbox could both be waiting for their codes; only the first one counts.
+  if (await repository.mailboxTakenByOther(email)) return { ok: false }
+  const userId = await repository.markVerified(email)
+  if (!userId) return { ok: false }
   try {
-    await grantSignupBonusFn(user.id)
+    await grantSignupBonusFn(userId)
   } catch (error) {
-    console.error('registerUser: failed to grant signup bonus', error)
+    console.error('verifyRegisteredEmail: failed to grant signup bonus', error)
   }
-
-  return user
+  return { ok: true, userId }
 }

@@ -282,9 +282,15 @@ export function ScanReceiptSheet({ onInsufficientCredits }: { onInsufficientCred
               >
                 <DrawerHeader>
                   <DrawerTitle>
-                    {gateMode === 'create' ? tAccount('createAccountAction') : tCredits('gateTitle')}
+                    {gateMode === 'verified'
+                    ? tAccount('verifiedTitle')
+                    : gateMode === 'verify'
+                      ? tAccount('verifyEmailTitle')
+                      : gateMode === 'create'
+                        ? tAccount('createAccountAction')
+                        : tCredits('gateTitle')}
                   </DrawerTitle>
-                  <DrawerDescription>{tCredits('gateSubtitle')}</DrawerDescription>
+                  {gateMode !== 'verify' && gateMode !== 'verified' && <DrawerDescription>{tCredits('gateSubtitle')}</DrawerDescription>}
                 </DrawerHeader>
 
                 <SignInForm

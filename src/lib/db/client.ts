@@ -14,6 +14,20 @@ import * as schema from './schema'
  */
 neonConfig.webSocketConstructor = ws
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  // Neon closes idle connections (and suspends the database when it's quiet). Without limits, a
+  // query sent over a connection that was already dead hung for minutes before failing: these
+  // make it fail in seconds instead, and the next query opens a fresh connection.
+  idleTimeoutMillis: 5_000,
+  connectionTimeoutMillis: 10_000,
+  query_timeout: 20_000,
+})
+
+// An idle connection dropped by the server emits 'error' on the pool; unhandled, that would crash
+// the process. The pool already discards the connection, so logging is all that's needed.
+pool.on('error', (error: Error) => {
+  console.error('db: idle connection error', error)
+})
 
 export const db = drizzle({ client: pool, schema })

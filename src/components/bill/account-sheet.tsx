@@ -127,11 +127,19 @@ export function AccountSheet({
                 </Button>
               </DrawerFooter>
             </>
-          ) : view === 'sign-in' && !user ? (
+          ) : view === 'sign-in' && (!user || signInMode === 'verified') ? (
             <>
               <DrawerHeader>
-                <DrawerTitle>{signInMode === 'create' ? t('createAccountAction') : t('signInTitle')}</DrawerTitle>
-                <DrawerDescription>{t('signInSubtitle')}</DrawerDescription>
+                <DrawerTitle>
+                  {signInMode === 'verified'
+                    ? t('verifiedTitle')
+                    : signInMode === 'verify'
+                    ? t('verifyEmailTitle')
+                    : signInMode === 'create'
+                      ? t('createAccountAction')
+                      : t('signInTitle')}
+                </DrawerTitle>
+                {signInMode !== 'verify' && signInMode !== 'verified' && <DrawerDescription>{t('signInSubtitle')}</DrawerDescription>}
               </DrawerHeader>
               <SignInForm
                 onSuccess={close}

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { authenticateWithPassword, type CredentialsRepository } from './authenticate'
+import { authenticateWithPassword, UNVERIFIED, type CredentialsRepository } from './authenticate'
 import { hashPassword } from './password'
 
 function fakeRepository(row: Awaited<ReturnType<CredentialsRepository['findByEmail']>>): CredentialsRepository {
@@ -9,7 +9,7 @@ function fakeRepository(row: Awaited<ReturnType<CredentialsRepository['findByEma
 describe('authenticateWithPassword', () => {
   it('returns the user on a correct password', async () => {
     const passwordHash = await hashPassword('correct horse battery')
-    const repository = fakeRepository({ id: 'user-1', email: 'diner@example.com', passwordHash })
+    const repository = fakeRepository({ id: 'user-1', email: 'diner@example.com', passwordHash, emailVerified: new Date() })
 
     const result = await authenticateWithPassword('Diner@Example.com', 'correct horse battery', repository)
     expect(result).toEqual({ id: 'user-1', email: 'diner@example.com' })
@@ -27,13 +27,21 @@ describe('authenticateWithPassword', () => {
   })
 
   it('returns null for a Google-only account with no password set', async () => {
-    const repository = fakeRepository({ id: 'user-1', email: 'diner@example.com', passwordHash: null })
+    const repository = fakeRepository({ id: 'user-1', email: 'diner@example.com', passwordHash: null, emailVerified: null })
     expect(await authenticateWithPassword('diner@example.com', 'anything', repository)).toBeNull()
   })
 
   it('returns null for a wrong password', async () => {
     const passwordHash = await hashPassword('correct horse battery')
-    const repository = fakeRepository({ id: 'user-1', email: 'diner@example.com', passwordHash })
+    const repository = fakeRepository({ id: 'user-1', email: 'diner@example.com', passwordHash, emailVerified: new Date() })
+    expect(await authenticateWithPassword('diner@example.com', 'wrong password', repository)).toBeNull()
+  })
+
+  it('reports an unverified account only when the password is right', async () => {
+    const passwordHash = await hashPassword('correct horse battery')
+    const repository = fakeRepository({ id: 'user-1', email: 'diner@example.com', passwordHash, emailVerified: null })
+
+    expect(await authenticateWithPassword('diner@example.com', 'correct horse battery', repository)).toBe(UNVERIFIED)
     expect(await authenticateWithPassword('diner@example.com', 'wrong password', repository)).toBeNull()
   })
 })
