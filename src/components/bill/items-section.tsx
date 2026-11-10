@@ -9,6 +9,7 @@ import { SectionHeading } from '@/components/shared/section-heading'
 import { getDinerDefaultPositions } from '@/lib/store/selectors'
 import type { Bill } from '@/lib/store/types'
 import { AddItemSheet } from './add-item-sheet'
+import { BillPhotos } from './bill-photos'
 import { CreditPackSheet } from './credit-pack-sheet'
 import { EditItemSheet } from './edit-item-sheet'
 import { ItemRow } from './item-row'
@@ -94,6 +95,8 @@ export function ItemsSection({ bill }: { bill: Bill }) {
             )}
           </motion.div>
         )}
+
+        <BillPhotos scanIds={bill.scanPhotoIds} />
       </div>
 
       <EditItemSheet bill={bill} itemId={editItemId} onOpenChange={(open) => !open && setEditItemId(null)} />

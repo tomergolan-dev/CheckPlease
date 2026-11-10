@@ -3,6 +3,8 @@ import { auth } from '@/auth'
 import { discardServerDraft } from '@/lib/bills/discard'
 import { renameCompletedBill } from '@/lib/bills/rename'
 import { renameRequestSchema } from '@/lib/bills/validation'
+import { deleteScanPhotos, isPhotoStorageConfigured } from '@/lib/scans/photos'
+import { blobPhotoStorage, drizzleScanPhotosRepository } from '@/lib/scans/photo-storage'
 
 /** Permanently deletes the caller's server-side draft row (restart flow's "Discard"). */
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -16,6 +18,15 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
 
   if (!result.ok) {
     return NextResponse.json({ error: 'not_found' }, { status: 404 })
+  }
+
+  // The discarded bill's photos go with it, right away rather than at the next orphan cleanup.
+  if (isPhotoStorageConfigured()) {
+    try {
+      await deleteScanPhotos(session.user.id, result.scanPhotoIds, blobPhotoStorage, drizzleScanPhotosRepository)
+    } catch (error) {
+      console.error('bills/delete: failed to delete the bill photos', error)
+    }
   }
   return NextResponse.json({ ok: true })
 }

@@ -1,6 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk'
-import { NextResponse } from 'next/server'
+import { after, NextResponse } from 'next/server'
 import { auth } from '@/auth'
+import { deleteOrphanedScanPhotos, isPhotoStorageConfigured, saveScanPhoto } from '@/lib/scans/photos'
+import { blobPhotoStorage, drizzleScanPhotosRepository } from '@/lib/scans/photo-storage'
 import { parseInputValueToMinorUnits } from '@/lib/money'
 import { reserveCredit, refundCredit } from '@/lib/credits/reserve'
 import { hasUnlimitedCredits } from '@/lib/credits/dev-override'
@@ -224,6 +226,25 @@ export async function POST(request: Request) {
   }
 
   await finish(items.length === 0 ? 'empty' : 'succeeded', response.usage)
+
+  // After the response, so saving the photo never slows the scan down. Best-effort: a failed save
+  // only means this bill has no photo to show, never a failed scan.
+  if (isPhotoStorageConfigured()) {
+    after(async () => {
+      try {
+        if (items.length > 0) {
+          await saveScanPhoto(
+            { userId, scanId: validatedScanId, imageBase64: image, contentType: mediaType },
+            blobPhotoStorage,
+            drizzleScanPhotosRepository
+          )
+        }
+        await deleteOrphanedScanPhotos(new Date(), blobPhotoStorage, drizzleScanPhotosRepository)
+      } catch (error) {
+        console.error('scan-receipt: bill photo bookkeeping failed', error)
+      }
+    })
+  }
 
   return NextResponse.json({ items })
 }

@@ -18,7 +18,8 @@ function isUniqueViolation(error: unknown): boolean {
 
 export type UpsertDraftResult = { ok: true; id: string; data: Bill } | { ok: false; reason: 'conflict' }
 export type MarkCompletedResult = { ok: true; data: Bill } | { ok: false; reason: 'not_found' }
-export type DeleteDraftResult = { ok: true } | { ok: false; reason: 'not_found' }
+/** `scanPhotoIds` are the deleted draft's bill photos, so the caller can delete them too. */
+export type DeleteDraftResult = { ok: true; scanPhotoIds: string[] } | { ok: false; reason: 'not_found' }
 export type RenameCompletedResult = { ok: true; data: Bill } | { ok: false; reason: 'not_found' }
 
 export interface CompletedBillRow {
@@ -155,8 +156,8 @@ export const drizzleBillsRepository: BillsRepository = {
     const [row] = await db
       .delete(bills)
       .where(and(eq(bills.id, id), eq(bills.userId, userId), eq(bills.status, 'draft')))
-      .returning({ id: bills.id })
-    return row ? { ok: true } : { ok: false, reason: 'not_found' }
+      .returning({ id: bills.id, data: bills.data })
+    return row ? { ok: true, scanPhotoIds: row.data.scanPhotoIds ?? [] } : { ok: false, reason: 'not_found' }
   },
 
   /**

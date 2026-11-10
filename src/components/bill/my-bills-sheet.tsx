@@ -9,6 +9,7 @@ import { Drawer, DrawerClose, DrawerContent, DrawerFooter, DrawerHeader, DrawerT
 import { Input } from '@/components/ui/input'
 import { formatCurrency } from '@/lib/money'
 import type { Bill } from '@/lib/store/types'
+import { BillPhotos } from './bill-photos'
 import { CompletedBillDetail } from './completed-bill-detail'
 
 interface CompletedBillEntry {
@@ -231,8 +232,9 @@ export function MyBillsSheet({ open, onOpenChange }: { open: boolean; onOpenChan
                 {renameError && <p className="mt-1 text-xs text-destructive">{renameError}</p>}
               </DrawerHeader>
 
-              <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-2">
+              <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 pb-2">
                 <CompletedBillDetail bill={selected.bill} />
+                <BillPhotos scanIds={selected.bill.scanPhotoIds} />
               </div>
 
               <DrawerFooter>

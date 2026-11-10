@@ -174,6 +174,28 @@ describe('clearItems', () => {
     expect(bill!.items).toEqual([])
     expect(bill!.diners.map((d) => d.id)).toEqual([d1])
   })
+
+  it('also drops the bill photos of the dishes it removed', () => {
+    start()
+    const store = useBillStore.getState()
+    store.attachScanPhoto('scan-1')
+
+    store.clearItems()
+
+    expect(useBillStore.getState().bill!.scanPhotoIds).toBeUndefined()
+  })
+})
+
+describe('attachScanPhoto', () => {
+  it('keeps each scan once, in the order they were added', () => {
+    start()
+    const store = useBillStore.getState()
+    store.attachScanPhoto('scan-1')
+    store.attachScanPhoto('scan-2')
+    store.attachScanPhoto('scan-1')
+
+    expect(useBillStore.getState().bill!.scanPhotoIds).toEqual(['scan-1', 'scan-2'])
+  })
 })
 
 describe('setItemDiners', () => {

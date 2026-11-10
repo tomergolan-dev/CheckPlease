@@ -1,0 +1,1 @@
+ALTER TABLE "scan_attempts" ADD COLUMN "image_path" text;

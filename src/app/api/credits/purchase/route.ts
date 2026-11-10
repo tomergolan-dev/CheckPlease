@@ -8,7 +8,7 @@ export async function POST(request: Request) {
   const apiKey = process.env.STRIPE_SECRET_KEY
   if (!apiKey) {
     console.error('credits/purchase: STRIPE_SECRET_KEY is not configured')
-    return NextResponse.json({ error: 'server_misconfigured' }, { status: 500 })
+    return NextResponse.json({ error: 'payments_unavailable' }, { status: 503 })
   }
 
   const session = await auth()
@@ -61,7 +61,15 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     console.error('credits/purchase: Stripe Checkout Session creation failed', error)
-    return NextResponse.json({ error: 'upstream_error' }, { status: 502 })
+    // A rejected key or request (an expired test sandbox, a revoked key, an account setting)
+    // won't fix itself on retry, so the client says buying is unavailable rather than "try again".
+    const unavailable =
+      error instanceof Stripe.errors.StripeAuthenticationError ||
+      error instanceof Stripe.errors.StripePermissionError ||
+      error instanceof Stripe.errors.StripeInvalidRequestError
+    return unavailable
+      ? NextResponse.json({ error: 'payments_unavailable' }, { status: 503 })
+      : NextResponse.json({ error: 'upstream_error' }, { status: 502 })
   }
 
   if (!checkoutSession.url) {

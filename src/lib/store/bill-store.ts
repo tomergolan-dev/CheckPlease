@@ -53,6 +53,8 @@ export interface BillStore {
   ) => void
   removeItem: (itemId: string) => void
   clearItems: () => void
+  /** Records that a scan's dishes were added, so its photo stays with this bill. */
+  attachScanPhoto: (scanId: string) => void
   setItemDiners: (itemId: string, dinerIds: string[]) => void
 
   setTip: (tip: TipConfig) => void
@@ -254,10 +256,19 @@ export const useBillStore = create<BillStore>()(
         set({ bill: { ...bill, items: bill.items.filter((item) => item.id !== itemId), ...touch() } })
       },
 
+      // Clearing every dish also drops the photos they came from ("Replace them with these").
       clearItems: () => {
         const bill = get().bill
         if (!bill) return
-        set({ bill: { ...bill, items: [], ...touch() } })
+        set({ bill: { ...bill, items: [], scanPhotoIds: undefined, ...touch() } })
+      },
+
+      attachScanPhoto: (scanId) => {
+        const bill = get().bill
+        if (!bill) return
+        const current = bill.scanPhotoIds ?? []
+        if (current.includes(scanId)) return
+        set({ bill: { ...bill, scanPhotoIds: [...current, scanId], ...touch() } })
       },
 
       setItemDiners: (itemId, dinerIds) => {

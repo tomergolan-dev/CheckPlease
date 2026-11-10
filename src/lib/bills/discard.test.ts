@@ -26,8 +26,17 @@ describe('discardServerDraft', () => {
 
     const result = await discardServerDraft('u1', 'bill-1', repository)
 
-    expect(result).toEqual({ ok: true })
+    expect(result).toEqual({ ok: true, scanPhotoIds: [] })
     expect(getRows()).toHaveLength(0)
+  })
+
+  it('reports the deleted draft\'s bill photos so they can be deleted too', async () => {
+    const { repository } = createInMemoryBillsRepository()
+    await repository.upsertDraft({ id: 'bill-1', userId: 'u1', data: makeBill({ scanPhotoIds: ['scan-a', 'scan-b'] }) })
+
+    const result = await discardServerDraft('u1', 'bill-1', repository)
+
+    expect(result).toEqual({ ok: true, scanPhotoIds: ['scan-a', 'scan-b'] })
   })
 
   it('no-ops on another user\'s row', async () => {

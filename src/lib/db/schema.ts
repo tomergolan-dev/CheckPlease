@@ -187,6 +187,11 @@ export const scanAttempts = pgTable(
     exempt: boolean('exempt').notNull().default(false),
     inputTokens: integer('input_tokens'),
     outputTokens: integer('output_tokens'),
+    /**
+     * Where the original bill photo sits in private Blob storage, set only for a scan that found
+     * dishes. Cleared once the photo is deleted (retaken, discarded, or never used in a bill).
+     */
+    imagePath: text('image_path'),
     createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
   },
   (table) => [

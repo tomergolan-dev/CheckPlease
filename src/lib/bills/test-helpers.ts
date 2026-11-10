@@ -100,7 +100,7 @@ export function createInMemoryBillsRepository(): {
         return { ok: false, reason: 'not_found' }
       }
       rows.delete(id)
-      return { ok: true }
+      return { ok: true, scanPhotoIds: existing.data.scanPhotoIds ?? [] }
     },
 
     async renameCompleted({ id, userId, restaurantName }): Promise<RenameCompletedResult> {

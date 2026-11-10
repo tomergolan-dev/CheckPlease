@@ -37,6 +37,11 @@ export interface Bill {
   items: Item[]
   tip: TipConfig
   /**
+   * The scans whose dishes are on this bill, in order: each one's original photo can be viewed
+   * (signed-in owner only). Absent on bills made before photos were kept, and on manual-only bills.
+   */
+  scanPhotoIds?: string[]
+  /**
    * 'draft' (the active, editable bill) or 'completed' (permanently read-only, saved to "My
    * Bills" via one deliberate action — see Cross-device sync and bill history in CLAUDE.md). This
    * is a display/local-state convenience only — the server's `bills.status`/`completed_at`

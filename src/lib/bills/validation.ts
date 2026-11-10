@@ -42,6 +42,7 @@ export const billDataSchema = z.object({
   diners: z.array(dinerSchema),
   items: z.array(itemSchema),
   tip: tipConfigSchema,
+  scanPhotoIds: z.array(z.string().min(1).max(64)).max(50).optional(),
   status: z.enum(['draft', 'completed']).optional(),
 })
 

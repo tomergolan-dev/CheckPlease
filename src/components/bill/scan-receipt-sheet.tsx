@@ -46,6 +46,7 @@ export function ScanReceiptSheet({ onInsufficientCredits }: { onInsufficientCred
   const tCredits = useTranslations('Credits')
   const addItem = useBillStore((s) => s.addItem)
   const clearItems = useBillStore((s) => s.clearItems)
+  const attachScanPhoto = useBillStore((s) => s.attachScanPhoto)
   const currency = useBillStore((s) => s.bill?.currency ?? 'ILS')
   const existingItemsCount = useBillStore((s) => s.bill?.items.length ?? 0)
   const shouldReduceMotion = useReducedMotion()
@@ -198,6 +199,7 @@ export function ScanReceiptSheet({ onInsufficientCredits }: { onInsufficientCred
         source: 'scanned',
       })
     }
+    if (scanId) attachScanPhoto(scanId)
     setOpen(false)
     reset()
   }
@@ -247,7 +249,7 @@ export function ScanReceiptSheet({ onInsufficientCredits }: { onInsufficientCred
             // (fail toward showing the gate), not the real security boundary. The server's own
             // auth()/credit check in the scan-receipt route is what actually enforces gating.
             onClick={() => setStep(status === 'authenticated' ? 'picker' : 'gate')}
-            className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-border/60 bg-card px-4 py-3.5 text-sm font-medium text-primary transition-all hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-soft active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+            className="flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-2xl border border-border/60 bg-card px-3 py-3.5 text-sm font-medium text-primary transition-all hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-soft active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
           >
             <ScanLine className="size-4" aria-hidden="true" />
             {t('scanReceipt')}

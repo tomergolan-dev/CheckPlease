@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { getCreditBalance } from '@/lib/credits/reserve'
 import { hasUnlimitedCredits } from '@/lib/credits/dev-override'
+import { isDemoPayments } from '@/lib/credits/demo-payments'
 
 export async function GET() {
   const session = await auth()
@@ -13,5 +14,9 @@ export async function GET() {
   // `unlimited` is purely a display hint for the dev/demo allowlist (see dev-override.ts) — the
   // real balance is still returned as-is underneath, since it's genuinely never touched for that
   // account (no reserve/refund ledger rows are ever created for it).
-  return NextResponse.json({ balance, unlimited: hasUnlimitedCredits(session.user.email) })
+  return NextResponse.json({
+    balance,
+    unlimited: hasUnlimitedCredits(session.user.email),
+    demoPayments: isDemoPayments(),
+  })
 }
