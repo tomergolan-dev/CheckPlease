@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { ChevronRight, LogIn, ReceiptText, RotateCcw, type LucideIcon } from 'lucide-react'
+import { ChevronRight, LogIn, ReceiptText, RotateCcw, ShieldCheck, type LucideIcon } from 'lucide-react'
 import { signOut, useSession } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
@@ -15,6 +15,7 @@ import {
   DrawerTitle,
 } from '@/components/ui/drawer'
 import { LanguageSwitcher } from '@/components/shared/language-switcher'
+import { Link } from '@/i18n/navigation'
 import { RESUME_SCAN_KEY } from '@/lib/scan-resume'
 import { CreditPackSheet } from './credit-pack-sheet'
 import { MyBillsSheet } from './my-bills-sheet'
@@ -184,6 +185,11 @@ export function AccountSheet({
                     </span>
                     <LanguageSwitcher labelledBy="menu-language-label" onChange={close} />
                   </div>
+                  <Link href="/privacy" className={ROW}>
+                    <ShieldCheck className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+                    <span className="flex-1">{t('privacyLink')}</span>
+                    <ChevronRight className="size-4 shrink-0 text-muted-foreground/60 rtl:rotate-180" aria-hidden="true" />
+                  </Link>
                 </div>
               </div>
 

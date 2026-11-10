@@ -400,6 +400,9 @@ Confirmed flow for how a signed-out user encounters the credit-gated scan featur
 - Because the gate sits *before* any photo is picked, no image data ever needs to survive the OAuth redirect — only a lightweight "resume scanning" intent does (e.g. a flag read once on return), which is trivial to persist compared to an in-progress photo.
 - This gate applies to receipt scanning only. Manual bill splitting — diners, dishes, tip, everything else — remains fully available to guests, completely unaffected.
 
+### Privacy page
+`/[locale]/privacy` (`src/app/[locale]/privacy/page.tsx`, content in `src/lib/privacy-content.ts`) is a plain-language policy, reachable from a "Privacy" / "פרטיות" row in the header menu. It describes what the app actually does: local-only bills without an account; what an account stores; bill photos sent to Anthropic for scanning and kept privately per the Bill photos rules; Stripe handling card details; the service providers; no ads, selling, or analytics; deletion by emailing `PRIVACY_CONTACT_EMAIL`. **Any change to what data is collected, kept, or shared must update this page in the same change**, and bump `PRIVACY_LAST_UPDATED`. Google requires its URL to take OAuth sign-in out of Testing mode. Deleting an account on request must also delete its Blob photos (`scan-photos/{userId}/`), since the database cascade doesn't reach storage.
+
 ### Folder structure additions
 ```
 src/lib/db/      — Drizzle schema, client, migrations
