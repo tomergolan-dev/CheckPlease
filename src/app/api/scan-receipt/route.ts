@@ -20,12 +20,13 @@ type SupportedMediaType = (typeof SUPPORTED_MEDIA_TYPES)[number]
 const MAX_BASE64_LENGTH = 12_000_000
 
 /**
- * Haiku 4.5 (the cheapest tier) proved too unreliable on real receipt photos in testing — too many
- * misread names/prices. Sonnet 5 is the accuracy/cost middle ground: much stronger OCR-style vision
- * than Haiku, still a fraction of Opus 5's price (and has introductory pricing through 2026-08-31).
- * 'claude-opus-5' remains a one-line upgrade if Sonnet 5 still isn't accurate enough in practice.
+ * Sonnet 5.5 at high effort. Haiku 4.5 was too unreliable on real receipt photos, and Sonnet 5 at
+ * medium effort misread wrapped dish names and shifted numbers between rows. On a real receipt with
+ * a dish name wrapping onto a second line (2026-11-11), Sonnet 5 / medium read it wrong 5 times out
+ * of 5; Sonnet 5.5 / high with the table-reading prompt below read it right 11 out of 11, in about
+ * 3 seconds, at the same per-token price. Opus 5.5 did no better there at twice the price.
  */
-const MODEL = 'claude-sonnet-5'
+const MODEL = 'claude-sonnet-5-5'
 
 const RECEIPT_SCHEMA = {
   type: 'object',
@@ -50,6 +51,11 @@ const RECEIPT_SCHEMA = {
 
 const EXTRACTION_PROMPT = `This image is a photo of a restaurant receipt or bill. Extract every distinct food or drink line item together with its quantity and price, in the language it's printed in (do not translate names).
 
+How to read it:
+- Read the item area as a table. First find its column headers (for example שם פריט / יחידות / מחיר / סה"כ, or Item / Qty / Price / Total) and note where each column sits horizontally. Then give every number to the column it lines up under: a count in the quantity column is a quantity, an amount in the price or total column is a price. Never guess a number's role from its size alone. Hebrew receipts read right to left, so the name is usually on the right and the amounts on the left.
+- A dish name can wrap onto a second printed line. A line that has text but no quantity and no price of its own is almost always the rest of the dish name on the line above it; join the two into one name (e.g. "סלט קיסר" + "עם חזה עוף" → "סלט קיסר עם חזה עוף"). Don't make it a separate item, and don't move the next line's numbers up to it: each line's quantity and prices belong to the row they're printed on.
+- Photos may be dim, angled or partly shadowed. Take extra care on faint digits rather than guessing.
+
 Rules:
 - "price" is always the line's total price as printed — if a unit price and an extended/line total are both shown, use the line total, not the unit price.
 - "quantity" is how many units that price covers. If a line shows an explicit quantity or multiplier for one dish (e.g. "2x", "×2", a quantity column) together with a single combined price, report that quantity together with the combined price — do not split it into repeated entries.
@@ -58,6 +64,7 @@ Rules:
 - Read every digit carefully — double-check that each price and quantity you output matches exactly what's printed, including the decimal point. Misreading a digit is worse than leaving an item out.
 - Exclude subtotal, tax/VAT, service charge, tip, discount, payment method, and grand-total lines.
 - Exclude table numbers, dates, receipt/order numbers, and any other non-item metadata.
+- Before answering, check your work: if the receipt prints a total of the items (e.g. סה"כ, פריטים לתשלום, Subtotal, Total), your line prices should add up to it. If they don't, re-read the lines, the columns and any wrapped names until they do, or until you're sure the receipt itself differs.
 - If the photo is unreadable or you cannot confidently identify any items, return an empty items array rather than guessing.`
 
 function isSupportedMediaType(value: unknown): value is SupportedMediaType {
@@ -154,9 +161,9 @@ export async function POST(request: Request) {
   try {
     response = await client.messages.create({
       model: MODEL,
-      max_tokens: 4096,
+      max_tokens: 8192,
       output_config: {
-        effort: 'medium',
+        effort: 'high',
         format: { type: 'json_schema', schema: RECEIPT_SCHEMA },
       },
       messages: [

@@ -317,6 +317,9 @@ export function ScanReceiptSheet({ onInsufficientCredits }: { onInsufficientCred
               >
                 <DrawerHeader>
                   <DrawerTitle>{t('scanReceipt')}</DrawerTitle>
+                  {/* Said before the photo, when it can still help: dim, angled or cropped photos are
+                      what the scan misreads most. */}
+                  <DrawerDescription>{t('scanPhotoTip')}</DrawerDescription>
                 </DrawerHeader>
                 <div className="flex flex-col gap-2 px-8 pb-2">
                   <Button size="lg" className="w-full justify-start gap-2.5" onClick={() => cameraInputRef.current?.click()}>
