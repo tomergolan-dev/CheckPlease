@@ -164,7 +164,17 @@
     "menuTitle": "Menu",
     "menuSignInTitle": "Not signed in?",
     "privacyLink": "Privacy",
-    "menuSignInHint": "Sign in to scan bills too"
+    "menuSignInHint": "Sign in to scan bills too",
+    "forgotPasswordLink": "Forgot password?",
+    "resetPasswordTitle": "Reset your password",
+    "forgotDescription": "We'll email you a code, and you'll choose a new password with it.",
+    "sendCodeAction": "Send code",
+    "newPasswordLabel": "New password",
+    "resetAction": "Save new password",
+    "backToSignIn": "Back to sign in",
+    "resetDoneTitle": "Password updated",
+    "resetDoneDescription": "Your new password is saved and you're signed in.",
+    "resetSavedSignIn": "Your new password is saved. You can sign in with it now."
   },
   "Credits": {
     "gateTitle": "Sign in to scan",

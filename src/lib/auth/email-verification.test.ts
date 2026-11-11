@@ -6,6 +6,7 @@ import {
   MAX_SENDS_PER_WINDOW,
   RESEND_COOLDOWN_MS,
   SEND_WINDOW_MS,
+  sendAccountExistsNotice,
   sendVerificationCode,
   type VerificationCodeRow,
   type VerificationCodesRepository,
@@ -31,12 +32,16 @@ function setup() {
     },
   }
   const sent: Array<{ to: string; code: string }> = []
+  const notices: Array<{ to: string; signInEmail: string }> = []
   const mailer: VerificationMailer = {
     async sendCode({ to, code }) {
       sent.push({ to, code })
     },
+    async sendAccountExists({ to, signInEmail }) {
+      notices.push({ to, signInEmail })
+    },
   }
-  return { rows, repository, mailer, sent }
+  return { rows, repository, mailer, sent, notices }
 }
 
 const EMAIL = 'dana@example.com'
@@ -65,31 +70,21 @@ describe('sending a code', () => {
       ok: false,
       reason: 'cooldown',
     })
-    expect(
-      await sendVerificationCode({ email: EMAIL, locale: 'he', now: later(RESEND_COOLDOWN_MS) }, repository, mailer)
-    ).toEqual({ ok: true })
+    expect(await sendVerificationCode({ email: EMAIL, locale: 'he', now: later(RESEND_COOLDOWN_MS) }, repository, mailer)).toEqual({
+      ok: true,
+    })
   })
 
   it('caps sends per hour, then allows them again', async () => {
     const { repository, mailer } = setup()
     for (let i = 0; i < MAX_SENDS_PER_WINDOW; i++) {
-      const result = await sendVerificationCode(
-        { email: EMAIL, locale: 'he', now: later(i * RESEND_COOLDOWN_MS) },
-        repository,
-        mailer
-      )
+      const result = await sendVerificationCode({ email: EMAIL, locale: 'he', now: later(i * RESEND_COOLDOWN_MS) }, repository, mailer)
       expect(result.ok).toBe(true)
     }
     expect(
-      await sendVerificationCode(
-        { email: EMAIL, locale: 'he', now: later(MAX_SENDS_PER_WINDOW * RESEND_COOLDOWN_MS) },
-        repository,
-        mailer
-      )
+      await sendVerificationCode({ email: EMAIL, locale: 'he', now: later(MAX_SENDS_PER_WINDOW * RESEND_COOLDOWN_MS) }, repository, mailer)
     ).toEqual({ ok: false, reason: 'too_many' })
-    expect(
-      (await sendVerificationCode({ email: EMAIL, locale: 'he', now: later(SEND_WINDOW_MS) }, repository, mailer)).ok
-    ).toBe(true)
+    expect((await sendVerificationCode({ email: EMAIL, locale: 'he', now: later(SEND_WINDOW_MS) }, repository, mailer)).ok).toBe(true)
   })
 })
 
@@ -146,5 +141,34 @@ describe('checking a code', () => {
 
     expect((await checkVerificationCode({ email: EMAIL, code: '111111', now: later(RESEND_COOLDOWN_MS) }, repository)).ok).toBe(false)
     expect((await checkVerificationCode({ email: EMAIL, code: '222222', now: later(RESEND_COOLDOWN_MS) }, repository)).ok).toBe(true)
+  })
+})
+
+describe('the account-exists notice', () => {
+  const NOTICE = { email: EMAIL, signInEmail: EMAIL, locale: 'he' as const, appUrl: 'https://example.com' }
+
+  it('emails the notice, and no code that could be typed', async () => {
+    const { repository, mailer, sent, notices } = setup()
+
+    expect(await sendAccountExistsNotice({ ...NOTICE, now: T0 }, repository, mailer)).toEqual({ ok: true })
+    expect(notices).toEqual([{ to: EMAIL, signInEmail: EMAIL }])
+    expect(sent).toEqual([])
+    expect((await checkVerificationCode({ email: EMAIL, code: '000000', now: T0 }, repository)).ok).toBe(false)
+  })
+
+  it('keeps a pending code working, so a sign-up attempt can never cancel a password reset', async () => {
+    const { repository, mailer } = setup()
+    await sendVerificationCode({ email: EMAIL, locale: 'he', purpose: 'reset', now: T0, code: '123456' }, repository, mailer)
+    await sendAccountExistsNotice({ ...NOTICE, now: later(RESEND_COOLDOWN_MS) }, repository, mailer)
+
+    expect((await checkVerificationCode({ email: EMAIL, code: '123456', now: later(RESEND_COOLDOWN_MS) }, repository)).ok).toBe(true)
+  })
+
+  it('shares the sending limits with codes', async () => {
+    const { repository, mailer, notices } = setup()
+    await sendVerificationCode({ email: EMAIL, locale: 'he', now: T0 }, repository, mailer)
+
+    expect(await sendAccountExistsNotice({ ...NOTICE, now: later(1000) }, repository, mailer)).toEqual({ ok: false, reason: 'cooldown' })
+    expect(notices).toEqual([])
   })
 })

@@ -5,21 +5,13 @@ import { ChevronRight, LogIn, ReceiptText, RotateCcw, ShieldCheck, type LucideIc
 import { signOut, useSession } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-} from '@/components/ui/drawer'
+import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer'
 import { LanguageSwitcher } from '@/components/shared/language-switcher'
 import { Link } from '@/i18n/navigation'
 import { RESUME_SCAN_KEY } from '@/lib/scan-resume'
 import { CreditPackSheet } from './credit-pack-sheet'
 import { MyBillsSheet } from './my-bills-sheet'
-import { SignInForm, type SignInFormMode } from './sign-in-form'
+import { SignInForm, signInFormIsDone, signInFormShowsSubtitle, signInFormTitleKey, type SignInFormMode } from './sign-in-form'
 
 type View = 'menu' | 'sign-in' | 'sign-out'
 
@@ -127,19 +119,11 @@ export function AccountSheet({
                 </Button>
               </DrawerFooter>
             </>
-          ) : view === 'sign-in' && (!user || signInMode === 'verified') ? (
+          ) : view === 'sign-in' && (!user || signInFormIsDone(signInMode)) ? (
             <>
               <DrawerHeader>
-                <DrawerTitle>
-                  {signInMode === 'verified'
-                    ? t('verifiedTitle')
-                    : signInMode === 'verify'
-                    ? t('verifyEmailTitle')
-                    : signInMode === 'create'
-                      ? t('createAccountAction')
-                      : t('signInTitle')}
-                </DrawerTitle>
-                {signInMode !== 'verify' && signInMode !== 'verified' && <DrawerDescription>{t('signInSubtitle')}</DrawerDescription>}
+                <DrawerTitle>{t(signInFormTitleKey(signInMode) ?? 'signInTitle')}</DrawerTitle>
+                {signInFormShowsSubtitle(signInMode) && <DrawerDescription>{t('signInSubtitle')}</DrawerDescription>}
               </DrawerHeader>
               <SignInForm
                 onSuccess={close}
@@ -149,11 +133,16 @@ export function AccountSheet({
                 // abandoned attempt can never resurrect a scan sheet the user didn't ask to reopen.
                 onBeforeGoogleRedirect={() => sessionStorage.removeItem(RESUME_SCAN_KEY)}
               />
-              <DrawerFooter>
-                <Button variant="outline" onClick={() => setView('menu')}>
-                  {tCommon('cancel')}
-                </Button>
-              </DrawerFooter>
+              {/* A completion screen has its own single way forward; there's nothing left to cancel. */}
+              {signInFormIsDone(signInMode) ? (
+                <div className="h-6" />
+              ) : (
+                <DrawerFooter>
+                  <Button variant="outline" onClick={() => setView('menu')}>
+                    {tCommon('cancel')}
+                  </Button>
+                </DrawerFooter>
+              )}
             </>
           ) : (
             <>

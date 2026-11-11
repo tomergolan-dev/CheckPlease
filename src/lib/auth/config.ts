@@ -71,7 +71,7 @@ export const authConfig: NextAuthConfig = {
       if (!user.id) return
       // A Google account for a mailbox that already has a password account (e.g. name+x@gmail.com)
       // is allowed in, but the free scans were already given to that mailbox.
-      if (user.email && (await drizzleUserRepository.mailboxTakenByOther(normalizeEmail(user.email)))) return
+      if (user.email && (await drizzleUserRepository.mailboxOwnerEmail(normalizeEmail(user.email)))) return
       try {
         await grantSignupBonus(user.id)
       } catch (error) {

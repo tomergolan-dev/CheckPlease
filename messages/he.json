@@ -164,7 +164,17 @@
     "menuTitle": "תפריט",
     "menuSignInTitle": "לא מחוברים?",
     "privacyLink": "פרטיות",
-    "menuSignInHint": "התחברו ותוכלו גם לסרוק חשבונות"
+    "menuSignInHint": "התחברו ותוכלו גם לסרוק חשבונות",
+    "forgotPasswordLink": "שכחתי סיסמה",
+    "resetPasswordTitle": "איפוס סיסמה",
+    "forgotDescription": "נשלח קוד למייל שלכם, ואיתו תבחרו סיסמה חדשה.",
+    "sendCodeAction": "שליחת קוד",
+    "newPasswordLabel": "סיסמה חדשה",
+    "resetAction": "שמירת סיסמה חדשה",
+    "backToSignIn": "חזרה להתחברות",
+    "resetDoneTitle": "הסיסמה עודכנה",
+    "resetDoneDescription": "הסיסמה החדשה נשמרה ואתם מחוברים.",
+    "resetSavedSignIn": "הסיסמה החדשה נשמרה. אפשר להתחבר איתה עכשיו."
   },
   "Credits": {
     "gateTitle": "התחברות לסריקה",

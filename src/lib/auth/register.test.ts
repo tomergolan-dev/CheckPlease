@@ -9,7 +9,7 @@ function fakeRepository(overrides: Partial<UserRepository> = {}): UserRepository
     updatePassword: vi.fn().mockResolvedValue(undefined),
     markVerified: vi.fn().mockResolvedValue('user-1'),
     deleteUnverified: vi.fn().mockResolvedValue(undefined),
-    mailboxTakenByOther: vi.fn().mockResolvedValue(false),
+    mailboxOwnerEmail: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   }
 }
@@ -62,16 +62,17 @@ describe('registerUser', () => {
   })
 
   it('rejects an address variant of a mailbox that already has an account', async () => {
-    const repository = fakeRepository({ mailboxTakenByOther: vi.fn().mockResolvedValue(true) })
+    const repository = fakeRepository({ mailboxOwnerEmail: vi.fn().mockResolvedValue('diner@example.org') })
 
-    await expect(registerUser(INPUT, repository)).rejects.toThrow(EmailAlreadyRegisteredError)
+    // The notice tells the mailbox's owner which address their account actually signs in with.
+    await expect(registerUser(INPUT, repository)).rejects.toMatchObject({ signInEmail: 'diner@example.org' })
     expect(repository.insert).not.toHaveBeenCalled()
   })
 
   it('does not let an unverified variant take over a mailbox that already has an account', async () => {
     const repository = fakeRepository({
       findByEmail: vi.fn().mockResolvedValue(unverifiedUser),
-      mailboxTakenByOther: vi.fn().mockResolvedValue(true),
+      mailboxOwnerEmail: vi.fn().mockResolvedValue('diner@example.org'),
     })
 
     await expect(registerUser(INPUT, repository)).rejects.toThrow(EmailAlreadyRegisteredError)
@@ -110,7 +111,7 @@ describe('verifyRegisteredEmail', () => {
   })
 
   it('refuses to verify a second account for a mailbox that was verified meanwhile', async () => {
-    const repository = fakeRepository({ mailboxTakenByOther: vi.fn().mockResolvedValue(true) })
+    const repository = fakeRepository({ mailboxOwnerEmail: vi.fn().mockResolvedValue('diner@example.org') })
     const grant = vi.fn()
 
     expect(await verifyRegisteredEmail('diner@example.com', repository, grant)).toEqual({ ok: false })

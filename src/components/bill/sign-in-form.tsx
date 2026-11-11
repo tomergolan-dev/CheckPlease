@@ -9,8 +9,43 @@ import { Input } from '@/components/ui/input'
 import { GoogleIcon } from '@/components/shared/google-icon'
 import { PasswordInput } from '@/components/shared/password-input'
 
-/** 'verify' is the emailed-code step that follows creating an account (or signing in before verifying). */
-export type SignInFormMode = 'sign-in' | 'create' | 'verify' | 'verified'
+/**
+ * 'verify' is the emailed-code step that follows creating an account (or signing in before
+ * verifying). 'forgot' asks where to send a reset code, and 'reset' takes it with the new password.
+ * 'verified' and 'reset-done' are completion screens, shown once the user is already signed in.
+ */
+export type SignInFormMode = 'sign-in' | 'create' | 'verify' | 'verified' | 'forgot' | 'reset' | 'reset-done'
+
+type AccountTitleKey = 'verifiedTitle' | 'verifyEmailTitle' | 'createAccountAction' | 'resetPasswordTitle' | 'resetDoneTitle'
+
+/** The sheet title for a mode, from the Account messages; `null` means the sheet's own sign-in title. */
+export function signInFormTitleKey(mode: SignInFormMode): AccountTitleKey | null {
+  switch (mode) {
+    case 'verified':
+      return 'verifiedTitle'
+    case 'verify':
+      return 'verifyEmailTitle'
+    case 'create':
+      return 'createAccountAction'
+    case 'forgot':
+    case 'reset':
+      return 'resetPasswordTitle'
+    case 'reset-done':
+      return 'resetDoneTitle'
+    default:
+      return null
+  }
+}
+
+/** Whether the sheet's own subtitle belongs above this mode (only the first sign-in screens). */
+export function signInFormShowsSubtitle(mode: SignInFormMode): boolean {
+  return mode === 'sign-in' || mode === 'create'
+}
+
+/** Completion screens: the user is signed in already, but the sheet stays until they continue. */
+export function signInFormIsDone(mode: SignInFormMode): boolean {
+  return mode === 'verified' || mode === 'reset-done'
+}
 
 const RESEND_SECONDS = 60
 
@@ -72,8 +107,8 @@ export function SignInForm({ onSuccess, onBeforeGoogleRedirect, onModeChange }: 
     return null
   }
 
-  async function requestCode(): Promise<boolean> {
-    const response = await fetch('/api/auth/send-code', {
+  async function requestCode(endpoint = '/api/auth/send-code'): Promise<boolean> {
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, locale }),
@@ -95,7 +130,7 @@ export function SignInForm({ onSuccess, onBeforeGoogleRedirect, onModeChange }: 
     setError(null)
     setNotice(null)
     setSubmitting(true)
-    const sent = await requestCode()
+    const sent = await requestCode(mode === 'reset' ? '/api/auth/forgot-password' : undefined)
     setSubmitting(false)
     if (sent) {
       setCode('')
@@ -124,13 +159,7 @@ export function SignInForm({ onSuccess, onBeforeGoogleRedirect, onModeChange }: 
           setSubmitting(false)
           return
         }
-        setError(
-          reason === 'expired'
-            ? t('codeExpired')
-            : reason === 'too_many_attempts'
-              ? t('codeTooManyAttempts')
-              : t('codeInvalid')
-        )
+        setError(reason === 'expired' ? t('codeExpired') : reason === 'too_many_attempts' ? t('codeTooManyAttempts') : t('codeInvalid'))
         setCode('')
         setSubmitting(false)
         return
@@ -150,11 +179,69 @@ export function SignInForm({ onSuccess, onBeforeGoogleRedirect, onModeChange }: 
     }
   }
 
+  async function handleForgotSubmit() {
+    setError(null)
+    setSubmitting(true)
+    const sent = await requestCode('/api/auth/forgot-password')
+    setSubmitting(false)
+    if (!sent) return
+    setCode('')
+    setPassword('')
+    setConfirmPassword('')
+    setResendIn(RESEND_SECONDS)
+    changeMode('reset')
+  }
+
+  async function handleReset() {
+    setError(null)
+    setNotice(null)
+    setSubmitting(true)
+    try {
+      const response = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code, password }),
+      })
+      if (!response.ok) {
+        const body: unknown = await response.json().catch(() => null)
+        const reason = body && typeof body === 'object' && 'error' in body ? body.error : null
+        if (response.status !== 400) {
+          // The server, not the code: keep everything typed so trying again is one tap.
+          setError(t('genericError'))
+        } else if (reason === 'email_taken') {
+          setError(t('emailTaken'))
+        } else {
+          setError(reason === 'expired' ? t('codeExpired') : reason === 'too_many_attempts' ? t('codeTooManyAttempts') : t('codeInvalid'))
+          setCode('')
+        }
+        setSubmitting(false)
+        return
+      }
+      const result = await signIn('credentials', { email, password, redirect: false })
+      setSubmitting(false)
+      if (result?.error) {
+        // Saved, but signing in didn't go through: the new password works from the sign-in screen.
+        changeMode('sign-in')
+        setNotice(t('resetSavedSignIn'))
+        return
+      }
+      changeMode('reset-done')
+    } catch {
+      setError(t('genericError'))
+      setSubmitting(false)
+    }
+  }
+
+  function startForgot() {
+    setCode('')
+    changeMode('forgot')
+  }
+
   function handleCodeChange(raw: string) {
     const digits = raw.replace(/\D/g, '').slice(0, 6)
     setCode(digits)
     // Six digits is the whole code, so it checks itself; no extra tap.
-    if (digits.length === 6 && !submitting) void handleVerify(digits)
+    if (mode === 'verify' && digits.length === 6 && !submitting) void handleVerify(digits)
   }
 
   function toggleMode() {
@@ -213,24 +300,128 @@ export function SignInForm({ onSuccess, onBeforeGoogleRedirect, onModeChange }: 
   const passwordLongEnough = password.length >= 8
 
   // Flagged only once the confirmation is as long as the password, so it never nags mid-typing.
+  const choosingPassword = mode === 'create' || mode === 'reset'
   const passwordsMismatch =
-    mode === 'create' && confirmPassword.length >= password.length && confirmPassword.length > 0 && confirmPassword !== password
+    choosingPassword && confirmPassword.length >= password.length && confirmPassword.length > 0 && confirmPassword !== password
 
   const canSubmit =
     mode === 'create'
       ? email.trim().length > 0 && password.length >= 8 && confirmPassword === password
       : email.trim().length > 0 && password.length > 0
 
-  if (mode === 'verified') {
+  if (signInFormIsDone(mode)) {
     return (
       <div className="flex flex-col items-center gap-4 px-8 text-center">
         <span className="flex size-14 items-center justify-center rounded-full bg-[#e8f5ee] text-[#2a8a5f]">
           <Check className="size-7" aria-hidden="true" />
         </span>
-        <p className="text-sm leading-relaxed text-muted-foreground">{t('verifiedDescription')}</p>
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          {mode === 'reset-done' ? t('resetDoneDescription') : t('verifiedDescription')}
+        </p>
         <Button className="w-full" onClick={onSuccess}>
           {t('verifiedAction')}
         </Button>
+      </div>
+    )
+  }
+
+  const linkClass =
+    'rounded-md py-1 text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline disabled:pointer-events-none disabled:no-underline disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50'
+
+  /** The new password, its live length hint and its confirmation: creating an account, or resetting. */
+  const newPasswordFields = (
+    <>
+      <label className="flex flex-col gap-1.5">
+        <span className="text-sm font-medium text-muted-foreground">{mode === 'reset' ? t('newPasswordLabel') : t('passwordLabel')}</span>
+        <PasswordInput autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+        {/* Live, never red: gray until the length is met, then green with a check. A field the
+            user is still typing in isn't an error. */}
+        <span
+          className={`flex items-center gap-1 text-xs transition-colors ${passwordLongEnough ? 'text-[#2a8a5f]' : 'text-muted-foreground'}`}
+        >
+          {passwordLongEnough && <Check className="size-3.5" aria-hidden="true" />}
+          {t('passwordHint')}
+        </span>
+      </label>
+
+      <label className="flex flex-col gap-1.5">
+        <span className="text-sm font-medium text-muted-foreground">{t('confirmPasswordLabel')}</span>
+        <PasswordInput
+          autoComplete="new-password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          aria-invalid={passwordsMismatch || undefined}
+        />
+        {passwordsMismatch && <span className="text-xs text-destructive">{t('passwordsMismatch')}</span>}
+      </label>
+    </>
+  )
+
+  if (mode === 'forgot') {
+    return (
+      <div className="flex flex-col gap-4 px-8">
+        <p className="text-center text-sm leading-relaxed text-muted-foreground">{t('forgotDescription')}</p>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium text-muted-foreground">{t('emailLabel')}</span>
+          <Input type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        </label>
+        {error && <p className="text-xs text-destructive">{error}</p>}
+        <Button onClick={handleForgotSubmit} disabled={email.trim().length === 0 || submitting}>
+          {t('sendCodeAction')}
+        </Button>
+        <button type="button" onClick={() => changeMode('sign-in')} disabled={submitting} className={`self-center text-sm ${linkClass}`}>
+          {t('backToSignIn')}
+        </button>
+      </div>
+    )
+  }
+
+  if (mode === 'reset') {
+    const canReset = code.length === 6 && passwordLongEnough && confirmPassword === password
+    return (
+      <div className="flex flex-col gap-4 px-8">
+        <p className="text-center text-sm leading-relaxed text-muted-foreground">
+          {t('codeSentTo')}
+          <br />
+          <span dir="ltr" className="font-medium text-foreground">
+            {email}
+          </span>
+        </p>
+
+        <Input
+          value={code}
+          onChange={(e) => handleCodeChange(e.target.value)}
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          maxLength={6}
+          aria-label={t('codeLabel')}
+          disabled={submitting}
+          dir="ltr"
+          placeholder="••••••"
+          className="h-14 text-center text-2xl font-semibold tracking-[0.5em] tabular-nums md:text-2xl"
+        />
+
+        {newPasswordFields}
+
+        {error && (
+          <p role="alert" className="text-center text-xs text-destructive">
+            {error}
+          </p>
+        )}
+        {notice && !error && <p className="text-center text-xs text-[#2a8a5f]">{notice}</p>}
+
+        <Button onClick={handleReset} disabled={!canReset || submitting}>
+          {t('resetAction')}
+        </Button>
+
+        <div className="flex flex-col items-center gap-1 text-sm">
+          <button type="button" onClick={handleResend} disabled={resendIn > 0 || submitting} className={linkClass}>
+            {resendIn > 0 ? t('resendCodeIn', { seconds: resendIn }) : t('resendCodeAction')}
+          </button>
+          <button type="button" onClick={() => changeMode('sign-in')} disabled={submitting} className={linkClass}>
+            {t('backToSignIn')}
+          </button>
+        </div>
       </div>
     )
   }
@@ -316,45 +507,32 @@ export function SignInForm({ onSuccess, onBeforeGoogleRedirect, onModeChange }: 
         <Input type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
       </label>
 
-      <label className="flex flex-col gap-1.5">
-        <span className="text-sm font-medium text-muted-foreground">{t('passwordLabel')}</span>
-        <PasswordInput
-          autoComplete={mode === 'create' ? 'new-password' : 'current-password'}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        {/* Live, never red: gray until the length is met, then green with a check. A field the
-            user is still typing in isn't an error. */}
-        {mode === 'create' && (
-          <span
-            className={`flex items-center gap-1 text-xs transition-colors ${passwordLongEnough ? 'text-[#2a8a5f]' : 'text-muted-foreground'}`}
-          >
-            {passwordLongEnough && <Check className="size-3.5" aria-hidden="true" />}
-            {t('passwordHint')}
-          </span>
-        )}
-      </label>
-
-      {mode === 'create' && (
-        <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-muted-foreground">{t('confirmPasswordLabel')}</span>
-          <PasswordInput
-            autoComplete="new-password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            aria-invalid={passwordsMismatch || undefined}
-          />
-          {passwordsMismatch && <span className="text-xs text-destructive">{t('passwordsMismatch')}</span>}
-        </label>
+      {mode === 'create' ? (
+        newPasswordFields
+      ) : (
+        <div className="flex flex-col gap-1.5">
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium text-muted-foreground">{t('passwordLabel')}</span>
+            <PasswordInput autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          </label>
+          <button type="button" onClick={startForgot} disabled={submitting} className={`self-end text-xs ${linkClass}`}>
+            {t('forgotPasswordLink')}
+          </button>
+        </div>
       )}
 
       {error && <p className="text-xs text-destructive">{error}</p>}
+      {notice && !error && <p className="text-xs text-[#2a8a5f]">{notice}</p>}
 
       <Button onClick={handleCredentialsSubmit} disabled={!canSubmit || submitting}>
         {mode === 'create' ? t('createAccountAction') : t('signInAction')}
       </Button>
 
-      <button type="button" onClick={toggleMode} className="text-center text-sm text-muted-foreground transition-colors hover:text-foreground">
+      <button
+        type="button"
+        onClick={toggleMode}
+        className="text-center text-sm text-muted-foreground transition-colors hover:text-foreground"
+      >
         {mode === 'create' ? (
           <>
             {t('signInPrompt')} <span className="font-medium text-primary">{t('signInAction')}</span>

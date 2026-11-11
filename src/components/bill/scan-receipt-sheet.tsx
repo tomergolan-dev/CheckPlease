@@ -25,7 +25,7 @@ import { formatCurrency, minorUnitsToInputValue, parseInputValueToMinorUnits } f
 import { generateId } from '@/lib/id'
 import { abandonScan, scanReceipt, ScanReceiptError, type ScanReceiptErrorCode } from '@/lib/receipt-scan'
 import { RESUME_SCAN_KEY } from '@/lib/scan-resume'
-import { SignInForm, type SignInFormMode } from './sign-in-form'
+import { SignInForm, signInFormIsDone, signInFormShowsSubtitle, signInFormTitleKey, type SignInFormMode } from './sign-in-form'
 
 interface DraftRow {
   id: string
@@ -282,15 +282,9 @@ export function ScanReceiptSheet({ onInsufficientCredits }: { onInsufficientCred
               >
                 <DrawerHeader>
                   <DrawerTitle>
-                    {gateMode === 'verified'
-                    ? tAccount('verifiedTitle')
-                    : gateMode === 'verify'
-                      ? tAccount('verifyEmailTitle')
-                      : gateMode === 'create'
-                        ? tAccount('createAccountAction')
-                        : tCredits('gateTitle')}
+                    {signInFormTitleKey(gateMode) ? tAccount(signInFormTitleKey(gateMode)!) : tCredits('gateTitle')}
                   </DrawerTitle>
-                  {gateMode !== 'verify' && gateMode !== 'verified' && <DrawerDescription>{tCredits('gateSubtitle')}</DrawerDescription>}
+                  {signInFormShowsSubtitle(gateMode) && <DrawerDescription>{tCredits('gateSubtitle')}</DrawerDescription>}
                 </DrawerHeader>
 
                 <SignInForm
@@ -300,11 +294,15 @@ export function ScanReceiptSheet({ onInsufficientCredits }: { onInsufficientCred
                   onBeforeGoogleRedirect={() => sessionStorage.setItem(RESUME_SCAN_KEY, '1')}
                 />
 
-                <DrawerFooter>
-                  <DrawerClose asChild>
-                    <Button variant="outline">{tCommon('cancel')}</Button>
-                  </DrawerClose>
-                </DrawerFooter>
+                {signInFormIsDone(gateMode) ? (
+                  <div className="h-6" />
+                ) : (
+                  <DrawerFooter>
+                    <DrawerClose asChild>
+                      <Button variant="outline">{tCommon('cancel')}</Button>
+                    </DrawerClose>
+                  </DrawerFooter>
+                )}
               </motion.div>
             )}
 
@@ -321,11 +319,7 @@ export function ScanReceiptSheet({ onInsufficientCredits }: { onInsufficientCred
                   <DrawerTitle>{t('scanReceipt')}</DrawerTitle>
                 </DrawerHeader>
                 <div className="flex flex-col gap-2 px-8 pb-2">
-                  <Button
-                    size="lg"
-                    className="w-full justify-start gap-2.5"
-                    onClick={() => cameraInputRef.current?.click()}
-                  >
+                  <Button size="lg" className="w-full justify-start gap-2.5" onClick={() => cameraInputRef.current?.click()}>
                     <Camera className="size-4" />
                     {t('scanTakePhoto')}
                   </Button>
@@ -468,11 +462,7 @@ export function ScanReceiptSheet({ onInsufficientCredits }: { onInsufficientCred
                       >
                         {isEditing ? (
                           <div className="flex flex-1 flex-col gap-1.5">
-                            <Input
-                              autoFocus
-                              value={row.name}
-                              onChange={(e) => updateRow(row.id, { name: e.target.value })}
-                            />
+                            <Input autoFocus value={row.name} onChange={(e) => updateRow(row.id, { name: e.target.value })} />
                             <div className="flex items-center gap-2">
                               <div className="relative w-28">
                                 <span className="pointer-events-none absolute inset-y-0 start-2.5 flex items-center text-xs text-muted-foreground">
@@ -500,9 +490,7 @@ export function ScanReceiptSheet({ onInsufficientCredits }: { onInsufficientCred
                             className="flex flex-1 items-center gap-2 text-start disabled:pointer-events-none"
                           >
                             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                              <span className="truncate text-sm font-medium">
-                                {row.name || t('namePlaceholder')}
-                              </span>
+                              <span className="truncate text-sm font-medium">{row.name || t('namePlaceholder')}</span>
                               <span className="text-xs tabular-nums text-muted-foreground">
                                 {formatCurrency(parseInputValueToMinorUnits(row.priceValue, currency), currency)}
                                 {row.quantity > 1 && ` × ${row.quantity}`}
@@ -538,9 +526,7 @@ export function ScanReceiptSheet({ onInsufficientCredits }: { onInsufficientCred
 
                 {existingItemsCount > 0 && (
                   <div className="flex flex-col gap-2 border-t border-border/40 px-8 pt-3">
-                    <span className="text-sm font-medium text-muted-foreground">
-                      {t('scanExistingItemsQuestion')}
-                    </span>
+                    <span className="text-sm font-medium text-muted-foreground">{t('scanExistingItemsQuestion')}</span>
                     <div className="flex flex-col gap-2">
                       <Button
                         type="button"
@@ -564,18 +550,14 @@ export function ScanReceiptSheet({ onInsufficientCredits }: { onInsufficientCred
                       </Button>
                     </div>
                     {addMode === 'replace' && (
-                      <p className="text-xs text-muted-foreground">
-                        {t('scanReplaceWarning', { count: existingItemsCount })}
-                      </p>
+                      <p className="text-xs text-muted-foreground">{t('scanReplaceWarning', { count: existingItemsCount })}</p>
                     )}
                   </div>
                 )}
 
                 <div className="flex items-center justify-between border-t border-border/40 px-8 py-2.5">
                   <span className="text-sm text-muted-foreground">{t('scanReviewTotal')}</span>
-                  <span className="text-base font-semibold tabular-nums">
-                    {formatCurrency(includedTotalMinorUnits, currency)}
-                  </span>
+                  <span className="text-base font-semibold tabular-nums">{formatCurrency(includedTotalMinorUnits, currency)}</span>
                 </div>
 
                 <DrawerFooter>

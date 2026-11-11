@@ -13,10 +13,7 @@ describe('hashPassword / verifyPassword', () => {
   })
 
   it('produces a different hash each time (random salt), while both still verify', async () => {
-    const [hashA, hashB] = await Promise.all([
-      hashPassword('same password'),
-      hashPassword('same password'),
-    ])
+    const [hashA, hashB] = await Promise.all([hashPassword('same password'), hashPassword('same password')])
     expect(hashA).not.toBe(hashB)
     expect(await verifyPassword('same password', hashA)).toBe(true)
     expect(await verifyPassword('same password', hashB)).toBe(true)

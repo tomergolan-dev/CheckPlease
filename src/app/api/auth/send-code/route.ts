@@ -22,11 +22,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await sendVerificationCode(
-      { email, locale },
-      drizzleVerificationCodesRepository,
-      resendVerificationMailer
-    )
+    const result = await sendVerificationCode({ email, locale }, drizzleVerificationCodesRepository, resendVerificationMailer)
     if (!result.ok) {
       return NextResponse.json({ error: result.reason }, { status: 429 })
     }

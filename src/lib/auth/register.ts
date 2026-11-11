@@ -7,9 +7,16 @@ import { hashPassword } from './password'
 import type { RegisterInput } from './validation'
 
 export class EmailAlreadyRegisteredError extends Error {
-  constructor() {
+  /**
+   * The address that account signs in with: the typed one, or the first-registered variant of the
+   * same mailbox. Mailed only to that mailbox's owner, never returned to whoever is signing up.
+   */
+  readonly signInEmail: string
+
+  constructor(signInEmail: string) {
     super('Email is already registered')
     this.name = 'EmailAlreadyRegisteredError'
+    this.signInEmail = signInEmail
   }
 }
 
@@ -33,11 +40,11 @@ export interface UserRepository {
   /** Deletes a password account that never verified, freeing its email for its real owner. */
   deleteUnverified(email: string): Promise<void>
   /**
-   * Whether another account (a different address, verified or Google) already uses the same real
-   * mailbox, e.g. `name@gmail.com` for `name+x@gmail.com`. Unverified accounts don't count, for the
-   * same reason they never "take" an email.
+   * The address of another account (verified or Google) that already uses the same real mailbox,
+   * e.g. `name@gmail.com` for `name+x@gmail.com`, or undefined if none. Unverified accounts don't
+   * count, for the same reason they never "take" an email.
    */
-  mailboxTakenByOther(email: string): Promise<boolean>
+  mailboxOwnerEmail(email: string): Promise<string | undefined>
 }
 
 /** A password account that hasn't proven it owns its email yet. Google accounts never are. */
@@ -91,9 +98,9 @@ export const drizzleUserRepository: UserRepository = {
   async deleteUnverified(email) {
     await db.delete(users).where(and(eq(users.email, email), isNotNull(users.passwordHash), isNull(users.emailVerified)))
   },
-  async mailboxTakenByOther(email) {
+  async mailboxOwnerEmail(email) {
     const [row] = await db
-      .select({ id: users.id })
+      .select({ email: users.email })
       .from(users)
       .where(
         and(
@@ -103,7 +110,7 @@ export const drizzleUserRepository: UserRepository = {
         )
       )
       .limit(1)
-    return row !== undefined
+    return row?.email ?? undefined
   },
 }
 
@@ -124,18 +131,20 @@ export async function registerUser(input: RegisterInput, repository: UserReposit
   const existing = await repository.findByEmail(input.email)
 
   if (existing) {
-    if (!isUnverifiedPasswordAccount(existing)) throw new EmailAlreadyRegisteredError()
-    if (await repository.mailboxTakenByOther(input.email)) throw new EmailAlreadyRegisteredError()
+    if (!isUnverifiedPasswordAccount(existing)) throw new EmailAlreadyRegisteredError(input.email)
+    const owner = await repository.mailboxOwnerEmail(input.email)
+    if (owner) throw new EmailAlreadyRegisteredError(owner)
     await repository.updatePassword(existing.id, passwordHash)
     return { id: existing.id, email: input.email }
   }
-  if (await repository.mailboxTakenByOther(input.email)) throw new EmailAlreadyRegisteredError()
+  const owner = await repository.mailboxOwnerEmail(input.email)
+  if (owner) throw new EmailAlreadyRegisteredError(owner)
 
   try {
     return await repository.insert({ email: input.email, passwordHash })
   } catch (error) {
     if (isUniqueViolation(error)) {
-      throw new EmailAlreadyRegisteredError()
+      throw new EmailAlreadyRegisteredError(input.email)
     }
     throw error
   }
@@ -152,7 +161,7 @@ export async function verifyRegisteredEmail(
   grantSignupBonusFn: (userId: string) => Promise<void> = grantSignupBonus
 ): Promise<{ ok: true; userId: string } | { ok: false }> {
   // Two variants of one mailbox could both be waiting for their codes; only the first one counts.
-  if (await repository.mailboxTakenByOther(email)) return { ok: false }
+  if (await repository.mailboxOwnerEmail(email)) return { ok: false }
   const userId = await repository.markVerified(email)
   if (!userId) return { ok: false }
   try {
