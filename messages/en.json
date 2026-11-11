@@ -75,7 +75,7 @@
     "cannotDeselectLastDiner": "At least one diner must share this item",
     "emptyState": "No dishes yet",
     "scanReceipt": "Scan bill",
-    "scanPhotoTip": "For the best result: good light, straight from above, the whole bill in the photo.",
+    "scanPhotoTip": "Tip: capture the whole bill, in good lighting.",
     "scanTakePhoto": "Take a photo",
     "scanChooseFromLibrary": "Choose from library",
     "scanProcessingTitle": "Scanning your bill…",
