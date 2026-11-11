@@ -96,9 +96,10 @@ export function OnboardingScreen({ hasActiveDraft, onContinue, onStartNew }: Onb
         <motion.h1 {...fadeUp(0.3)} className="text-4xl font-semibold tracking-tight">
           {BRAND_NAME}
         </motion.h1>
-        <motion.p {...fadeUp(0.4)} className="text-base whitespace-pre-line text-muted-foreground">
-          {t('tagline')}
-        </motion.p>
+        <motion.div {...fadeUp(0.4)} className="flex flex-col items-center gap-1 text-center">
+          <p className="text-base font-medium text-foreground/80">{t('tagline')}</p>
+          <p className="text-sm text-muted-foreground">{t('taglineSub')}</p>
+        </motion.div>
       </div>
 
       <motion.div {...fadeUp(0.55)} className="flex w-full max-w-xs flex-col gap-2.5">

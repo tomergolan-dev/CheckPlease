@@ -1,6 +1,7 @@
 {
   "App": {
-    "tagline": "Split the bill.\nNot the friendship.",
+    "tagline": "Everyone pays for what they ordered.",
+    "taglineSub": "No calculator. No awkward math.",
     "newBillAction": "Start a new bill",
     "newBillConfirmTitle": "Start a new bill?",
     "newBillConfirmDescription": "This clears your current bill for good — diners, dishes and tip included. This can't be undone.",
@@ -208,5 +209,12 @@
   },
   "Settings": {
     "languageLabel": "Language"
+  },
+  "Share": {
+    "tagline": "Everyone pays for what they ordered.",
+    "taglineSub": "No calculator. No awkward math.",
+    "totalToPay": "Total to pay",
+    "title": "Check Please — split the restaurant bill",
+    "description": "Add who ate what, or scan the bill, and see right away what everyone pays, tip included."
   }
 }

@@ -1,10 +1,10 @@
 import type { Metadata, Viewport } from 'next'
 import { Heebo } from 'next/font/google'
 import { NextIntlClientProvider, hasLocale } from 'next-intl'
-import { getMessages, setRequestLocale } from 'next-intl/server'
+import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import { routing, localeDirections, type AppLocale } from '@/i18n/routing'
-import { BRAND_NAME } from '@/lib/brand'
+import { APP_URL, BRAND_NAME } from '@/lib/brand'
 import { Providers } from '@/components/providers'
 import '../globals.css'
 
@@ -18,9 +18,31 @@ export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }))
 }
 
-export const metadata: Metadata = {
-  title: BRAND_NAME,
-  description: 'Split the bill. Skip the math.',
+/**
+ * Title, description and link preview per language: what LinkedIn, WhatsApp and search show when
+ * the app is shared. The preview image itself is opengraph-image.tsx next to this file.
+ */
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params
+  const t = await getTranslations({ locale, namespace: 'Share' })
+  return {
+    ...metadata,
+    metadataBase: new URL(APP_URL),
+    title: t('title'),
+    description: t('description'),
+    openGraph: {
+      type: 'website',
+      siteName: BRAND_NAME,
+      title: t('title'),
+      description: t('description'),
+      locale: locale === 'he' ? 'he_IL' : 'en_US',
+      url: `/${locale}`,
+    },
+    twitter: { card: 'summary_large_image', title: t('title'), description: t('description') },
+  }
+}
+
+const metadata: Metadata = {
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -29,7 +51,8 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: '/icons/icon.svg',
-    apple: '/icons/icon.svg',
+    // iOS ignores SVG for the home-screen icon; a full-bleed PNG it rounds itself.
+    apple: '/icons/apple-touch-icon.png',
   },
 }
 
@@ -48,13 +71,7 @@ export const viewport: Viewport = {
   ],
 }
 
-export default async function LocaleLayout({
-  children,
-  params,
-}: {
-  children: React.ReactNode
-  params: Promise<{ locale: string }>
-}) {
+export default async function LocaleLayout({ children, params }: { children: React.ReactNode; params: Promise<{ locale: string }> }) {
   const { locale } = await params
 
   if (!hasLocale(routing.locales, locale)) {
